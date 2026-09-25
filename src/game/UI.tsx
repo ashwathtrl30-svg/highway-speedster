@@ -30,7 +30,7 @@ export function LoadingScreen() {
         </h1>
         <p className="text-gray-500 text-xs mb-6">Loading assets...</p>
         
-        <div className="w-48 h-1.5 bg-gray-800 rounded-full overflow-hidden mx-auto">
+        <div className="w-64 sm:w-80 h-1.5 bg-gray-800 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full transition-all duration-200"
             style={{ width: `${Math.min(100, progress)}%` }}
@@ -238,7 +238,6 @@ function BikeSelection({ onBack }: { onBack: () => void }) {
                     <div className="flex gap-2 sm:gap-3 mt-1.5">
                       <StatBar label="SPD" value={bike.maxSpeed / 250} color="#ef4444" />
                       <StatBar label="ACC" value={bike.acceleration / 1.6} color="#f59e0b" />
-                      <StatBar label="HDL" value={bike.handling / 1.0} color="#3b82f6" />
                     </div>
                   )}
 
@@ -280,7 +279,7 @@ function BikeSelection({ onBack }: { onBack: () => void }) {
 
       {/* Unlocked count at bottom */}
       <div className="pb-4 pt-2 text-center">
-        <span className="text-xs text-gray-500">{state.unlockedBikes.length}/{BIKES.length} unlocked</span>
+        <span className="text-xs text-gray-500">{state.unlockedBikes.length} out of {BIKES.length} Bikes unlocked</span>
       </div>
     </div>
   )
