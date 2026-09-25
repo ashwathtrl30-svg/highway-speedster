@@ -119,21 +119,46 @@ function RoadsideTree({ position }: { position: [number, number, number] }) {
   const scale = 0.8 + Math.random() * 0.6
   return (
     <group position={position} scale={scale}>
-      <mesh position={[0, 1.8, 0]}>
-        <cylinderGeometry args={[0.12, 0.18, 3.6, 5]} />
-        <meshStandardMaterial color="#4a3728" />
+      {/* Trunk - tapered cylinder */}
+      <mesh position={[0, 1.5, 0]}>
+        <cylinderGeometry args={[0.08, 0.2, 3, 6]} />
+        <meshStandardMaterial color="#3e2723" roughness={0.9} />
       </mesh>
-      <mesh position={[0, 4, 0]}>
-        <sphereGeometry args={[1.4, 6, 5]} />
-        <meshStandardMaterial color="#1b5e20" />
+      
+      {/* Main foliage cluster - bottom layer */}
+      <mesh position={[0, 3.2, 0]}>
+        <sphereGeometry args={[1.3, 8, 6]} />
+        <meshStandardMaterial color="#2e7d32" roughness={0.8} />
       </mesh>
-      <mesh position={[0.4, 4.5, 0.3]}>
-        <sphereGeometry args={[0.9, 5, 4]} />
-        <meshStandardMaterial color="#2e7d32" />
+      
+      {/* Middle foliage */}
+      <mesh position={[0.5, 3.8, 0.3]}>
+        <sphereGeometry args={[1.0, 7, 5]} />
+        <meshStandardMaterial color="#388e3c" roughness={0.8} />
       </mesh>
-      <mesh position={[-0.3, 3.5, -0.2]}>
-        <sphereGeometry args={[0.7, 5, 4]} />
-        <meshStandardMaterial color="#388e3c" />
+      <mesh position={[-0.4, 3.6, -0.3]}>
+        <sphereGeometry args={[0.9, 7, 5]} />
+        <meshStandardMaterial color="#1b5e20" roughness={0.8} />
+      </mesh>
+      
+      {/* Top foliage */}
+      <mesh position={[0.2, 4.5, 0.1]}>
+        <sphereGeometry args={[0.8, 6, 5]} />
+        <meshStandardMaterial color="#43a047" roughness={0.8} />
+      </mesh>
+      <mesh position={[-0.3, 4.3, 0.2]}>
+        <sphereGeometry args={[0.7, 6, 5]} />
+        <meshStandardMaterial color="#2e7d32" roughness={0.8} />
+      </mesh>
+      
+      {/* Small detail clusters */}
+      <mesh position={[0.7, 3.3, -0.2]}>
+        <sphereGeometry args={[0.5, 5, 4]} />
+        <meshStandardMaterial color="#388e3c" roughness={0.8} />
+      </mesh>
+      <mesh position={[-0.6, 4.0, 0.4]}>
+        <sphereGeometry args={[0.4, 5, 4]} />
+        <meshStandardMaterial color="#43a047" roughness={0.8} />
       </mesh>
     </group>
   )
@@ -162,13 +187,24 @@ function RoadsidePole({ position }: { position: [number, number, number] }) {
 function RoadsideBush({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
-      <mesh position={[0, 0.4, 0]}>
-        <sphereGeometry args={[0.6, 5, 4]} />
-        <meshStandardMaterial color="#33691e" />
+      {/* Main bush body */}
+      <mesh position={[0, 0.35, 0]}>
+        <sphereGeometry args={[0.55, 6, 5]} />
+        <meshStandardMaterial color="#2e7d32" roughness={0.9} />
       </mesh>
+      
+      {/* Bush detail clusters */}
       <mesh position={[0.3, 0.3, 0.2]}>
-        <sphereGeometry args={[0.4, 4, 3]} />
-        <meshStandardMaterial color="#558b2f" />
+        <sphereGeometry args={[0.4, 5, 4]} />
+        <meshStandardMaterial color="#388e3c" roughness={0.9} />
+      </mesh>
+      <mesh position={[-0.25, 0.28, -0.15]}>
+        <sphereGeometry args={[0.35, 5, 4]} />
+        <meshStandardMaterial color="#1b5e20" roughness={0.9} />
+      </mesh>
+      <mesh position={[0.1, 0.45, 0.1]}>
+        <sphereGeometry args={[0.3, 5, 4]} />
+        <meshStandardMaterial color="#43a047" roughness={0.9} />
       </mesh>
     </group>
   )
@@ -782,7 +818,7 @@ export function GameScene() {
 
   return (
     <Canvas
-      camera={{ position: [0, 4, PLAYER_Z + 8], fov: 65, near: 0.1, far: 500 }}
+      camera={{ position: [0, 4, PLAYER_Z + 8], fov: 70, near: 0.1, far: 500 }}
       style={{ width: '100%', height: '100%' }}
       gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
     >
