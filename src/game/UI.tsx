@@ -66,18 +66,6 @@ export function HUD() {
             <span className="text-white">{Math.floor(state.speed)}</span>
             <span className="text-[10px] sm:text-xs text-gray-500 ml-0.5">km/h</span>
           </div>
-          {/* Speed bar */}
-          <div className="w-16 sm:w-20 h-1 bg-gray-800 rounded-full mt-1 overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-300"
-              style={{
-                width: `${(state.speed / state.selectedBike.maxSpeed) * 100}%`,
-                background: state.speed > state.selectedBike.maxSpeed * 0.8
-                  ? 'linear-gradient(90deg, #ef4444, #f97316)'
-                  : 'linear-gradient(90deg, #22c55e, #3b82f6)',
-              }}
-            />
-          </div>
         </div>
       </div>
 
