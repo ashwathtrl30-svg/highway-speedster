@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useGameStore, actions, BIKES, getState } from './store'
+import { useGameStore, actions, BIKES, getState, type Bike } from './store'
 
 // ============== LOADING SCREEN ==============
 export function LoadingScreen() {
@@ -135,9 +135,9 @@ export function MainMenu() {
 
       {/* Current bike */}
       <div className="relative z-10 mb-5 sm:mb-7">
-        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center border border-white/10"
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center border border-white/10 overflow-hidden"
           style={{ background: `linear-gradient(135deg, ${state.selectedBike.color}30, ${state.selectedBike.accentColor}30)` }}>
-          <span className="text-3xl sm:text-4xl">🏍️</span>
+          <BikeIcon bike={state.selectedBike} />
         </div>
         <p className="text-center text-white font-bold mt-2 text-sm sm:text-base">
           {state.selectedBike.name}
@@ -214,14 +214,14 @@ function BikeSelection({ onBack }: { onBack: () => void }) {
               <div className="flex items-center gap-3 sm:gap-4">
                 {/* Bike icon */}
                 <div
-                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl flex items-center justify-center text-2xl sm:text-3xl shrink-0"
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
                   style={{
                     background: isUnlocked
                       ? `linear-gradient(135deg, ${bike.color}30, ${bike.accentColor}30)`
                       : 'rgba(255,255,255,0.03)',
                   }}
                 >
-                  {isUnlocked ? '🏍️' : '🔒'}
+                  {isUnlocked ? <BikeIcon bike={bike} /> : <span className="text-2xl sm:text-3xl">🔒</span>}
                 </div>
 
                 {/* Info */}
@@ -295,6 +295,93 @@ function StatBar({ label, value, color }: { label: string; value: number; color:
       </div>
     </div>
   )
+}
+
+// Bike icon component with distinct visuals for each bike
+function BikeIcon({ bike }: { bike: Bike }) {
+  if (bike.id === 'blitz') {
+    // Blitz - Modern neo-retro cruiser (sleek, clean)
+    return (
+      <svg viewBox="0 0 100 60" className="w-full h-full">
+        {/* Wheels */}
+        <circle cx="25" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
+        <circle cx="75" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
+        {/* Frame */}
+        <path d="M 25 45 L 40 30 L 60 30 L 75 45" fill="none" stroke={bike.color} strokeWidth="3"/>
+        {/* Body */}
+        <ellipse cx="50" cy="32" rx="15" ry="8" fill={bike.color}/>
+        <ellipse cx="50" cy="32" rx="12" ry="6" fill={bike.accentColor}/>
+        {/* Seat */}
+        <ellipse cx="55" cy="28" rx="8" ry="4" fill="#1a1a1a"/>
+        {/* Handlebar */}
+        <line x1="35" y1="25" x2="45" y2="20" stroke="#666" strokeWidth="2"/>
+        <circle cx="45" cy="20" r="2" fill="#888"/>
+        {/* Headlight */}
+        <circle cx="38" cy="28" r="3" fill="#ffffcc" opacity="0.8"/>
+      </svg>
+    )
+  }
+  
+  if (bike.id === 'apex') {
+    // Apex - Classic muscular cruiser (bulkier, traditional)
+    return (
+      <svg viewBox="0 0 100 60" className="w-full h-full">
+        {/* Wheels */}
+        <circle cx="22" cy="45" r="11" fill="#333" stroke="#555" strokeWidth="2"/>
+        <circle cx="78" cy="45" r="11" fill="#333" stroke="#555" strokeWidth="2"/>
+        {/* Frame - thicker */}
+        <path d="M 22 45 L 38 28 L 62 28 L 78 45" fill="none" stroke={bike.color} strokeWidth="4"/>
+        {/* Engine block - prominent */}
+        <rect x="42" y="32" width="16" height="10" fill="#2a2a2a" rx="2"/>
+        <rect x="44" y="34" width="12" height="6" fill="#444"/>
+        {/* Body - bulkier tank */}
+        <ellipse cx="50" cy="30" rx="18" ry="10" fill={bike.color}/>
+        <ellipse cx="50" cy="30" rx="15" ry="8" fill={bike.accentColor}/>
+        {/* Chrome strip */}
+        <rect x="35" y="29" width="30" height="2" fill="#ccc" opacity="0.6"/>
+        {/* Seat - wider */}
+        <ellipse cx="58" cy="26" rx="10" ry="5" fill="#1a1a1a"/>
+        {/* Handlebar - wider */}
+        <line x1="32" y1="22" x2="48" y2="18" stroke="#777" strokeWidth="2.5"/>
+        <circle cx="48" cy="18" r="2.5" fill="#999"/>
+        {/* Headlight - larger */}
+        <circle cx="35" cy="26" r="4" fill="#ffffcc" opacity="0.8"/>
+        {/* Exhaust - dual */}
+        <line x1="60" y1="38" x2="70" y2="42" stroke="#bbb" strokeWidth="2"/>
+        <line x1="58" y1="40" x2="68" y2="44" stroke="#bbb" strokeWidth="2"/>
+      </svg>
+    )
+  }
+  
+  if (bike.id === 'chronos') {
+    // Chronos - Sport bike (aerodynamic, aggressive)
+    return (
+      <svg viewBox="0 0 100 60" className="w-full h-full">
+        {/* Wheels */}
+        <circle cx="25" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
+        <circle cx="75" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
+        {/* Fairing - full body */}
+        <path d="M 30 40 L 35 25 L 50 20 L 65 25 L 70 40 Z" fill={bike.color}/>
+        <path d="M 35 38 L 38 27 L 50 23 L 62 27 L 65 38 Z" fill={bike.accentColor}/>
+        {/* Windscreen */}
+        <path d="M 40 25 L 45 18 L 55 18 L 60 25" fill="#333" opacity="0.5"/>
+        {/* Seat - low */}
+        <ellipse cx="58" cy="32" rx="8" ry="3" fill="#1a1a1a"/>
+        {/* Tail */}
+        <path d="M 65 30 L 72 35 L 70 40" fill={bike.color}/>
+        {/* Handlebar - clip-ons */}
+        <line x1="38" y1="22" x2="45" y2="20" stroke="#666" strokeWidth="1.5"/>
+        {/* Headlight - twin */}
+        <circle cx="37" cy="28" r="2.5" fill="#ffffcc" opacity="0.9"/>
+        <circle cx="42" cy="26" r="2.5" fill="#ffffcc" opacity="0.9"/>
+        {/* Exhaust - under tail */}
+        <line x1="62" y1="38" x2="68" y2="42" stroke="#aaa" strokeWidth="1.5"/>
+      </svg>
+    )
+  }
+  
+  // Default fallback
+  return <span className="text-2xl sm:text-3xl">🏍️</span>
 }
 
 // ============== PAUSE MENU ==============
