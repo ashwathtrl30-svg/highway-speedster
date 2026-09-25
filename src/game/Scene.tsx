@@ -9,7 +9,7 @@ const ROAD_WIDTH = 14
 const SEGMENT_LENGTH = 20
 const NUM_SEGMENTS = 30
 const VISIBLE_DISTANCE = 400
-const TRAFFIC_SPAWN_DISTANCE = 90
+const TRAFFIC_SPAWN_DISTANCE = 70
 const PLAYER_Z = 5
 
 // Traffic vehicle types
@@ -713,7 +713,7 @@ function Environment() {
       />
       
       {/* Fog - hides distant vehicles */}
-      <fog attach="fog" args={['#a8c8d8', 30, 110]} />
+      <fog attach="fog" args={['#a8c8d8', 20, 85]} />
     </>
   )
 }
