@@ -9,7 +9,7 @@ const ROAD_WIDTH = 14
 const SEGMENT_LENGTH = 20
 const NUM_SEGMENTS = 30
 const VISIBLE_DISTANCE = 400
-const TRAFFIC_SPAWN_DISTANCE = 300
+const TRAFFIC_SPAWN_DISTANCE = 120
 const PLAYER_Z = 5
 
 // Traffic vehicle types
@@ -405,7 +405,9 @@ function TrafficSystem() {
 
     for (let i = vehicles.length - 1; i >= 0; i--) {
       const v = vehicles[i]
-      v.z += (speed - v.speed) * clampedDelta * 0.5
+      // Vehicles always approach player (minimum approach rate ensures visibility even at low speed)
+      const approachRate = Math.max(15, speed - v.speed + 30)
+      v.z += approachRate * clampedDelta * 0.5
 
       // Remove if past player
       if (v.z > 25) {
@@ -435,17 +437,14 @@ function TrafficSystem() {
       }
     }
 
-    // Score based on distance/speed
-    actions.addScore(Math.floor(speed * clampedDelta * 0.5))
+    // Score: 180 points per second base rate (continuous)
+    actions.addScore(Math.floor(180 * clampedDelta))
     actions.setDistance(state.distance + speed * clampedDelta * 0.08)
     
-    // Gradually increase speed
-    const targetSpeed = Math.min(
-      state.selectedBike.maxSpeed,
-      40 + state.distance * 0.5
-    )
-    const newSpeed = state.speed + (targetSpeed - state.speed) * state.selectedBike.acceleration * clampedDelta * 0.3
-    actions.setSpeed(Math.max(40, newSpeed))
+    // Gradually increase speed from 0 to maxSpeed
+    const speedIncrease = state.selectedBike.acceleration * 2 * clampedDelta
+    const newSpeed = Math.min(state.selectedBike.maxSpeed, state.speed + speedIncrease)
+    actions.setSpeed(newSpeed)
 
     // Combo timer
     if (state.comboTimer > 0) {
@@ -704,8 +703,8 @@ function Environment() {
         intensity={0.4}
       />
       
-      {/* Fog */}
-      <fog attach="fog" args={['#a8c8d8', 80, 350]} />
+      {/* Fog - hides distant vehicles */}
+      <fog attach="fog" args={['#a8c8d8', 40, 140]} />
     </>
   )
 }

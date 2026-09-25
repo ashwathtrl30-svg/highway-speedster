@@ -260,7 +260,7 @@ function BikeSelection({ onBack }: { onBack: () => void }) {
                   {/* Stats */}
                   {isUnlocked && (
                     <div className="flex gap-2 sm:gap-3 mt-1.5">
-                      <StatBar label="SPD" value={bike.maxSpeed / 220} color="#ef4444" />
+                      <StatBar label="SPD" value={bike.maxSpeed / 200} color="#ef4444" />
                       <StatBar label="ACC" value={bike.acceleration / 1.6} color="#f59e0b" />
                       <StatBar label="HDL" value={bike.handling / 1.0} color="#3b82f6" />
                     </div>

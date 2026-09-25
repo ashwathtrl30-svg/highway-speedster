@@ -15,8 +15,8 @@ export interface Bike {
 
 export const BIKES: Bike[] = [
   {
-    id: 'thunderbird',
-    name: 'Thunderbird 350',
+    id: 'blitz',
+    name: 'Blitz',
     unlockScore: 0,
     maxSpeed: 120,
     acceleration: 0.8,
@@ -26,10 +26,10 @@ export const BIKES: Bike[] = [
     description: 'The classic cruiser. Balanced and reliable.',
   },
   {
-    id: 'dominar',
-    name: 'Dominar 400',
+    id: 'apex',
+    name: 'Apex',
     unlockScore: 15000,
-    maxSpeed: 160,
+    maxSpeed: 150,
     acceleration: 1.2,
     handling: 0.9,
     color: '#2c3e50',
@@ -37,10 +37,10 @@ export const BIKES: Bike[] = [
     description: 'Muscular sport-tourer. Raw power.',
   },
   {
-    id: 'hayabusa',
-    name: 'Hayabusa',
+    id: 'chronos',
+    name: 'Chronos',
     unlockScore: 50000,
-    maxSpeed: 220,
+    maxSpeed: 200,
     acceleration: 1.6,
     handling: 0.8,
     color: '#f39c12',
@@ -74,10 +74,21 @@ function loadSavedProgress(): { highScore: number; unlockedBikes: string[] } {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
-      return JSON.parse(saved)
+      const data = JSON.parse(saved)
+      // Migrate old bike IDs to new names
+      const migrate = (id: string) => {
+        if (id === 'thunderbird') return 'blitz'
+        if (id === 'dominar') return 'apex'
+        if (id === 'hayabusa') return 'chronos'
+        return id
+      }
+      return {
+        highScore: data.highScore || 0,
+        unlockedBikes: (data.unlockedBikes || ['blitz']).map(migrate),
+      }
     }
   } catch (e) { /* ignore */ }
-  return { highScore: 0, unlockedBikes: ['thunderbird'] }
+  return { highScore: 0, unlockedBikes: ['blitz'] }
 }
 
 function saveProgress(highScore: number, unlockedBikes: string[]) {
