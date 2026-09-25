@@ -9,7 +9,7 @@ const ROAD_WIDTH = 14
 const SEGMENT_LENGTH = 20
 const NUM_SEGMENTS = 30
 const VISIBLE_DISTANCE = 400
-const TRAFFIC_SPAWN_DISTANCE = 120
+const TRAFFIC_SPAWN_DISTANCE = 105
 const PLAYER_Z = 5
 
 // Traffic vehicle types
@@ -441,8 +441,8 @@ function TrafficSystem() {
     actions.addScore(Math.floor(180 * clampedDelta))
     actions.setDistance(state.distance + speed * clampedDelta * 0.08)
     
-    // Gradually increase speed from 0 to maxSpeed
-    const speedIncrease = state.selectedBike.acceleration * 2 * clampedDelta
+    // Gradually increase speed from 0 to maxSpeed (reaches max in ~15-20 seconds)
+    const speedIncrease = state.selectedBike.acceleration * 8 * clampedDelta
     const newSpeed = Math.min(state.selectedBike.maxSpeed, state.speed + speedIncrease)
     actions.setSpeed(newSpeed)
 
@@ -704,7 +704,7 @@ function Environment() {
       />
       
       {/* Fog - hides distant vehicles */}
-      <fog attach="fog" args={['#a8c8d8', 40, 140]} />
+      <fog attach="fog" args={['#a8c8d8', 40, 125]} />
     </>
   )
 }
