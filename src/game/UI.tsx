@@ -233,11 +233,12 @@ function BikeSelection({ onBack }: { onBack: () => void }) {
                     {isUnlocked ? bike.description : `Unlock at ${bike.unlockScore.toLocaleString()} pts`}
                   </p>
                   
-                  {/* Stats */}
+                  {/* Top Speed */}
                   {isUnlocked && (
-                    <div className="flex gap-2 sm:gap-3 mt-1.5">
-                      <StatBar label="SPD" value={bike.maxSpeed / 250} color="#ef4444" />
-                      <StatBar label="ACC" value={bike.acceleration / 1.6} color="#f59e0b" />
+                    <div className="mt-1.5">
+                      <p className="text-[10px] sm:text-xs text-gray-400">
+                        Top Speed: <span className="text-white font-semibold">{bike.maxSpeed} kmph</span>
+                      </p>
                     </div>
                   )}
 
