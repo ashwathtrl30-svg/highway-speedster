@@ -79,6 +79,10 @@ export function HUD() {
           </div>
         </div>
       )}
+
+
+
+
     </div>
   )
 }
@@ -150,6 +154,8 @@ export function MainMenu() {
           🏍️ GARAGE
         </button>
       </div>
+
+
     </div>
   )
 }
@@ -489,34 +495,44 @@ export function TouchControls() {
     if (state.gameState !== 'playing') return
 
     const handleOrientation = (e: DeviceOrientationEvent) => {
+      // gamma is the left-right tilt (-90 to 90)
       const gamma = e.gamma || 0
       
+      // Only change lane when tilt crosses threshold
       const now = Date.now()
-      if (now - lastLaneChangeRef.current < 300) return
+      if (now - lastLaneChangeRef.current < 300) return // debounce
       
       const currentLane = getState().targetLane
       
       if (gamma < -15 && currentLane > -1) {
+        // Tilted left
         if (lastTiltLaneRef.current !== -1) {
           lastTiltLaneRef.current = -1
           lastLaneChangeRef.current = now
           actions.setTargetLane(currentLane - 1)
         }
       } else if (gamma > 15 && currentLane < 1) {
+        // Tilted right
         if (lastTiltLaneRef.current !== 1) {
           lastTiltLaneRef.current = 1
           lastLaneChangeRef.current = now
           actions.setTargetLane(currentLane + 1)
         }
       } else if (gamma > -10 && gamma < 10) {
+        // Centered - reset
         lastTiltLaneRef.current = 0
       }
     }
 
+    // Try to enable tilt controls
     const enableTilt = async () => {
+      // iOS 13+ requires permission
       if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+        // Show prompt for iOS users
         setShowTiltPrompt(true)
       } else if ('DeviceOrientationEvent' in window) {
+        // Android and older iOS - no permission needed
+        // Test if it actually works
         const testHandler = (e: DeviceOrientationEvent) => {
           if (e.gamma !== null) {
             tiltEnabledRef.current = true
@@ -525,6 +541,7 @@ export function TouchControls() {
           }
         }
         window.addEventListener('deviceorientation', testHandler)
+        // Remove test listener after 1 second if no data
         setTimeout(() => {
           window.removeEventListener('deviceorientation', testHandler)
         }, 1000)
@@ -538,6 +555,7 @@ export function TouchControls() {
     }
   }, [state.gameState])
 
+  // Handle iOS tilt permission
   const handleEnableTilt = async () => {
     try {
       const permission = await (DeviceOrientationEvent as any).requestPermission()
@@ -545,6 +563,7 @@ export function TouchControls() {
         tiltEnabledRef.current = true
         setShowTiltPrompt(false)
         
+        // Add orientation listener
         const handleOrientation = (e: DeviceOrientationEvent) => {
           const gamma = e.gamma || 0
           const now = Date.now()
