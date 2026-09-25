@@ -28,7 +28,7 @@ export const BIKES: Bike[] = [
   {
     id: 'apex',
     name: 'Apex',
-    unlockScore: 15000,
+    unlockScore: 30000,
     maxSpeed: 200,
     acceleration: 1.2,
     handling: 0.9,
