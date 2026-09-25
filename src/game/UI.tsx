@@ -101,13 +101,7 @@ export function HUD() {
         </div>
       </div>
 
-      {/* Pause button */}
-      <button
-        className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 pointer-events-auto bg-black/60 backdrop-blur-sm rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center active:scale-90 transition-transform border border-white/10"
-        onClick={() => actions.setGameState('paused')}
-      >
-        <span className="text-white text-sm sm:text-base">⏸</span>
-      </button>
+
     </div>
   )
 }
