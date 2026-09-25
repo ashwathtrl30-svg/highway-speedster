@@ -167,7 +167,7 @@ export function MainMenu() {
           onClick={() => setShowBikes(true)}
           className="bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-600 text-white font-bold text-sm sm:text-base py-3 sm:py-3.5 rounded-xl shadow-lg shadow-purple-500/25 active:scale-95 transition-all border border-purple-400/20"
         >
-          🏍️ GARAGE ({state.unlockedBikes.length}/{BIKES.length})
+          🏍️ GARAGE
         </button>
       </div>
 
@@ -191,7 +191,6 @@ function BikeSelection({ onBack }: { onBack: () => void }) {
           ←
         </button>
         <h2 className="text-lg sm:text-xl font-bold text-white ml-3">Garage</h2>
-        <span className="ml-auto text-xs text-gray-500">{state.unlockedBikes.length}/{BIKES.length} unlocked</span>
       </div>
 
       {/* Bike list */}
@@ -277,6 +276,11 @@ function BikeSelection({ onBack }: { onBack: () => void }) {
             </div>
           )
         })}
+      </div>
+
+      {/* Unlocked count at bottom */}
+      <div className="pb-4 pt-2 text-center">
+        <span className="text-xs text-gray-500">{state.unlockedBikes.length}/{BIKES.length} unlocked</span>
       </div>
     </div>
   )
