@@ -121,7 +121,6 @@ export function MainMenu() {
 
       {/* Title */}
       <div className="relative z-10 text-center mb-6 sm:mb-10">
-        <div className="text-5xl sm:text-6xl mb-2">🏍️</div>
         <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-400 to-red-500">
           HIGHWAY
         </h1>
