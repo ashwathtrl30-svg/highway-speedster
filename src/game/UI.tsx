@@ -460,7 +460,7 @@ export function GameOverScreen() {
 
         {/* Stats card */}
         <div className="bg-white/[0.05] rounded-xl sm:rounded-2xl p-4 sm:p-5 mt-3 sm:mt-4 mb-5 sm:mb-7 border border-white/10 min-w-[240px] sm:min-w-[280px]">
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-3">
             <div>
               <p className="text-gray-500 text-[10px] uppercase tracking-wider">Score</p>
               <p className="text-white font-bold text-xl sm:text-2xl tabular-nums">{state.score.toLocaleString()}</p>
@@ -469,14 +469,10 @@ export function GameOverScreen() {
               <p className="text-gray-500 text-[10px] uppercase tracking-wider">Best</p>
               <p className="text-yellow-400 font-bold text-xl sm:text-2xl tabular-nums">{state.highScore.toLocaleString()}</p>
             </div>
-            <div>
-              <p className="text-gray-500 text-[10px] uppercase tracking-wider">Distance</p>
-              <p className="text-white font-bold text-base sm:text-lg tabular-nums">{state.distance.toFixed(1)} km</p>
-            </div>
-            <div>
-              <p className="text-gray-500 text-[10px] uppercase tracking-wider">Near Misses</p>
-              <p className="text-orange-400 font-bold text-base sm:text-lg tabular-nums">{state.nearMisses}</p>
-            </div>
+          </div>
+          <div className="text-center pt-2 border-t border-white/10">
+            <p className="text-gray-500 text-[10px] uppercase tracking-wider">Near Misses</p>
+            <p className="text-orange-400 font-bold text-xl sm:text-2xl tabular-nums">{state.nearMisses}</p>
           </div>
         </div>
 
