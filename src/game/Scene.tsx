@@ -9,7 +9,7 @@ const ROAD_WIDTH = 14
 const SEGMENT_LENGTH = 20
 const NUM_SEGMENTS = 30
 const VISIBLE_DISTANCE = 400
-const TRAFFIC_SPAWN_DISTANCE = 105
+const TRAFFIC_SPAWN_DISTANCE = 90
 const PLAYER_Z = 5
 
 // Traffic vehicle types
@@ -344,6 +344,7 @@ function TrafficSystem() {
   const vehiclesRef = useRef<TrafficVehicle[]>([])
   const nextIdRef = useRef(0)
   const spawnTimerRef = useRef(0)
+  const lastGameStateRef = useRef<string>('menu')
 
   const vehicleColors = useMemo(() => [
     '#e74c3c', '#3498db', '#27ae60', '#f39c12', '#8e44ad',
@@ -362,6 +363,14 @@ function TrafficSystem() {
 
   useFrame((_, delta) => {
     const state = getState()
+    
+    // Clear vehicles when game restarts
+    if (state.gameState === 'playing' && lastGameStateRef.current !== 'playing') {
+      vehiclesRef.current = []
+      spawnTimerRef.current = 0
+    }
+    lastGameStateRef.current = state.gameState
+    
     if (state.gameState !== 'playing') return
 
     const speed = state.speed
@@ -704,7 +713,7 @@ function Environment() {
       />
       
       {/* Fog - hides distant vehicles */}
-      <fog attach="fog" args={['#a8c8d8', 40, 125]} />
+      <fog attach="fog" args={['#a8c8d8', 30, 110]} />
     </>
   )
 }

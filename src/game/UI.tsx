@@ -92,11 +92,11 @@ export function HUD() {
         </div>
       )}
 
-      {/* Distance */}
+      {/* Speed */}
       <div className="absolute bottom-16 sm:bottom-20 left-1/2 -translate-x-1/2">
         <div className="bg-black/50 backdrop-blur-sm rounded-lg px-2.5 py-1 border border-white/5">
           <span className="text-[10px] sm:text-xs text-gray-300 font-medium tabular-nums">
-            📍 {state.distance.toFixed(1)} km
+            ⚡ {Math.floor(state.speed)} / {state.selectedBike.maxSpeed} km/h
           </span>
         </div>
       </div>
