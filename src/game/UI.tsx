@@ -127,9 +127,6 @@ export function MainMenu() {
         <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-pink-500 -mt-1 sm:-mt-2">
           SPEEDSTER
         </h1>
-        <p className="text-gray-400 text-[10px] sm:text-xs mt-2 tracking-[0.2em] uppercase font-medium">
-          Indian Highway Racer
-        </p>
       </div>
 
       {/* Current bike */}
@@ -146,7 +143,7 @@ export function MainMenu() {
       {/* High score */}
       {state.highScore > 0 && (
         <div className="relative z-10 mb-4 sm:mb-5 text-center">
-          <p className="text-gray-500 text-[10px] uppercase tracking-wider font-medium">High Score</p>
+          <p className="text-gray-500 text-[10px] uppercase tracking-wider font-medium">Your Highest Score Is Only</p>
           <p className="text-yellow-400 font-bold text-lg sm:text-xl tabular-nums">
             {state.highScore.toLocaleString()}
           </p>

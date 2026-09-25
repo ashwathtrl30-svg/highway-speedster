@@ -93,8 +93,8 @@ function Highway() {
           {/* Roadside elements */}
           {i % 3 === 0 && (
             <>
-              <RoadsideTree position={[-ROAD_WIDTH / 2 - 4 - Math.random() * 3, 0, Math.random() * 10 - 5]} />
-              <RoadsideTree position={[ROAD_WIDTH / 2 + 4 + Math.random() * 3, 0, Math.random() * 10 - 5]} />
+              <RoadsideTree position={[-ROAD_WIDTH / 2 - 4 - (i * 0.37) % 3, 0, (i * 0.73) % 10 - 5]} />
+              <RoadsideTree position={[ROAD_WIDTH / 2 + 4 + (i * 0.41) % 3, 0, (i * 0.67) % 10 - 5]} />
             </>
           )}
           {i % 4 === 0 && (
@@ -116,7 +116,7 @@ function Highway() {
 }
 
 function RoadsideTree({ position }: { position: [number, number, number] }) {
-  const scale = 0.8 + Math.random() * 0.6
+  const scale = useMemo(() => 0.8 + (position[0] * 0.13 + position[2] * 0.17) % 0.6, [position])
   return (
     <group position={position} scale={scale}>
       {/* Trunk - tapered cylinder */}
