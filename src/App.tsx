@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Analytics } from '@vercel/analytics/react'
 import { GameScene } from './game/Scene'
 import {
   HUD,
@@ -37,6 +38,7 @@ function App() {
       <GameOverScreen />
       <TouchControls />
       <UnlockNotification />
+      <Analytics />
     </div>
   )
 }
