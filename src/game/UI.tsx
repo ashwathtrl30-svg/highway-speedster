@@ -171,17 +171,7 @@ export function MainMenu() {
         </button>
       </div>
 
-      {/* Controls hint */}
-      <div className="relative z-10 mt-5 sm:mt-7 text-center px-4">
-        <p className="text-gray-500 text-[9px] sm:text-[11px] leading-relaxed">
-          <span className="hidden sm:inline">← → Arrow Keys or A/D to steer</span>
-          <span className="sm:hidden">Tap left/right side to steer</span>
-          <span className="mx-1.5">•</span>
-          Dodge traffic
-          <span className="mx-1.5">•</span>
-          Chain near-misses for combos
-        </p>
-      </div>
+
     </div>
   )
 }
