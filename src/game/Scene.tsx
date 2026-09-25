@@ -345,6 +345,7 @@ function TrafficSystem() {
   const nextIdRef = useRef(0)
   const spawnTimerRef = useRef(0)
   const lastGameStateRef = useRef<string>('menu')
+  const survivalTimeRef = useRef(0)
 
   const vehicleColors = useMemo(() => [
     '#e74c3c', '#3498db', '#27ae60', '#f39c12', '#8e44ad',
@@ -368,6 +369,7 @@ function TrafficSystem() {
     if (state.gameState === 'playing' && lastGameStateRef.current !== 'playing') {
       vehiclesRef.current = []
       spawnTimerRef.current = 0
+      survivalTimeRef.current = 0
     }
     lastGameStateRef.current = state.gameState
     
@@ -376,6 +378,12 @@ function TrafficSystem() {
     const speed = state.speed
     const playerX = state.playerX
     const clampedDelta = Math.min(delta, 0.05) // Cap delta to prevent tunneling
+
+    // Track survival time
+    survivalTimeRef.current += clampedDelta
+
+    // Calculate spawn distance: starts at 70, decreases by 2 every 20 seconds (min 30)
+    const spawnDistance = Math.max(30, TRAFFIC_SPAWN_DISTANCE - (survivalTimeRef.current / 20) * 2)
 
     // Spawn traffic
     spawnTimerRef.current -= clampedDelta
@@ -388,7 +396,7 @@ function TrafficSystem() {
       
       // Don't spawn if there's already a vehicle too close in that lane
       const tooClose = vehiclesRef.current.some(
-        v => v.lane === lane && Math.abs(v.z - (-TRAFFIC_SPAWN_DISTANCE)) < 15
+        v => v.lane === lane && Math.abs(v.z - (-spawnDistance)) < 15
       )
       
       if (!tooClose) {
@@ -400,7 +408,7 @@ function TrafficSystem() {
         vehiclesRef.current.push({
           id: nextIdRef.current++,
           lane,
-          z: -TRAFFIC_SPAWN_DISTANCE - Math.random() * 30,
+          z: -spawnDistance - Math.random() * 30,
           speed: vehicleSpeed,
           type,
           color,
