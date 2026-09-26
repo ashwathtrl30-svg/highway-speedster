@@ -427,7 +427,7 @@ function Store({ onBack }: { onBack: () => void }) {
                 disabled={state.totalCoins < 400}
                 className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-sm px-4 py-2 rounded-lg active:scale-95 transition-all shadow-lg shadow-blue-500/25"
               >
-                🪙 400
+                🪙 300
               </button>
             </div>
           </div>
@@ -446,7 +446,7 @@ function Store({ onBack }: { onBack: () => void }) {
                 disabled={state.totalCoins < 450}
                 className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-sm px-4 py-2 rounded-lg active:scale-95 transition-all shadow-lg shadow-yellow-500/25"
               >
-                🪙 450
+                🪙 350
               </button>
             </div>
           </div>
@@ -465,7 +465,7 @@ function Store({ onBack }: { onBack: () => void }) {
                 disabled={state.totalCoins < 500}
                 className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-sm px-4 py-2 rounded-lg active:scale-95 transition-all shadow-lg shadow-green-500/25"
               >
-                🪙 500
+                🪙 450
               </button>
             </div>
           </div>

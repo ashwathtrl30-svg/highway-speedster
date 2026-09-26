@@ -305,8 +305,8 @@ export const actions = {
   },
 
   buyMagnet() {
-    if (state.totalCoins >= 400) {
-      const newTotalCoins = state.totalCoins - 400
+    if (state.totalCoins >= 300) {
+      const newTotalCoins = state.totalCoins - 300
       const newInventory = { ...state.inventory, magnet: state.inventory.magnet + 1 }
       setState({ totalCoins: newTotalCoins, inventory: newInventory })
       saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory)
@@ -314,8 +314,8 @@ export const actions = {
   },
 
   buyMultiplier() {
-    if (state.totalCoins >= 450) {
-      const newTotalCoins = state.totalCoins - 450
+    if (state.totalCoins >= 350) {
+      const newTotalCoins = state.totalCoins - 350
       const newInventory = { ...state.inventory, multiplier: state.inventory.multiplier + 1 }
       setState({ totalCoins: newTotalCoins, inventory: newInventory })
       saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory)
@@ -323,8 +323,8 @@ export const actions = {
   },
 
   buyShield() {
-    if (state.totalCoins >= 500) {
-      const newTotalCoins = state.totalCoins - 500
+    if (state.totalCoins >= 450) {
+      const newTotalCoins = state.totalCoins - 450
       const newInventory = { ...state.inventory, shield: state.inventory.shield + 1 }
       setState({ totalCoins: newTotalCoins, inventory: newInventory })
       saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory)
