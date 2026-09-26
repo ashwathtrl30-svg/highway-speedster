@@ -23,6 +23,15 @@ interface TrafficVehicle {
   passed: boolean
 }
 
+// Power-up types
+interface PowerUp {
+  id: number
+  lane: number
+  z: number
+  type: 'magnet' | 'multiplier' | 'shield'
+  collected: boolean
+}
+
 // ============== HIGHWAY ==============
 function Highway() {
   const segmentsRef = useRef<THREE.Group>(null)
@@ -1060,14 +1069,22 @@ function TrafficSystem() {
       const collisionZ = v.z > PLAYER_Z - 1.8 && v.z < PLAYER_Z + 1.2
 
       if (collisionX && collisionZ && v.z > PLAYER_Z - 2) {
+        // Check if shield is active
+        if (state.shieldActive) {
+          actions.useShield()
+          // Remove the vehicle that would have caused crash
+          vehicles.splice(i, 1)
+          continue
+        }
         actions.setGameState('gameover')
         actions.setSpeed(0)
         return
       }
     }
 
-    // Score: 180 points per second base rate (continuous)
-    actions.addScore(Math.floor(180 * clampedDelta))
+    // Score: 180 points per second base rate (continuous), 2x if multiplier active
+    const scoreRate = state.multiplierActive ? 360 : 180
+    actions.addScore(Math.floor(scoreRate * clampedDelta))
     actions.setDistance(state.distance + speed * clampedDelta * 0.08)
     
     // Gradually increase speed from 0 to maxSpeed (reaches max in ~15-20 seconds)
@@ -1300,8 +1317,11 @@ function CoinSystem() {
         const coinX = coin.lane * LANE_WIDTH
         const lateralDist = Math.abs(playerX - coinX)
         const longitudinalDist = Math.abs(coin.z - PLAYER_Z)
+        
+        // Magnet extends collection range to 2 lanes
+        const collectionRange = state.magnetActive ? 7.0 : 1.0
 
-        if (lateralDist < 1.0 && longitudinalDist < 1.5) {
+        if (lateralDist < collectionRange && longitudinalDist < 1.5) {
           coin.collected = true
           actions.addCoins(1)
           actions.addScore(50)
@@ -1377,6 +1397,265 @@ function createCoinMesh(): THREE.Group {
   const glow = new THREE.Mesh(glowGeo, glowMat)
   group.add(glow)
 
+  return group
+}
+
+// ============== POWER-UP SYSTEM ==============
+function PowerUpSystem() {
+  const powerUpsRef = useRef<PowerUp[]>([])
+  const nextIdRef = useRef(0)
+  const magnetTimerRef = useRef(30)
+  const multiplierTimerRef = useRef(50)
+  const shieldTimerRef = useRef(70)
+  const meshCacheRef = useRef<Map<number, THREE.Group>>(new Map())
+  const groupRef = useRef<THREE.Group>(null)
+  const lastGameStateRef = useRef<string>('menu')
+
+  useFrame((_, delta) => {
+    const state = getState()
+    
+    // Clear power-ups when game restarts
+    if (state.gameState === 'playing' && lastGameStateRef.current !== 'playing') {
+      powerUpsRef.current = []
+      magnetTimerRef.current = 30
+      multiplierTimerRef.current = 50
+      shieldTimerRef.current = 70
+    }
+    lastGameStateRef.current = state.gameState
+    
+    if (state.gameState !== 'playing') return
+
+    const speed = state.speed
+    const playerX = state.playerX
+    const clampedDelta = Math.min(delta, 0.05)
+
+    // Tick power-up timers
+    actions.tickPowerUps(clampedDelta)
+
+    // Spawn magnet every 30 seconds
+    magnetTimerRef.current -= clampedDelta
+    if (magnetTimerRef.current <= 0) {
+      magnetTimerRef.current = 30
+      const lane = Math.floor(Math.random() * 3) - 1
+      powerUpsRef.current.push({
+        id: nextIdRef.current++,
+        lane,
+        z: -80,
+        type: 'magnet',
+        collected: false,
+      })
+    }
+
+    // Spawn multiplier every 50 seconds
+    multiplierTimerRef.current -= clampedDelta
+    if (multiplierTimerRef.current <= 0) {
+      multiplierTimerRef.current = 50
+      const lane = Math.floor(Math.random() * 3) - 1
+      powerUpsRef.current.push({
+        id: nextIdRef.current++,
+        lane,
+        z: -80,
+        type: 'multiplier',
+        collected: false,
+      })
+    }
+
+    // Spawn shield every 70 seconds
+    shieldTimerRef.current -= clampedDelta
+    if (shieldTimerRef.current <= 0) {
+      shieldTimerRef.current = 70
+      const lane = Math.floor(Math.random() * 3) - 1
+      powerUpsRef.current.push({
+        id: nextIdRef.current++,
+        lane,
+        z: -80,
+        type: 'shield',
+        collected: false,
+      })
+    }
+
+    // Update power-ups
+    const powerUps = powerUpsRef.current
+    for (let i = powerUps.length - 1; i >= 0; i--) {
+      const powerUp = powerUps[i]
+      powerUp.z += (speed + 20) * clampedDelta * 0.5
+
+      // Remove if past player
+      if (powerUp.z > 20) {
+        powerUps.splice(i, 1)
+        continue
+      }
+
+      // Collection detection
+      if (!powerUp.collected) {
+        const powerUpX = powerUp.lane * LANE_WIDTH
+        const lateralDist = Math.abs(playerX - powerUpX)
+        const longitudinalDist = Math.abs(powerUp.z - PLAYER_Z)
+
+        if (lateralDist < 1.0 && longitudinalDist < 1.5) {
+          powerUp.collected = true
+          
+          // Activate power-up
+          if (powerUp.type === 'magnet') {
+            actions.activateMagnet()
+          } else if (powerUp.type === 'multiplier') {
+            actions.activateMultiplier()
+          } else if (powerUp.type === 'shield') {
+            actions.activateShield()
+          }
+        }
+      }
+    }
+
+    // Update meshes
+    if (!groupRef.current) return
+    const existingIds = new Set<number>()
+    
+    powerUps.forEach((powerUp) => {
+      if (powerUp.collected) return
+      existingIds.add(powerUp.id)
+      
+      let mesh = meshCacheRef.current.get(powerUp.id)
+      if (!mesh) {
+        mesh = createPowerUpMesh(powerUp.type)
+        meshCacheRef.current.set(powerUp.id, mesh)
+        groupRef.current!.add(mesh)
+      }
+      
+      mesh.position.set(powerUp.lane * LANE_WIDTH, 1.5, powerUp.z)
+      mesh.rotation.y += clampedDelta * 2
+    })
+
+    // Remove collected/old meshes
+    meshCacheRef.current.forEach((mesh, id) => {
+      if (!existingIds.has(id)) {
+        groupRef.current!.remove(mesh)
+        meshCacheRef.current.delete(id)
+      }
+    })
+  })
+
+  return <group ref={groupRef} />
+}
+
+function createPowerUpMesh(type: 'magnet' | 'multiplier' | 'shield'): THREE.Group {
+  const group = new THREE.Group()
+  
+  if (type === 'magnet') {
+    // Blue horseshoe magnet
+    const magnetGeo = new THREE.TorusGeometry(0.4, 0.12, 8, 16, Math.PI)
+    const magnetMat = new THREE.MeshStandardMaterial({ 
+      color: '#3b82f6', 
+      metalness: 0.7, 
+      roughness: 0.3,
+      emissive: '#1e40af',
+      emissiveIntensity: 0.5,
+    })
+    const magnet = new THREE.Mesh(magnetGeo, magnetMat)
+    magnet.rotation.x = Math.PI / 2
+    group.add(magnet)
+    
+    // Red tips
+    const tipGeo = new THREE.BoxGeometry(0.15, 0.25, 0.15)
+    const tipMat = new THREE.MeshStandardMaterial({ 
+      color: '#ef4444', 
+      metalness: 0.6, 
+      roughness: 0.4,
+      emissive: '#dc2626',
+      emissiveIntensity: 0.3,
+    })
+    const tip1 = new THREE.Mesh(tipGeo, tipMat)
+    tip1.position.set(-0.4, 0, 0)
+    group.add(tip1)
+    const tip2 = new THREE.Mesh(tipGeo, tipMat)
+    tip2.position.set(0.4, 0, 0)
+    group.add(tip2)
+    
+    // Glow
+    const glowGeo = new THREE.SphereGeometry(0.5, 8, 8)
+    const glowMat = new THREE.MeshBasicMaterial({ 
+      color: '#3b82f6', 
+      transparent: true, 
+      opacity: 0.2,
+    })
+    const glow = new THREE.Mesh(glowGeo, glowMat)
+    group.add(glow)
+  }
+  
+  else if (type === 'multiplier') {
+    // Gold "2x" symbol
+    const ringGeo = new THREE.TorusGeometry(0.4, 0.08, 8, 16)
+    const ringMat = new THREE.MeshStandardMaterial({ 
+      color: '#fbbf24', 
+      metalness: 0.9, 
+      roughness: 0.1,
+      emissive: '#f59e0b',
+      emissiveIntensity: 0.6,
+    })
+    const ring = new THREE.Mesh(ringGeo, ringMat)
+    group.add(ring)
+    
+    // Inner star
+    const starGeo = new THREE.OctahedronGeometry(0.25, 0)
+    const starMat = new THREE.MeshStandardMaterial({ 
+      color: '#fcd34d', 
+      metalness: 0.8, 
+      roughness: 0.2,
+      emissive: '#fbbf24',
+      emissiveIntensity: 0.5,
+    })
+    const star = new THREE.Mesh(starGeo, starMat)
+    group.add(star)
+    
+    // Glow
+    const glowGeo = new THREE.SphereGeometry(0.5, 8, 8)
+    const glowMat = new THREE.MeshBasicMaterial({ 
+      color: '#fbbf24', 
+      transparent: true, 
+      opacity: 0.25,
+    })
+    const glow = new THREE.Mesh(glowGeo, glowMat)
+    group.add(glow)
+  }
+  
+  else if (type === 'shield') {
+    // Green shield
+    const shieldGeo = new THREE.SphereGeometry(0.4, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2)
+    const shieldMat = new THREE.MeshStandardMaterial({ 
+      color: '#10b981', 
+      metalness: 0.6, 
+      roughness: 0.3,
+      emissive: '#059669',
+      emissiveIntensity: 0.5,
+      side: THREE.DoubleSide,
+    })
+    const shield = new THREE.Mesh(shieldGeo, shieldMat)
+    group.add(shield)
+    
+    // Shield base
+    const baseGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.1, 16)
+    const baseMat = new THREE.MeshStandardMaterial({ 
+      color: '#059669', 
+      metalness: 0.7, 
+      roughness: 0.3,
+      emissive: '#047857',
+      emissiveIntensity: 0.4,
+    })
+    const base = new THREE.Mesh(baseGeo, baseMat)
+    base.position.y = -0.05
+    group.add(base)
+    
+    // Glow
+    const glowGeo = new THREE.SphereGeometry(0.5, 8, 8)
+    const glowMat = new THREE.MeshBasicMaterial({ 
+      color: '#10b981', 
+      transparent: true, 
+      opacity: 0.2,
+    })
+    const glow = new THREE.Mesh(glowGeo, glowMat)
+    group.add(glow)
+  }
+  
   return group
 }
 
@@ -1547,6 +1826,7 @@ export function GameScene() {
       <Motorcycle bike={selectedBike} />
       <TrafficSystem />
       <CoinSystem />
+      <PowerUpSystem />
       <SpeedLines />
       <GameCamera />
     </Canvas>

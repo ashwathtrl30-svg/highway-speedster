@@ -109,6 +109,11 @@ export interface GameData {
   targetLane: number
   playerX: number
   newUnlock: string | null
+  magnetActive: boolean
+  magnetTimer: number
+  multiplierActive: boolean
+  multiplierTimer: number
+  shieldActive: boolean
 }
 
 const STORAGE_KEY = 'highway-speedster-progress'
@@ -168,6 +173,11 @@ let state: GameData = {
   targetLane: 0,
   playerX: 0,
   newUnlock: null,
+  magnetActive: false,
+  magnetTimer: 0,
+  multiplierActive: false,
+  multiplierTimer: 0,
+  shieldActive: false,
 }
 
 const listeners: Set<Listener> = new Set()
@@ -295,6 +305,50 @@ export const actions = {
   },
 
   clearNewUnlock() { setState({ newUnlock: null }) },
+
+  activateMagnet() {
+    setState({ magnetActive: true, magnetTimer: 10 })
+  },
+
+  activateMultiplier() {
+    setState({ multiplierActive: true, multiplierTimer: 15 })
+  },
+
+  activateShield() {
+    setState({ shieldActive: true })
+  },
+
+  useShield() {
+    setState({ shieldActive: false })
+  },
+
+  tickPowerUps(delta: number) {
+    const updates: Partial<GameData> = {}
+    
+    if (state.magnetActive) {
+      const newTimer = state.magnetTimer - delta
+      if (newTimer <= 0) {
+        updates.magnetActive = false
+        updates.magnetTimer = 0
+      } else {
+        updates.magnetTimer = newTimer
+      }
+    }
+    
+    if (state.multiplierActive) {
+      const newTimer = state.multiplierTimer - delta
+      if (newTimer <= 0) {
+        updates.multiplierActive = false
+        updates.multiplierTimer = 0
+      } else {
+        updates.multiplierTimer = newTimer
+      }
+    }
+    
+    if (Object.keys(updates).length > 0) {
+      setState(updates)
+    }
+  },
 }
 
 // React hook

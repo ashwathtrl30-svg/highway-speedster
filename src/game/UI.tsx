@@ -86,6 +86,31 @@ export function HUD() {
         </div>
       )}
 
+      {/* Active Power-ups */}
+      <div className="absolute top-28 sm:top-36 left-1/2 -translate-x-1/2 flex gap-2">
+        {state.magnetActive && (
+          <div className="bg-blue-500/90 backdrop-blur-sm rounded-full px-3 py-1 shadow-lg shadow-blue-500/40 border border-blue-400/30 animate-pulse">
+            <span className="text-white font-bold text-xs sm:text-sm">
+              🧲 {Math.ceil(state.magnetTimer)}s
+            </span>
+          </div>
+        )}
+        {state.multiplierActive && (
+          <div className="bg-yellow-500/90 backdrop-blur-sm rounded-full px-3 py-1 shadow-lg shadow-yellow-500/40 border border-yellow-400/30 animate-pulse">
+            <span className="text-white font-bold text-xs sm:text-sm">
+              ⭐ 2× {Math.ceil(state.multiplierTimer)}s
+            </span>
+          </div>
+        )}
+        {state.shieldActive && (
+          <div className="bg-green-500/90 backdrop-blur-sm rounded-full px-3 py-1 shadow-lg shadow-green-500/40 border border-green-400/30">
+            <span className="text-white font-bold text-xs sm:text-sm">
+              🛡️ Active
+            </span>
+          </div>
+        )}
+      </div>
+
 
 
 
