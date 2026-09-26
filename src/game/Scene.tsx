@@ -9,7 +9,7 @@ const ROAD_WIDTH = 14
 const SEGMENT_LENGTH = 20
 const NUM_SEGMENTS = 30
 const VISIBLE_DISTANCE = 400
-const TRAFFIC_SPAWN_DISTANCE = 70
+const TRAFFIC_SPAWN_DISTANCE = 65
 const PLAYER_Z = 5
 
 // Traffic vehicle types
@@ -994,8 +994,8 @@ function TrafficSystem() {
     // Track survival time
     survivalTimeRef.current += clampedDelta
 
-    // Calculate spawn distance: starts at 70, decreases by 2 every 20 seconds (min 30)
-    const spawnDistance = Math.max(30, TRAFFIC_SPAWN_DISTANCE - (survivalTimeRef.current / 20) * 2)
+    // Calculate spawn distance: starts at 65, decreases by 2.5 every 20 seconds (min 30)
+    const spawnDistance = Math.max(30, TRAFFIC_SPAWN_DISTANCE - (survivalTimeRef.current / 20) * 2.5)
 
     // Spawn traffic
     spawnTimerRef.current -= clampedDelta
