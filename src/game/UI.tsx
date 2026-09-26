@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useGameStore, actions, BIKES, getState, type Bike } from './store'
+import { useGameStore, actions, BIKES, BIKE_SKINS, getState, type Bike, type BikeSkin } from './store'
 
 // ============== LOADING SCREEN ==============
 export function LoadingScreen() {
@@ -51,11 +51,17 @@ export function HUD() {
     <div className="absolute inset-0 pointer-events-none select-none">
       {/* Top bar */}
       <div className="absolute top-0 left-0 right-0 flex justify-between items-start p-2.5 sm:p-4">
-        {/* Score */}
-        <div className="bg-black/70 backdrop-blur-sm rounded-xl px-2.5 py-1.5 sm:px-4 sm:py-2.5 border border-white/5">
-          <div className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wider font-medium">Score</div>
-          <div className="text-base sm:text-2xl font-bold text-white tabular-nums leading-tight">
-            {state.score.toLocaleString()}
+        {/* Score & Coins */}
+        <div className="flex flex-col gap-1.5">
+          <div className="bg-black/70 backdrop-blur-sm rounded-xl px-2.5 py-1.5 sm:px-4 sm:py-2.5 border border-white/5">
+            <div className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wider font-medium">Score</div>
+            <div className="text-base sm:text-2xl font-bold text-white tabular-nums leading-tight">
+              {state.score.toLocaleString()}
+            </div>
+          </div>
+          <div className="bg-black/70 backdrop-blur-sm rounded-xl px-2.5 py-1 sm:px-3 sm:py-1.5 border border-yellow-500/20 flex items-center gap-1.5">
+            <span className="text-sm sm:text-base">🪙</span>
+            <span className="text-sm sm:text-lg font-bold text-yellow-400 tabular-nums">{state.coins}</span>
           </div>
         </div>
 
@@ -160,6 +166,40 @@ export function MainMenu() {
   )
 }
 
+// ============== SKIN SELECTOR ==============
+function SkinSelector({ bikeId }: { bikeId: string }) {
+  const state = useGameStore()
+  const availableSkins = BIKE_SKINS[bikeId] || []
+  const currentSkin = state.bikeSkins[bikeId] || 'black'
+
+  const skinDisplayColors: Record<string, string> = {
+    black: '#1a1a1a',
+    blue: '#1e40af',
+    red: '#991b1b',
+    silver: '#9ca3af',
+    gold: '#ffd700',
+  }
+
+  return (
+    <div className="mt-1.5 flex items-center gap-1">
+      {availableSkins.map((skin: BikeSkin) => {
+        const isActive = currentSkin === skin
+        return (
+          <button
+            key={skin}
+            onClick={() => actions.selectSkin(bikeId, skin)}
+            className={`w-5 h-5 sm:w-6 sm:h-6 rounded-md border-2 transition-all active:scale-90 ${
+              isActive ? 'border-white scale-110' : 'border-gray-600 hover:border-gray-400'
+            }`}
+            style={{ backgroundColor: skinDisplayColors[skin] }}
+            title={skin.charAt(0).toUpperCase() + skin.slice(1)}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
 // ============== BIKE SELECTION ==============
 function BikeSelection({ onBack }: { onBack: () => void }) {
   const state = useGameStore()
@@ -224,6 +264,11 @@ function BikeSelection({ onBack }: { onBack: () => void }) {
                         Top Speed: <span className="text-white font-semibold">{bike.maxSpeed} kmph</span>
                       </p>
                     </div>
+                  )}
+
+                  {/* Skin Selection */}
+                  {isUnlocked && (
+                    <SkinSelector bikeId={bike.id} />
                   )}
 
                   {/* Unlock progress */}
@@ -364,6 +409,69 @@ function BikeIcon({ bike }: { bike: Bike }) {
     )
   }
   
+  if (bike.id === 'stratos') {
+    // Stratos - High-performance sport bike (sleek, aggressive)
+    return (
+      <svg viewBox="0 0 100 60" className="w-full h-full">
+        {/* Wheels */}
+        <circle cx="23" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
+        <circle cx="77" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
+        {/* Full fairing - aggressive angle */}
+        <path d="M 25 42 L 30 22 L 48 16 L 68 22 L 75 42 Z" fill={bike.color}/>
+        <path d="M 32 40 L 35 25 L 48 20 L 63 25 L 68 40 Z" fill={bike.accentColor}/>
+        {/* Windscreen - sharper */}
+        <path d="M 36 22 L 42 14 L 54 14 L 58 22" fill="#222" opacity="0.6"/>
+        {/* Seat - very low */}
+        <ellipse cx="60" cy="30" rx="9" ry="2.5" fill="#1a1a1a"/>
+        {/* Tail - sharp */}
+        <path d="M 68 28 L 78 32 L 75 40" fill={bike.color}/>
+        {/* Handlebar - very low clip-ons */}
+        <line x1="35" y1="20" x2="44" y2="17" stroke="#555" strokeWidth="1.5"/>
+        {/* Headlight - aggressive single */}
+        <path d="M 33 26 L 38 24 L 38 28 Z" fill="#ffffcc" opacity="0.9"/>
+        {/* Exhaust - side */}
+        <line x1="65" y1="36" x2="73" y2="40" stroke="#999" strokeWidth="2"/>
+        {/* Racing stripe */}
+        <line x1="40" y1="30" x2="60" y2="30" stroke={bike.accentColor} strokeWidth="1.5" opacity="0.7"/>
+      </svg>
+    )
+  }
+  
+  if (bike.id === 'zenith') {
+    // Zenith - Ultimate hyperbike (extreme, futuristic)
+    return (
+      <svg viewBox="0 0 100 60" className="w-full h-full">
+        {/* Wheels */}
+        <circle cx="22" cy="45" r="10" fill="#222" stroke="#444" strokeWidth="1.5"/>
+        <circle cx="78" cy="45" r="10" fill="#222" stroke="#444" strokeWidth="1.5"/>
+        {/* Wheel spokes */}
+        <line x1="22" y1="38" x2="22" y2="52" stroke="#555" strokeWidth="0.5"/>
+        <line x1="15" y1="45" x2="29" y2="45" stroke="#555" strokeWidth="0.5"/>
+        <line x1="78" y1="38" x2="78" y2="52" stroke="#555" strokeWidth="0.5"/>
+        <line x1="71" y1="45" x2="85" y2="45" stroke="#555" strokeWidth="0.5"/>
+        {/* Full fairing - extreme angle */}
+        <path d="M 22 43 L 28 18 L 46 12 L 70 18 L 78 43 Z" fill={bike.color}/>
+        <path d="M 30 41 L 33 22 L 46 16 L 64 22 L 70 41 Z" fill={bike.accentColor}/>
+        {/* Windscreen - very sharp */}
+        <path d="M 34 18 L 40 10 L 52 10 L 56 18" fill="#111" opacity="0.7"/>
+        {/* Seat - ultra low */}
+        <ellipse cx="62" cy="28" rx="10" ry="2" fill="#0a0a0a"/>
+        {/* Tail - extreme */}
+        <path d="M 70 25 L 82 28 L 78 40" fill={bike.color}/>
+        {/* Handlebar - ultra low */}
+        <line x1="33" y1="16" x2="42" y2="13" stroke="#444" strokeWidth="1.5"/>
+        {/* Headlight - LED strip */}
+        <rect x="30" y="22" width="8" height="2" rx="1" fill="#ffffcc" opacity="0.9"/>
+        {/* Exhaust - dual under tail */}
+        <line x1="68" y1="34" x2="76" y2="38" stroke="#888" strokeWidth="1.5"/>
+        <line x1="66" y1="36" x2="74" y2="40" stroke="#888" strokeWidth="1.5"/>
+        {/* Racing stripes */}
+        <line x1="38" y1="28" x2="62" y2="28" stroke={bike.accentColor} strokeWidth="1" opacity="0.8"/>
+        <line x1="40" y1="32" x2="60" y2="32" stroke={bike.accentColor} strokeWidth="1" opacity="0.5"/>
+      </svg>
+    )
+  }
+  
   // Default fallback
   return <span className="text-2xl sm:text-3xl">🏍️</span>
 }
@@ -458,6 +566,10 @@ export function GameOverScreen() {
           <div className="text-center pt-2 border-t border-white/10">
             <p className="text-gray-500 text-[10px] uppercase tracking-wider">Near Misses</p>
             <p className="text-orange-400 font-bold text-xl sm:text-2xl tabular-nums">{state.nearMisses}</p>
+          </div>
+          <div className="text-center pt-2 mt-2 border-t border-white/10">
+            <p className="text-gray-500 text-[10px] uppercase tracking-wider">Coins Collected</p>
+            <p className="text-yellow-400 font-bold text-xl sm:text-2xl tabular-nums">🪙 {state.coins}</p>
           </div>
         </div>
 

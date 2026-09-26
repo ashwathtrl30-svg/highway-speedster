@@ -254,6 +254,10 @@ function Motorcycle({ bike }: { bike: Bike }) {
         return <ApexBike bike={bike} />
       case 'chronos':
         return <ChronosBike bike={bike} />
+      case 'stratos':
+        return <StratosBike bike={bike} />
+      case 'zenith':
+        return <ZenithBike bike={bike} />
       default:
         return <BlitzBike bike={bike} />
     }
@@ -675,6 +679,278 @@ function ChronosBike({ bike }: { bike: Bike }) {
   )
 }
 
+// ============== STRATOS BIKE (High-Performance Sport) ==============
+function StratosBike({ bike }: { bike: Bike }) {
+  return (
+    <>
+      {/* Full fairing - sleek, aggressive */}
+      <mesh position={[0, 0.52, -0.15]}>
+        <boxGeometry args={[0.48, 0.48, 1.85]} />
+        <meshStandardMaterial color={bike.color} metalness={0.8} roughness={0.18} />
+      </mesh>
+      
+      {/* Front fairing - very aggressive angle */}
+      <mesh position={[0, 0.62, -0.88]} rotation={[0.35, 0, 0]}>
+        <boxGeometry args={[0.46, 0.42, 0.52]} />
+        <meshStandardMaterial color={bike.accentColor} metalness={0.85} roughness={0.12} />
+      </mesh>
+      
+      {/* Windscreen - sharper */}
+      <mesh position={[0, 0.82, -0.78]} rotation={[0.45, 0, 0]}>
+        <boxGeometry args={[0.32, 0.22, 0.025]} />
+        <meshStandardMaterial color="#222222" metalness={0.4} roughness={0.3} transparent opacity={0.75} />
+      </mesh>
+      
+      {/* Engine block */}
+      <mesh position={[0, 0.3, 0.08]}>
+        <boxGeometry args={[0.4, 0.22, 0.52]} />
+        <meshStandardMaterial color="#1a1a1a" metalness={0.9} roughness={0.2} />
+      </mesh>
+      
+      {/* Tail section - very slim */}
+      <mesh position={[0, 0.6, 0.62]}>
+        <boxGeometry args={[0.32, 0.18, 0.58]} />
+        <meshStandardMaterial color={bike.color} metalness={0.8} roughness={0.18} />
+      </mesh>
+      
+      {/* Seat - ultra low */}
+      <mesh position={[0, 0.68, 0.32]}>
+        <boxGeometry args={[0.28, 0.06, 0.52]} />
+        <meshStandardMaterial color="#0a0a0a" roughness={0.95} />
+      </mesh>
+
+      {/* Front fork - inverted, thick */}
+      <mesh position={[0, 0.52, -0.9]} rotation={[0.22, 0, 0]}>
+        <boxGeometry args={[0.09, 0.72, 0.09]} />
+        <meshStandardMaterial color="#999999" metalness={0.9} roughness={0.12} />
+      </mesh>
+
+      {/* Front wheel */}
+      <mesh position={[0, 0.25, -1.0]} rotation={[0, 0, Math.PI / 2]}>
+        <torusGeometry args={[0.24, 0.075, 8, 16]} />
+        <meshStandardMaterial color="#111111" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 0.25, -1.0]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.17, 0.17, 0.055, 8]} />
+        <meshStandardMaterial color="#666666" metalness={0.85} />
+      </mesh>
+      
+      {/* Rear wheel */}
+      <mesh position={[0, 0.25, 0.9]} rotation={[0, 0, Math.PI / 2]}>
+        <torusGeometry args={[0.26, 0.11, 8, 16]} />
+        <meshStandardMaterial color="#111111" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 0.25, 0.9]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.19, 0.19, 0.14, 8]} />
+        <meshStandardMaterial color="#666666" metalness={0.85} />
+      </mesh>
+
+      {/* Handlebar - very low clip-ons */}
+      <mesh position={[0, 0.85, -0.72]} rotation={[0.38, 0, 0]}>
+        <boxGeometry args={[0.52, 0.035, 0.035]} />
+        <meshStandardMaterial color="#333333" metalness={0.9} roughness={0.15} />
+      </mesh>
+
+      {/* Headlight - aggressive single LED */}
+      <mesh position={[0, 0.65, -1.1]}>
+        <boxGeometry args={[0.15, 0.06, 0.04]} />
+        <meshStandardMaterial color="#ffffff" emissive="#ffffee" emissiveIntensity={4} />
+      </mesh>
+      <pointLight position={[0, 0.65, -1.5]} intensity={0.8} distance={15} color="#ffffee" />
+
+      {/* Tail light - LED strip */}
+      <mesh position={[0, 0.55, 1.1]}>
+        <boxGeometry args={[0.18, 0.035, 0.025]} />
+        <meshStandardMaterial color="#ff0000" emissive="#ff0000" emissiveIntensity={3} />
+      </mesh>
+
+      {/* Exhaust - side-mounted */}
+      <mesh position={[0.28, 0.28, 0.55]} rotation={[0.12, 0, 0]}>
+        <cylinderGeometry args={[0.032, 0.048, 0.72, 8]} />
+        <meshStandardMaterial color="#aaaaaa" metalness={0.95} roughness={0.08} />
+      </mesh>
+
+      {/* Racing stripe */}
+      <mesh position={[0, 0.52, -0.15]}>
+        <boxGeometry args={[0.08, 0.01, 1.8]} />
+        <meshStandardMaterial color={bike.accentColor} metalness={0.7} roughness={0.2} />
+      </mesh>
+
+      {/* Rider - tucked position */}
+      <group position={[0, 0.95, 0.08]}>
+        <mesh position={[0, 0.1, -0.06]} rotation={[0.25, 0, 0]}>
+          <boxGeometry args={[0.36, 0.48, 0.26]} />
+          <meshStandardMaterial color="#1a1a1a" roughness={0.8} />
+        </mesh>
+        <mesh position={[0, 0.5, -0.16]}>
+          <sphereGeometry args={[0.15, 8, 8]} />
+          <meshStandardMaterial color={bike.accentColor} metalness={0.7} roughness={0.15} />
+        </mesh>
+        <mesh position={[0, 0.48, -0.26]}>
+          <boxGeometry args={[0.17, 0.065, 0.045]} />
+          <meshStandardMaterial color="#111111" metalness={0.9} roughness={0.1} />
+        </mesh>
+        <mesh position={[-0.24, -0.02, -0.26]} rotation={[0.75, 0, 0.15]}>
+          <boxGeometry args={[0.095, 0.36, 0.095]} />
+          <meshStandardMaterial color="#1a1a1a" />
+        </mesh>
+        <mesh position={[0.24, -0.02, -0.26]} rotation={[0.75, 0, -0.15]}>
+          <boxGeometry args={[0.095, 0.36, 0.095]} />
+          <meshStandardMaterial color="#1a1a1a" />
+        </mesh>
+        <mesh position={[-0.09, -0.34, 0.04]} rotation={[0.45, 0, 0]}>
+          <boxGeometry args={[0.1, 0.4, 0.1]} />
+          <meshStandardMaterial color="#222222" />
+        </mesh>
+        <mesh position={[0.09, -0.34, 0.04]} rotation={[0.45, 0, 0]}>
+          <boxGeometry args={[0.1, 0.4, 0.1]} />
+          <meshStandardMaterial color="#222222" />
+        </mesh>
+      </group>
+    </>
+  )
+}
+
+// ============== ZENITH BIKE (Ultimate Hyperbike) ==============
+function ZenithBike({ bike }: { bike: Bike }) {
+  return (
+    <>
+      {/* Full fairing - extreme, futuristic */}
+      <mesh position={[0, 0.5, -0.1]}>
+        <boxGeometry args={[0.5, 0.52, 1.9]} />
+        <meshStandardMaterial color={bike.color} metalness={0.85} roughness={0.15} />
+      </mesh>
+      
+      {/* Front fairing - extreme angle */}
+      <mesh position={[0, 0.6, -0.92]} rotation={[0.4, 0, 0]}>
+        <boxGeometry args={[0.48, 0.45, 0.55]} />
+        <meshStandardMaterial color={bike.accentColor} metalness={0.9} roughness={0.1} />
+      </mesh>
+      
+      {/* Windscreen - very sharp */}
+      <mesh position={[0, 0.8, -0.82]} rotation={[0.5, 0, 0]}>
+        <boxGeometry args={[0.3, 0.2, 0.02]} />
+        <meshStandardMaterial color="#111111" metalness={0.5} roughness={0.25} transparent opacity={0.8} />
+      </mesh>
+      
+      {/* Engine block - larger */}
+      <mesh position={[0, 0.28, 0.05]}>
+        <boxGeometry args={[0.44, 0.25, 0.55]} />
+        <meshStandardMaterial color="#0a0a0a" metalness={0.95} roughness={0.15} />
+      </mesh>
+      
+      {/* Tail section - extreme */}
+      <mesh position={[0, 0.58, 0.65]}>
+        <boxGeometry args={[0.3, 0.16, 0.6]} />
+        <meshStandardMaterial color={bike.color} metalness={0.85} roughness={0.15} />
+      </mesh>
+      
+      {/* Seat - ultra low, minimal */}
+      <mesh position={[0, 0.65, 0.3]}>
+        <boxGeometry args={[0.26, 0.05, 0.5]} />
+        <meshStandardMaterial color="#050505" roughness={0.95} />
+      </mesh>
+
+      {/* Front fork - inverted, very thick */}
+      <mesh position={[0, 0.5, -0.95]} rotation={[0.25, 0, 0]}>
+        <boxGeometry args={[0.1, 0.7, 0.1]} />
+        <meshStandardMaterial color="#aaaaaa" metalness={0.95} roughness={0.1} />
+      </mesh>
+
+      {/* Front wheel */}
+      <mesh position={[0, 0.25, -1.05]} rotation={[0, 0, Math.PI / 2]}>
+        <torusGeometry args={[0.24, 0.07, 8, 16]} />
+        <meshStandardMaterial color="#0a0a0a" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 0.25, -1.05]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.17, 0.17, 0.05, 8]} />
+        <meshStandardMaterial color="#777777" metalness={0.9} />
+      </mesh>
+      
+      {/* Rear wheel - widest */}
+      <mesh position={[0, 0.25, 0.95]} rotation={[0, 0, Math.PI / 2]}>
+        <torusGeometry args={[0.27, 0.13, 8, 16]} />
+        <meshStandardMaterial color="#0a0a0a" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 0.25, 0.95]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.2, 0.2, 0.16, 8]} />
+        <meshStandardMaterial color="#777777" metalness={0.9} />
+      </mesh>
+
+      {/* Handlebar - ultra low clip-ons */}
+      <mesh position={[0, 0.82, -0.75]} rotation={[0.42, 0, 0]}>
+        <boxGeometry args={[0.5, 0.03, 0.03]} />
+        <meshStandardMaterial color="#222222" metalness={0.95} roughness={0.1} />
+      </mesh>
+
+      {/* Headlight - LED strip */}
+      <mesh position={[0, 0.62, -1.15]}>
+        <boxGeometry args={[0.2, 0.04, 0.03]} />
+        <meshStandardMaterial color="#ffffff" emissive="#ffffee" emissiveIntensity={5} />
+      </mesh>
+      <pointLight position={[0, 0.62, -1.6]} intensity={1.0} distance={18} color="#ffffee" />
+
+      {/* Tail light - LED strip */}
+      <mesh position={[0, 0.52, 1.15]}>
+        <boxGeometry args={[0.16, 0.03, 0.02]} />
+        <meshStandardMaterial color="#ff0000" emissive="#ff0000" emissiveIntensity={3.5} />
+      </mesh>
+
+      {/* Exhaust - dual under tail */}
+      <mesh position={[0.22, 0.26, 0.58]} rotation={[0.15, 0, 0]}>
+        <cylinderGeometry args={[0.03, 0.045, 0.68, 8]} />
+        <meshStandardMaterial color="#999999" metalness={0.95} roughness={0.06} />
+      </mesh>
+      <mesh position={[-0.22, 0.26, 0.58]} rotation={[0.15, 0, 0]}>
+        <cylinderGeometry args={[0.03, 0.045, 0.68, 8]} />
+        <meshStandardMaterial color="#999999" metalness={0.95} roughness={0.06} />
+      </mesh>
+
+      {/* Racing stripes - dual */}
+      <mesh position={[0, 0.5, -0.1]}>
+        <boxGeometry args={[0.06, 0.008, 1.85]} />
+        <meshStandardMaterial color={bike.accentColor} metalness={0.75} roughness={0.18} />
+      </mesh>
+      <mesh position={[0, 0.48, -0.1]}>
+        <boxGeometry args={[0.04, 0.008, 1.8]} />
+        <meshStandardMaterial color={bike.accentColor} metalness={0.7} roughness={0.2} opacity={0.6} transparent />
+      </mesh>
+
+      {/* Rider - extreme tucked position */}
+      <group position={[0, 0.92, 0.05]}>
+        <mesh position={[0, 0.08, -0.08]} rotation={[0.3, 0, 0]}>
+          <boxGeometry args={[0.35, 0.46, 0.25]} />
+          <meshStandardMaterial color="#0a0a0a" roughness={0.8} />
+        </mesh>
+        <mesh position={[0, 0.48, -0.18]}>
+          <sphereGeometry args={[0.14, 8, 8]} />
+          <meshStandardMaterial color={bike.accentColor} metalness={0.75} roughness={0.12} />
+        </mesh>
+        <mesh position={[0, 0.46, -0.28]}>
+          <boxGeometry args={[0.16, 0.06, 0.04]} />
+          <meshStandardMaterial color="#050505" metalness={0.95} roughness={0.08} />
+        </mesh>
+        <mesh position={[-0.22, -0.04, -0.28]} rotation={[0.8, 0, 0.15]}>
+          <boxGeometry args={[0.09, 0.34, 0.09]} />
+          <meshStandardMaterial color="#0a0a0a" />
+        </mesh>
+        <mesh position={[0.22, -0.04, -0.28]} rotation={[0.8, 0, -0.15]}>
+          <boxGeometry args={[0.09, 0.34, 0.09]} />
+          <meshStandardMaterial color="#0a0a0a" />
+        </mesh>
+        <mesh position={[-0.08, -0.36, 0.02]} rotation={[0.5, 0, 0]}>
+          <boxGeometry args={[0.095, 0.38, 0.095]} />
+          <meshStandardMaterial color="#111111" />
+        </mesh>
+        <mesh position={[0.08, -0.36, 0.02]} rotation={[0.5, 0, 0]}>
+          <boxGeometry args={[0.095, 0.38, 0.095]} />
+          <meshStandardMaterial color="#111111" />
+        </mesh>
+      </group>
+    </>
+  )
+}
+
 // ============== TRAFFIC ==============
 function TrafficSystem() {
   const vehiclesRef = useRef<TrafficVehicle[]>([])
@@ -960,6 +1236,150 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
   return group
 }
 
+// ============== COINS ==============
+interface Coin {
+  id: number
+  lane: number
+  z: number
+  collected: boolean
+}
+
+function CoinSystem() {
+  const coinsRef = useRef<Coin[]>([])
+  const nextIdRef = useRef(0)
+  const spawnTimerRef = useRef(0)
+  const meshCacheRef = useRef<Map<number, THREE.Group>>(new Map())
+  const groupRef = useRef<THREE.Group>(null)
+  const lastGameStateRef = useRef<string>('menu')
+
+  useFrame((_, delta) => {
+    const state = getState()
+    
+    // Clear coins when game restarts
+    if (state.gameState === 'playing' && lastGameStateRef.current !== 'playing') {
+      coinsRef.current = []
+      spawnTimerRef.current = 0
+    }
+    lastGameStateRef.current = state.gameState
+    
+    if (state.gameState !== 'playing') return
+
+    const speed = state.speed
+    const playerX = state.playerX
+    const clampedDelta = Math.min(delta, 0.05)
+
+    // Spawn coins
+    spawnTimerRef.current -= clampedDelta
+    if (spawnTimerRef.current <= 0) {
+      spawnTimerRef.current = 0.8 + Math.random() * 0.5
+
+      const lane = Math.floor(Math.random() * 3) - 1
+      
+      coinsRef.current.push({
+        id: nextIdRef.current++,
+        lane,
+        z: -80 - Math.random() * 20,
+        collected: false,
+      })
+    }
+
+    // Update coins
+    const coins = coinsRef.current
+    for (let i = coins.length - 1; i >= 0; i--) {
+      const coin = coins[i]
+      coin.z += (speed + 20) * clampedDelta * 0.5
+
+      // Remove if past player
+      if (coin.z > 20) {
+        coins.splice(i, 1)
+        continue
+      }
+
+      // Collection detection
+      if (!coin.collected) {
+        const coinX = coin.lane * LANE_WIDTH
+        const lateralDist = Math.abs(playerX - coinX)
+        const longitudinalDist = Math.abs(coin.z - PLAYER_Z)
+
+        if (lateralDist < 1.0 && longitudinalDist < 1.5) {
+          coin.collected = true
+          actions.addCoins(1)
+          actions.addScore(50)
+        }
+      }
+    }
+
+    // Update meshes
+    if (!groupRef.current) return
+    const existingIds = new Set<number>()
+    
+    coins.forEach((coin) => {
+      if (coin.collected) return
+      existingIds.add(coin.id)
+      
+      let mesh = meshCacheRef.current.get(coin.id)
+      if (!mesh) {
+        mesh = createCoinMesh()
+        meshCacheRef.current.set(coin.id, mesh)
+        groupRef.current!.add(mesh)
+      }
+      
+      mesh.position.set(coin.lane * LANE_WIDTH, 1.2, coin.z)
+      mesh.rotation.y += clampedDelta * 3
+    })
+
+    // Remove collected/old meshes
+    meshCacheRef.current.forEach((mesh, id) => {
+      if (!existingIds.has(id)) {
+        groupRef.current!.remove(mesh)
+        meshCacheRef.current.delete(id)
+      }
+    })
+  })
+
+  return <group ref={groupRef} />
+}
+
+function createCoinMesh(): THREE.Group {
+  const group = new THREE.Group()
+  
+  // Coin body
+  const coinGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.08, 16)
+  const coinMat = new THREE.MeshStandardMaterial({ 
+    color: '#ffd700', 
+    metalness: 0.8, 
+    roughness: 0.2,
+    emissive: '#ffa500',
+    emissiveIntensity: 0.3,
+  })
+  const coin = new THREE.Mesh(coinGeo, coinMat)
+  coin.rotation.x = Math.PI / 2
+  group.add(coin)
+
+  // Coin inner circle
+  const innerGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.09, 16)
+  const innerMat = new THREE.MeshStandardMaterial({ 
+    color: '#ffed4a', 
+    metalness: 0.9, 
+    roughness: 0.1,
+  })
+  const inner = new THREE.Mesh(innerGeo, innerMat)
+  inner.rotation.x = Math.PI / 2
+  group.add(inner)
+
+  // Glow
+  const glowGeo = new THREE.SphereGeometry(0.4, 8, 8)
+  const glowMat = new THREE.MeshBasicMaterial({ 
+    color: '#ffd700', 
+    transparent: true, 
+    opacity: 0.15,
+  })
+  const glow = new THREE.Mesh(glowGeo, glowMat)
+  group.add(glow)
+
+  return group
+}
+
 // ============== CAMERA ==============
 function GameCamera() {
   const { camera } = useThree()
@@ -1126,6 +1546,7 @@ export function GameScene() {
       <Highway />
       <Motorcycle bike={selectedBike} />
       <TrafficSystem />
+      <CoinSystem />
       <SpeedLines />
       <GameCamera />
     </Canvas>
