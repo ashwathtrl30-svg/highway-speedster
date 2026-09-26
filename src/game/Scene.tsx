@@ -1418,8 +1418,8 @@ function PowerUpSystem() {
     if (state.gameState === 'playing' && lastGameStateRef.current !== 'playing') {
       powerUpsRef.current = []
       magnetTimerRef.current = 30
-      multiplierTimerRef.current = 50
-      shieldTimerRef.current = 70
+      multiplierTimerRef.current = 35
+      shieldTimerRef.current = 40
     }
     lastGameStateRef.current = state.gameState
     
@@ -1446,10 +1446,10 @@ function PowerUpSystem() {
       })
     }
 
-    // Spawn multiplier every 50 seconds
+    // Spawn multiplier every 35 seconds
     multiplierTimerRef.current -= clampedDelta
     if (multiplierTimerRef.current <= 0) {
-      multiplierTimerRef.current = 50
+      multiplierTimerRef.current = 35
       const lane = Math.floor(Math.random() * 3) - 1
       powerUpsRef.current.push({
         id: nextIdRef.current++,
@@ -1460,10 +1460,10 @@ function PowerUpSystem() {
       })
     }
 
-    // Spawn shield every 70 seconds
+    // Spawn shield every 40 seconds
     shieldTimerRef.current -= clampedDelta
     if (shieldTimerRef.current <= 0) {
-      shieldTimerRef.current = 70
+      shieldTimerRef.current = 40
       const lane = Math.floor(Math.random() * 3) - 1
       powerUpsRef.current.push({
         id: nextIdRef.current++,
@@ -1542,115 +1542,115 @@ function createPowerUpMesh(type: 'magnet' | 'multiplier' | 'shield'): THREE.Grou
   const group = new THREE.Group()
   
   if (type === 'magnet') {
-    // Blue horseshoe magnet
-    const magnetGeo = new THREE.TorusGeometry(0.4, 0.12, 8, 16, Math.PI)
+    // Blue horseshoe magnet - BIGGER
+    const magnetGeo = new THREE.TorusGeometry(0.6, 0.18, 8, 16, Math.PI)
     const magnetMat = new THREE.MeshStandardMaterial({ 
       color: '#3b82f6', 
       metalness: 0.7, 
       roughness: 0.3,
       emissive: '#1e40af',
-      emissiveIntensity: 0.5,
+      emissiveIntensity: 0.8,
     })
     const magnet = new THREE.Mesh(magnetGeo, magnetMat)
     magnet.rotation.x = Math.PI / 2
     group.add(magnet)
     
-    // Red tips
-    const tipGeo = new THREE.BoxGeometry(0.15, 0.25, 0.15)
+    // Red tips - BIGGER
+    const tipGeo = new THREE.BoxGeometry(0.22, 0.38, 0.22)
     const tipMat = new THREE.MeshStandardMaterial({ 
       color: '#ef4444', 
       metalness: 0.6, 
       roughness: 0.4,
       emissive: '#dc2626',
-      emissiveIntensity: 0.3,
+      emissiveIntensity: 0.6,
     })
     const tip1 = new THREE.Mesh(tipGeo, tipMat)
-    tip1.position.set(-0.4, 0, 0)
+    tip1.position.set(-0.6, 0, 0)
     group.add(tip1)
     const tip2 = new THREE.Mesh(tipGeo, tipMat)
-    tip2.position.set(0.4, 0, 0)
+    tip2.position.set(0.6, 0, 0)
     group.add(tip2)
     
-    // Glow
-    const glowGeo = new THREE.SphereGeometry(0.5, 8, 8)
+    // Glow - BIGGER
+    const glowGeo = new THREE.SphereGeometry(0.8, 8, 8)
     const glowMat = new THREE.MeshBasicMaterial({ 
       color: '#3b82f6', 
       transparent: true, 
-      opacity: 0.2,
+      opacity: 0.3,
     })
     const glow = new THREE.Mesh(glowGeo, glowMat)
     group.add(glow)
   }
   
   else if (type === 'multiplier') {
-    // Gold "2x" symbol
-    const ringGeo = new THREE.TorusGeometry(0.4, 0.08, 8, 16)
+    // Gold "2x" symbol - BIGGER
+    const ringGeo = new THREE.TorusGeometry(0.6, 0.12, 8, 16)
     const ringMat = new THREE.MeshStandardMaterial({ 
       color: '#fbbf24', 
       metalness: 0.9, 
       roughness: 0.1,
       emissive: '#f59e0b',
-      emissiveIntensity: 0.6,
+      emissiveIntensity: 0.9,
     })
     const ring = new THREE.Mesh(ringGeo, ringMat)
     group.add(ring)
     
-    // Inner star
-    const starGeo = new THREE.OctahedronGeometry(0.25, 0)
+    // Inner star - BIGGER
+    const starGeo = new THREE.OctahedronGeometry(0.38, 0)
     const starMat = new THREE.MeshStandardMaterial({ 
       color: '#fcd34d', 
       metalness: 0.8, 
       roughness: 0.2,
       emissive: '#fbbf24',
-      emissiveIntensity: 0.5,
+      emissiveIntensity: 0.8,
     })
     const star = new THREE.Mesh(starGeo, starMat)
     group.add(star)
     
-    // Glow
-    const glowGeo = new THREE.SphereGeometry(0.5, 8, 8)
+    // Glow - BIGGER
+    const glowGeo = new THREE.SphereGeometry(0.8, 8, 8)
     const glowMat = new THREE.MeshBasicMaterial({ 
       color: '#fbbf24', 
       transparent: true, 
-      opacity: 0.25,
+      opacity: 0.35,
     })
     const glow = new THREE.Mesh(glowGeo, glowMat)
     group.add(glow)
   }
   
   else if (type === 'shield') {
-    // Green shield
-    const shieldGeo = new THREE.SphereGeometry(0.4, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2)
+    // Green shield - BIGGER
+    const shieldGeo = new THREE.SphereGeometry(0.6, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2)
     const shieldMat = new THREE.MeshStandardMaterial({ 
       color: '#10b981', 
       metalness: 0.6, 
       roughness: 0.3,
       emissive: '#059669',
-      emissiveIntensity: 0.5,
+      emissiveIntensity: 0.8,
       side: THREE.DoubleSide,
     })
     const shield = new THREE.Mesh(shieldGeo, shieldMat)
     group.add(shield)
     
-    // Shield base
-    const baseGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.1, 16)
+    // Shield base - BIGGER
+    const baseGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.15, 16)
     const baseMat = new THREE.MeshStandardMaterial({ 
       color: '#059669', 
       metalness: 0.7, 
       roughness: 0.3,
       emissive: '#047857',
-      emissiveIntensity: 0.4,
+      emissiveIntensity: 0.6,
     })
     const base = new THREE.Mesh(baseGeo, baseMat)
-    base.position.y = -0.05
+    base.position.y = -0.075
     group.add(base)
     
-    // Glow
-    const glowGeo = new THREE.SphereGeometry(0.5, 8, 8)
+    // Glow - BIGGER
+    const glowGeo = new THREE.SphereGeometry(0.8, 8, 8)
     const glowMat = new THREE.MeshBasicMaterial({ 
       color: '#10b981', 
       transparent: true, 
-      opacity: 0.2,
+      opacity: 0.3,
     })
     const glow = new THREE.Mesh(glowGeo, glowMat)
     group.add(glow)

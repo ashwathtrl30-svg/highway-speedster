@@ -91,6 +91,12 @@ export const BIKES: Bike[] = [
 
 export type GameState = 'menu' | 'playing' | 'paused' | 'gameover'
 
+export interface PowerUpInventory {
+  magnet: number
+  multiplier: number
+  shield: number
+}
+
 export interface GameData {
   gameState: GameState
   score: number
@@ -104,7 +110,10 @@ export interface GameData {
   selectedSkin: BikeSkin
   unlockedBikes: string[]
   bikeSkins: Record<string, BikeSkin>
-  coins: number
+  totalCoins: number
+  runCoins: number
+  inventory: PowerUpInventory
+  selectedPowerUp: 'magnet' | 'multiplier' | 'shield' | null
   playerLane: number
   targetLane: number
   playerX: number
@@ -118,7 +127,7 @@ export interface GameData {
 
 const STORAGE_KEY = 'highway-speedster-progress'
 
-function loadSavedProgress(): { highScore: number; unlockedBikes: string[]; bikeSkins: Record<string, BikeSkin>; coins: number } {
+function loadSavedProgress(): { highScore: number; unlockedBikes: string[]; bikeSkins: Record<string, BikeSkin>; totalCoins: number; inventory: PowerUpInventory } {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
@@ -134,16 +143,17 @@ function loadSavedProgress(): { highScore: number; unlockedBikes: string[]; bike
         highScore: data.highScore || 0,
         unlockedBikes: (data.unlockedBikes || ['blitz']).map(migrate),
         bikeSkins: data.bikeSkins || { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' },
-        coins: data.coins || 0,
+        totalCoins: data.totalCoins || data.coins || 0,
+        inventory: data.inventory || { magnet: 0, multiplier: 0, shield: 0 },
       }
     }
   } catch (e) { /* ignore */ }
-  return { highScore: 0, unlockedBikes: ['blitz'], bikeSkins: { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' }, coins: 0 }
+  return { highScore: 0, unlockedBikes: ['blitz'], bikeSkins: { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' }, totalCoins: 0, inventory: { magnet: 0, multiplier: 0, shield: 0 } }
 }
 
-function saveProgress(highScore: number, unlockedBikes: string[], bikeSkins: Record<string, BikeSkin>, coins: number) {
+function saveProgress(highScore: number, unlockedBikes: string[], bikeSkins: Record<string, BikeSkin>, totalCoins: number, inventory: PowerUpInventory) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ highScore, unlockedBikes, bikeSkins, coins }))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ highScore, unlockedBikes, bikeSkins, totalCoins, inventory }))
   } catch (e) { /* ignore */ }
 }
 
@@ -168,7 +178,10 @@ let state: GameData = {
   selectedSkin: initialSkin,
   unlockedBikes: savedProgress.unlockedBikes,
   bikeSkins: savedProgress.bikeSkins,
-  coins: savedProgress.coins,
+  totalCoins: savedProgress.totalCoins,
+  runCoins: 0,
+  inventory: savedProgress.inventory,
+  selectedPowerUp: null,
   playerLane: 0,
   targetLane: 0,
   playerX: 0,
@@ -206,7 +219,10 @@ export const actions = {
     setState({ gameState })
     // Save progress when game ends
     if (gameState === 'gameover') {
-      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.coins)
+      // Add run coins to total coins
+      const newTotalCoins = state.totalCoins + state.runCoins
+      setState({ totalCoins: newTotalCoins, runCoins: 0 })
+      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, state.inventory)
     }
   },
 
@@ -225,14 +241,14 @@ export const actions = {
           unlockedBikes: newUnlocked,
           newUnlock: bike.name,
         })
-        saveProgress(newHighScore, newUnlocked, state.bikeSkins, state.coins)
+        saveProgress(newHighScore, newUnlocked, state.bikeSkins, state.totalCoins, state.inventory)
         return
       }
     }
     
     setState({ score: newScore, highScore: newHighScore })
     if (newHighScore > state.highScore) {
-      saveProgress(newHighScore, state.unlockedBikes, state.bikeSkins, state.coins)
+      saveProgress(newHighScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory)
     }
   },
 
@@ -280,13 +296,59 @@ export const actions = {
     }
     
     setState(updates)
-    saveProgress(state.highScore, state.unlockedBikes, newBikeSkins, state.coins)
+    saveProgress(state.highScore, state.unlockedBikes, newBikeSkins, state.totalCoins, state.inventory)
   },
 
   addCoins(amount: number) {
-    const newCoins = state.coins + amount
-    setState({ coins: newCoins })
-    saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newCoins)
+    const newRunCoins = state.runCoins + amount
+    setState({ runCoins: newRunCoins })
+  },
+
+  buyMagnet() {
+    if (state.totalCoins >= 400) {
+      const newTotalCoins = state.totalCoins - 400
+      const newInventory = { ...state.inventory, magnet: state.inventory.magnet + 1 }
+      setState({ totalCoins: newTotalCoins, inventory: newInventory })
+      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory)
+    }
+  },
+
+  buyMultiplier() {
+    if (state.totalCoins >= 450) {
+      const newTotalCoins = state.totalCoins - 450
+      const newInventory = { ...state.inventory, multiplier: state.inventory.multiplier + 1 }
+      setState({ totalCoins: newTotalCoins, inventory: newInventory })
+      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory)
+    }
+  },
+
+  buyShield() {
+    if (state.totalCoins >= 500) {
+      const newTotalCoins = state.totalCoins - 500
+      const newInventory = { ...state.inventory, shield: state.inventory.shield + 1 }
+      setState({ totalCoins: newTotalCoins, inventory: newInventory })
+      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory)
+    }
+  },
+
+  selectPowerUp(powerUp: 'magnet' | 'multiplier' | 'shield' | null) {
+    setState({ selectedPowerUp: powerUp })
+  },
+
+  useSelectedPowerUp() {
+    if (state.selectedPowerUp && state.inventory[state.selectedPowerUp] > 0) {
+      const newInventory = { ...state.inventory, [state.selectedPowerUp]: state.inventory[state.selectedPowerUp] - 1 }
+      
+      if (state.selectedPowerUp === 'magnet') {
+        setState({ magnetActive: true, magnetTimer: 10, inventory: newInventory })
+      } else if (state.selectedPowerUp === 'multiplier') {
+        setState({ multiplierActive: true, multiplierTimer: 15, inventory: newInventory })
+      } else if (state.selectedPowerUp === 'shield') {
+        setState({ shieldActive: true, inventory: newInventory })
+      }
+      
+      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, newInventory)
+    }
   },
 
   resetGame() {
@@ -297,10 +359,16 @@ export const actions = {
       nearMisses: 0,
       combo: 0,
       comboTimer: 0,
+      runCoins: 0,
       playerLane: 0,
       targetLane: 0,
       playerX: 0,
       newUnlock: null,
+      magnetActive: false,
+      magnetTimer: 0,
+      multiplierActive: false,
+      multiplierTimer: 0,
+      shieldActive: false,
     })
   },
 

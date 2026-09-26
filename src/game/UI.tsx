@@ -61,7 +61,7 @@ export function HUD() {
           </div>
           <div className="bg-black/70 backdrop-blur-sm rounded-xl px-2.5 py-1 sm:px-3 sm:py-1.5 border border-yellow-500/20 flex items-center gap-1.5">
             <span className="text-sm sm:text-base">🪙</span>
-            <span className="text-sm sm:text-lg font-bold text-yellow-400 tabular-nums">{state.coins}</span>
+            <span className="text-sm sm:text-lg font-bold text-yellow-400 tabular-nums">{state.runCoins}</span>
           </div>
         </div>
 
@@ -122,11 +122,24 @@ export function HUD() {
 export function MainMenu() {
   const state = useGameStore()
   const [showBikes, setShowBikes] = useState(false)
+  const [showStore, setShowStore] = useState(false)
+  const [showPowerUpSelection, setShowPowerUpSelection] = useState(false)
 
   if (state.gameState !== 'menu') return null
 
   if (showBikes) {
     return <BikeSelection onBack={() => setShowBikes(false)} />
+  }
+
+  if (showStore) {
+    return <Store onBack={() => setShowStore(false)} />
+  }
+
+  if (showPowerUpSelection) {
+    return <PowerUpSelection onBack={() => setShowPowerUpSelection(false)} onStart={() => {
+      actions.useSelectedPowerUp()
+      actions.setGameState('playing')
+    }} />
   }
 
   return (
@@ -172,7 +185,16 @@ export function MainMenu() {
       {/* Buttons */}
       <div className="relative z-10 flex flex-col gap-2.5 sm:gap-3 w-56 sm:w-64">
         <button
-          onClick={() => { actions.resetGame(); actions.setGameState('playing') }}
+          onClick={() => { 
+            actions.resetGame()
+            // Check if user has any power-ups
+            const hasPowerUps = state.inventory.magnet > 0 || state.inventory.multiplier > 0 || state.inventory.shield > 0
+            if (hasPowerUps) {
+              setShowPowerUpSelection(true)
+            } else {
+              actions.setGameState('playing')
+            }
+          }}
           className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold text-base sm:text-lg py-3 sm:py-3.5 rounded-xl shadow-lg shadow-green-500/25 active:scale-95 transition-all border border-green-400/20"
         >
           🏁 RIDE NOW
@@ -183,6 +205,13 @@ export function MainMenu() {
           className="bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-600 text-white font-bold text-sm sm:text-base py-3 sm:py-3.5 rounded-xl shadow-lg shadow-purple-500/25 active:scale-95 transition-all border border-purple-400/20"
         >
           🏍️ GARAGE
+        </button>
+
+        <button
+          onClick={() => setShowStore(true)}
+          className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white font-bold text-sm sm:text-base py-3 sm:py-3.5 rounded-xl shadow-lg shadow-yellow-500/25 active:scale-95 transition-all border border-yellow-400/20"
+        >
+          🛒 STORE
         </button>
       </div>
 
@@ -346,6 +375,204 @@ function StatBar({ label, value, color }: { label: string; value: number; color:
       <span className="text-[8px] sm:text-[9px] text-gray-500 w-5 font-medium">{label}</span>
       <div className="w-8 sm:w-10 h-1 bg-gray-800 rounded-full overflow-hidden">
         <div className="h-full rounded-full" style={{ width: `${value * 100}%`, backgroundColor: color }} />
+      </div>
+    </div>
+  )
+}
+
+// ============== STORE ==============
+function Store({ onBack }: { onBack: () => void }) {
+  const state = useGameStore()
+
+  return (
+    <div className="absolute inset-0 flex flex-col bg-gradient-to-b from-gray-900 via-gray-950 to-black overflow-y-auto">
+      {/* Header */}
+      <div className="flex items-center p-3 sm:p-4 border-b border-white/5">
+        <button
+          onClick={onBack}
+          className="text-white text-xl sm:text-2xl active:scale-90 transition-transform w-8 h-8 flex items-center justify-center rounded-lg bg-white/5"
+        >
+          ←
+        </button>
+        <h2 className="text-lg sm:text-xl font-bold text-white ml-3">Store</h2>
+      </div>
+
+      {/* Total Coins */}
+      <div className="p-4 sm:p-6 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-b border-yellow-500/20">
+        <div className="text-center">
+          <p className="text-gray-400 text-xs sm:text-sm uppercase tracking-wider mb-1">Total Coins Collected</p>
+          <p className="text-yellow-400 font-black text-3xl sm:text-4xl tabular-nums flex items-center justify-center gap-2">
+            <span className="text-4xl sm:text-5xl">🪙</span>
+            {state.totalCoins.toLocaleString()}
+          </p>
+        </div>
+      </div>
+
+      {/* Power-ups Section */}
+      <div className="flex-1 px-3 sm:px-4 py-4 sm:py-6">
+        <h3 className="text-white font-bold text-base sm:text-lg mb-4">Power-Ups</h3>
+        
+        <div className="space-y-3">
+          {/* Magnet */}
+          <div className="bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-xl p-4 border border-blue-500/30">
+            <div className="flex items-center gap-3">
+              <div className="text-4xl">🧲</div>
+              <div className="flex-1">
+                <h4 className="text-white font-bold text-base">Coin Magnet</h4>
+                <p className="text-gray-400 text-xs mt-0.5">Auto-collect coins for 10 seconds</p>
+                <p className="text-blue-400 text-xs mt-1 font-semibold">Owned: {state.inventory.magnet}</p>
+              </div>
+              <button
+                onClick={() => actions.buyMagnet()}
+                disabled={state.totalCoins < 400}
+                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-sm px-4 py-2 rounded-lg active:scale-95 transition-all shadow-lg shadow-blue-500/25"
+              >
+                🪙 400
+              </button>
+            </div>
+          </div>
+
+          {/* Multiplier */}
+          <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl p-4 border border-yellow-500/30">
+            <div className="flex items-center gap-3">
+              <div className="text-4xl">⭐</div>
+              <div className="flex-1">
+                <h4 className="text-white font-bold text-base">2× Score</h4>
+                <p className="text-gray-400 text-xs mt-0.5">Double your score for 15 seconds</p>
+                <p className="text-yellow-400 text-xs mt-1 font-semibold">Owned: {state.inventory.multiplier}</p>
+              </div>
+              <button
+                onClick={() => actions.buyMultiplier()}
+                disabled={state.totalCoins < 450}
+                className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-sm px-4 py-2 rounded-lg active:scale-95 transition-all shadow-lg shadow-yellow-500/25"
+              >
+                🪙 450
+              </button>
+            </div>
+          </div>
+
+          {/* Shield */}
+          <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-4 border border-green-500/30">
+            <div className="flex items-center gap-3">
+              <div className="text-4xl">🛡️</div>
+              <div className="flex-1">
+                <h4 className="text-white font-bold text-base">Shield</h4>
+                <p className="text-gray-400 text-xs mt-0.5">Protect from 1 crash</p>
+                <p className="text-green-400 text-xs mt-1 font-semibold">Owned: {state.inventory.shield}</p>
+              </div>
+              <button
+                onClick={() => actions.buyShield()}
+                disabled={state.totalCoins < 500}
+                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-sm px-4 py-2 rounded-lg active:scale-95 transition-all shadow-lg shadow-green-500/25"
+              >
+                🪙 500
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ============== POWER-UP SELECTION ==============
+function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: () => void }) {
+  const state = useGameStore()
+
+  const hasPowerUps = state.inventory.magnet > 0 || state.inventory.multiplier > 0 || state.inventory.shield > 0
+
+  if (!hasPowerUps) {
+    // No power-ups, just start the game
+    onStart()
+    return null
+  }
+
+  return (
+    <div className="absolute inset-0 flex flex-col bg-gradient-to-b from-indigo-950/95 via-purple-950/95 to-black/95 backdrop-blur-sm">
+      {/* Header */}
+      <div className="flex items-center p-3 sm:p-4">
+        <button
+          onClick={onBack}
+          className="text-white text-xl sm:text-2xl active:scale-90 transition-transform w-8 h-8 flex items-center justify-center rounded-lg bg-white/5"
+        >
+          ←
+        </button>
+        <h2 className="text-lg sm:text-xl font-bold text-white ml-3">Select Power-Up</h2>
+      </div>
+
+      {/* Power-ups */}
+      <div className="flex-1 px-4 sm:px-6 py-4 sm:py-6 flex flex-col justify-center">
+        <div className="space-y-3 max-w-md mx-auto w-full">
+          {/* Magnet */}
+          <div 
+            onClick={() => state.inventory.magnet > 0 && actions.selectPowerUp(state.selectedPowerUp === 'magnet' ? null : 'magnet')}
+            className={`bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-xl p-4 border-2 transition-all cursor-pointer ${
+              state.selectedPowerUp === 'magnet' ? 'border-blue-400 scale-105' : 'border-blue-500/30'
+            } ${state.inventory.magnet === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <div className="flex items-center gap-4">
+              <div className="text-5xl">🧲</div>
+              <div className="flex-1">
+                <h3 className="text-white font-black text-xl">COIN MAGNET</h3>
+                <p className="text-gray-300 text-xs mt-1">Auto-collect coins for 10s</p>
+                <p className="text-blue-400 text-sm mt-2 font-bold">Available: {state.inventory.magnet}</p>
+              </div>
+              {state.selectedPowerUp === 'magnet' && (
+                <div className="text-blue-400 text-2xl">✓</div>
+              )}
+            </div>
+          </div>
+
+          {/* Multiplier */}
+          <div 
+            onClick={() => state.inventory.multiplier > 0 && actions.selectPowerUp(state.selectedPowerUp === 'multiplier' ? null : 'multiplier')}
+            className={`bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-4 border-2 transition-all cursor-pointer ${
+              state.selectedPowerUp === 'multiplier' ? 'border-yellow-400 scale-105' : 'border-yellow-500/30'
+            } ${state.inventory.multiplier === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <div className="flex items-center gap-4">
+              <div className="text-5xl">⭐</div>
+              <div className="flex-1">
+                <h3 className="text-white font-black text-xl">2× SCORE</h3>
+                <p className="text-gray-300 text-xs mt-1">Double score for 15s</p>
+                <p className="text-yellow-400 text-sm mt-2 font-bold">Available: {state.inventory.multiplier}</p>
+              </div>
+              {state.selectedPowerUp === 'multiplier' && (
+                <div className="text-yellow-400 text-2xl">✓</div>
+              )}
+            </div>
+          </div>
+
+          {/* Shield */}
+          <div 
+            onClick={() => state.inventory.shield > 0 && actions.selectPowerUp(state.selectedPowerUp === 'shield' ? null : 'shield')}
+            className={`bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl p-4 border-2 transition-all cursor-pointer ${
+              state.selectedPowerUp === 'shield' ? 'border-green-400 scale-105' : 'border-green-500/30'
+            } ${state.inventory.shield === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <div className="flex items-center gap-4">
+              <div className="text-5xl">🛡️</div>
+              <div className="flex-1">
+                <h3 className="text-white font-black text-xl">SHIELD</h3>
+                <p className="text-gray-300 text-xs mt-1">Protect from 1 crash</p>
+                <p className="text-green-400 text-sm mt-2 font-bold">Available: {state.inventory.shield}</p>
+              </div>
+              {state.selectedPowerUp === 'shield' && (
+                <div className="text-green-400 text-2xl">✓</div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Start Button */}
+        <div className="mt-6 max-w-md mx-auto w-full">
+          <button
+            onClick={onStart}
+            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-black text-xl py-4 rounded-xl shadow-lg shadow-green-500/30 active:scale-95 transition-all border border-green-400/20"
+          >
+            🏁 START RIDE
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -594,7 +821,7 @@ export function GameOverScreen() {
           </div>
           <div className="text-center pt-2 mt-2 border-t border-white/10">
             <p className="text-gray-500 text-[10px] uppercase tracking-wider">Coins Collected</p>
-            <p className="text-yellow-400 font-bold text-xl sm:text-2xl tabular-nums">🪙 {state.coins}</p>
+            <p className="text-yellow-400 font-bold text-xl sm:text-2xl tabular-nums">🪙 {state.runCoins}</p>
           </div>
         </div>
 
