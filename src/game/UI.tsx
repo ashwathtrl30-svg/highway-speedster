@@ -106,14 +106,14 @@ export function HUD() {
         {state.multiplierActive && (
           <div className="bg-yellow-500/90 backdrop-blur-sm rounded-full px-3 py-1 shadow-lg shadow-yellow-500/40 border border-yellow-400/30 animate-pulse">
             <span className="text-white font-bold text-xs sm:text-sm">
-              ⭐ 2× {Math.ceil(state.multiplierTimer)}s
+              ⭐ {state.multiplier4x ? '4' : '2'}× {Math.ceil(state.multiplierTimer)}s
             </span>
           </div>
         )}
         {state.shieldActive && (
           <div className="bg-green-500/90 backdrop-blur-sm rounded-full px-3 py-1 shadow-lg shadow-green-500/40 border border-green-400/30">
             <span className="text-white font-bold text-xs sm:text-sm">
-              🛡️ Active
+              🛡️ {state.shieldCount} {state.shieldCount === 1 ? 'Shield' : 'Shields'}
             </span>
           </div>
         )}
@@ -196,7 +196,7 @@ export function MainMenu() {
           onClick={() => { 
             actions.resetGame()
             // Check if user has any power-ups
-            const hasPowerUps = state.inventory.magnet > 0 || state.inventory.multiplier > 0 || state.inventory.shield > 0
+            const hasPowerUps = state.inventory.magnet > 0 || state.inventory.multiplier2x > 0 || state.inventory.multiplier4x > 0 || state.inventory.shield > 0
             if (hasPowerUps) {
               setShowPowerUpSelection(true)
             } else {
@@ -421,51 +421,51 @@ function Store({ onBack }: { onBack: () => void }) {
         <h3 className="text-white font-bold text-base sm:text-lg mb-4">Power-Ups</h3>
         
         <div className="space-y-3">
-          {/* Magnet */}
-          <div className="bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-xl p-4 border border-blue-500/30">
+          {/* 2x Score - 300 coins */}
+          <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl p-4 border border-yellow-500/30">
             <div className="flex items-center gap-3">
-              <div className="text-4xl">🧲</div>
+              <div className="text-4xl">⭐</div>
               <div className="flex-1">
-                <h4 className="text-white font-bold text-base">Coin Magnet</h4>
-                <p className="text-gray-400 text-xs mt-0.5">Auto-collect coins for 10 seconds</p>
-                <p className="text-blue-400 text-xs mt-1 font-semibold">Owned: {state.inventory.magnet}</p>
+                <h4 className="text-white font-bold text-base">2× Score</h4>
+                <p className="text-gray-400 text-xs mt-0.5">Double your score for 10 seconds</p>
+                <p className="text-yellow-400 text-xs mt-1 font-semibold">Owned: {state.inventory.multiplier2x}</p>
               </div>
               <button
-                onClick={() => actions.buyMagnet()}
+                onClick={() => actions.buyMultiplier()}
                 disabled={state.totalCoins < 300}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-sm px-4 py-2 rounded-lg active:scale-95 transition-all shadow-lg shadow-blue-500/25"
+                className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-sm px-4 py-2 rounded-lg active:scale-95 transition-all shadow-lg shadow-yellow-500/25"
               >
                 🪙 300
               </button>
             </div>
           </div>
 
-          {/* Multiplier */}
-          <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl p-4 border border-yellow-500/30">
+          {/* 4x Score - 350 coins */}
+          <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-4 border border-purple-500/30">
             <div className="flex items-center gap-3">
-              <div className="text-4xl">⭐</div>
+              <div className="text-4xl">💎</div>
               <div className="flex-1">
-                <h4 className="text-white font-bold text-base">2× Score</h4>
-                <p className="text-gray-400 text-xs mt-0.5">Double your score for 15 seconds</p>
-                <p className="text-yellow-400 text-xs mt-1 font-semibold">Owned: {state.inventory.multiplier}</p>
+                <h4 className="text-white font-bold text-base">4× Score</h4>
+                <p className="text-gray-400 text-xs mt-0.5">Quadruple your score for 10 seconds</p>
+                <p className="text-purple-400 text-xs mt-1 font-semibold">Owned: {state.inventory.multiplier4x}</p>
               </div>
               <button
-                onClick={() => actions.buyMultiplier()}
+                onClick={() => actions.buyMultiplier4x()}
                 disabled={state.totalCoins < 350}
-                className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-sm px-4 py-2 rounded-lg active:scale-95 transition-all shadow-lg shadow-yellow-500/25"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-sm px-4 py-2 rounded-lg active:scale-95 transition-all shadow-lg shadow-purple-500/25"
               >
                 🪙 350
               </button>
             </div>
           </div>
 
-          {/* Shield */}
+          {/* 2x Shield - 450 coins */}
           <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-4 border border-green-500/30">
             <div className="flex items-center gap-3">
               <div className="text-4xl">🛡️</div>
               <div className="flex-1">
-                <h4 className="text-white font-bold text-base">Shield</h4>
-                <p className="text-gray-400 text-xs mt-0.5">Protect from 1 crash</p>
+                <h4 className="text-white font-bold text-base">2× Shield</h4>
+                <p className="text-gray-400 text-xs mt-0.5">Protect from 2 crashes</p>
                 <p className="text-green-400 text-xs mt-1 font-semibold">Owned: {state.inventory.shield}</p>
               </div>
               <button
@@ -487,7 +487,7 @@ function Store({ onBack }: { onBack: () => void }) {
 function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: () => void }) {
   const state = useGameStore()
 
-  const hasPowerUps = state.inventory.magnet > 0 || state.inventory.multiplier > 0 || state.inventory.shield > 0
+  const hasPowerUps = state.inventory.magnet > 0 || state.inventory.multiplier2x > 0 || state.inventory.multiplier4x > 0 || state.inventory.shield > 0
 
   if (!hasPowerUps) {
     // No power-ups, just start the game
@@ -531,22 +531,42 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
             </div>
           </div>
 
-          {/* Multiplier */}
+          {/* 2x Multiplier */}
           <div 
-            onClick={() => state.inventory.multiplier > 0 && actions.selectPowerUp(state.selectedPowerUp === 'multiplier' ? null : 'multiplier')}
+            onClick={() => state.inventory.multiplier2x > 0 && actions.selectPowerUp(state.selectedPowerUp === 'multiplier2x' ? null : 'multiplier2x')}
             className={`bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-4 border-2 transition-all cursor-pointer ${
-              state.selectedPowerUp === 'multiplier' ? 'border-yellow-400 scale-105' : 'border-yellow-500/30'
-            } ${state.inventory.multiplier === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              state.selectedPowerUp === 'multiplier2x' ? 'border-yellow-400 scale-105' : 'border-yellow-500/30'
+            } ${state.inventory.multiplier2x === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <div className="flex items-center gap-4">
               <div className="text-5xl">⭐</div>
               <div className="flex-1">
                 <h3 className="text-white font-black text-xl">2× SCORE</h3>
-                <p className="text-gray-300 text-xs mt-1">Double score for 15s</p>
-                <p className="text-yellow-400 text-sm mt-2 font-bold">Available: {state.inventory.multiplier}</p>
+                <p className="text-gray-300 text-xs mt-1">Double score for 10s</p>
+                <p className="text-yellow-400 text-sm mt-2 font-bold">Available: {state.inventory.multiplier2x}</p>
               </div>
-              {state.selectedPowerUp === 'multiplier' && (
+              {state.selectedPowerUp === 'multiplier2x' && (
                 <div className="text-yellow-400 text-2xl">✓</div>
+              )}
+            </div>
+          </div>
+
+          {/* 4x Multiplier */}
+          <div 
+            onClick={() => state.inventory.multiplier4x > 0 && actions.selectPowerUp(state.selectedPowerUp === 'multiplier4x' ? null : 'multiplier4x')}
+            className={`bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl p-4 border-2 transition-all cursor-pointer ${
+              state.selectedPowerUp === 'multiplier4x' ? 'border-purple-400 scale-105' : 'border-purple-500/30'
+            } ${state.inventory.multiplier4x === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <div className="flex items-center gap-4">
+              <div className="text-5xl">💎</div>
+              <div className="flex-1">
+                <h3 className="text-white font-black text-xl">4× SCORE</h3>
+                <p className="text-gray-300 text-xs mt-1">Quadruple score for 10s</p>
+                <p className="text-purple-400 text-sm mt-2 font-bold">Available: {state.inventory.multiplier4x}</p>
+              </div>
+              {state.selectedPowerUp === 'multiplier4x' && (
+                <div className="text-purple-400 text-2xl">✓</div>
               )}
             </div>
           </div>
@@ -759,48 +779,48 @@ export function PauseMenu() {
           <h3 className="text-white font-bold text-base sm:text-lg mb-3 text-center">⚡ Power-Ups Shop</h3>
           
           <div className="space-y-2">
-            {/* Magnet */}
-            <div className="bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-xl p-3 border border-blue-500/30">
+            {/* 2x Score */}
+            <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl p-3 border border-yellow-500/30">
               <div className="flex items-center gap-2">
-                <div className="text-2xl">🧲</div>
+                <div className="text-2xl">⭐</div>
                 <div className="flex-1">
-                  <h4 className="text-white font-bold text-sm">Coin Magnet</h4>
-                  <p className="text-blue-400 text-xs">Owned: {state.inventory.magnet}</p>
+                  <h4 className="text-white font-bold text-sm">2× Score</h4>
+                  <p className="text-yellow-400 text-xs">Owned: {state.inventory.multiplier2x}</p>
                 </div>
                 <button
-                  onClick={() => actions.buyMagnet()}
+                  onClick={() => actions.buyMultiplier()}
                   disabled={state.totalCoins < 300}
-                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-xs px-3 py-1.5 rounded-lg active:scale-95 transition-all"
+                  className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-xs px-3 py-1.5 rounded-lg active:scale-95 transition-all"
                 >
                   🪙 300
                 </button>
               </div>
             </div>
 
-            {/* Multiplier */}
-            <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl p-3 border border-yellow-500/30">
+            {/* 4x Score */}
+            <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-3 border border-purple-500/30">
               <div className="flex items-center gap-2">
-                <div className="text-2xl">⭐</div>
+                <div className="text-2xl">💎</div>
                 <div className="flex-1">
-                  <h4 className="text-white font-bold text-sm">2× Score</h4>
-                  <p className="text-yellow-400 text-xs">Owned: {state.inventory.multiplier}</p>
+                  <h4 className="text-white font-bold text-sm">4× Score</h4>
+                  <p className="text-purple-400 text-xs">Owned: {state.inventory.multiplier4x}</p>
                 </div>
                 <button
-                  onClick={() => actions.buyMultiplier()}
+                  onClick={() => actions.buyMultiplier4x()}
                   disabled={state.totalCoins < 350}
-                  className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-xs px-3 py-1.5 rounded-lg active:scale-95 transition-all"
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-xs px-3 py-1.5 rounded-lg active:scale-95 transition-all"
                 >
                   🪙 350
                 </button>
               </div>
             </div>
 
-            {/* Shield */}
+            {/* 2x Shield */}
             <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-3 border border-green-500/30">
               <div className="flex items-center gap-2">
                 <div className="text-2xl">🛡️</div>
                 <div className="flex-1">
-                  <h4 className="text-white font-bold text-sm">Shield</h4>
+                  <h4 className="text-white font-bold text-sm">2× Shield</h4>
                   <p className="text-green-400 text-xs">Owned: {state.inventory.shield}</p>
                 </div>
                 <button

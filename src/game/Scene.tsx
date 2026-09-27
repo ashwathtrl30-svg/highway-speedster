@@ -1082,8 +1082,8 @@ function TrafficSystem() {
       }
     }
 
-    // Score: 180 points per second base rate (continuous), 2x if multiplier active
-    const scoreRate = state.multiplierActive ? 360 : 180
+    // Score: 180 points per second base rate (continuous), 2x or 4x if multiplier active
+    const scoreRate = state.multiplierActive ? (state.multiplier4x ? 720 : 360) : 180
     actions.addScore(Math.floor(scoreRate * clampedDelta))
     actions.setDistance(state.distance + speed * clampedDelta * 0.08)
     
