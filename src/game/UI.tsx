@@ -542,7 +542,6 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
   const hasPowerUps = state.inventory.magnet > 0 || state.inventory.magnet2x > 0 || state.inventory.multiplier2x > 0 || state.inventory.multiplier4x > 0 || state.inventory.shield > 0
 
   if (!hasPowerUps) {
-    // No power-ups, just start the game
     onStart()
     return null
   }
@@ -1016,7 +1015,7 @@ export function TouchControls() {
   // Tilt / Gyroscope controls - only prompt once per session
   useEffect(() => {
     if (state.gameState !== 'playing') return
-    if (hasPromptedRef.current) return // Already prompted, skip
+    if (hasPromptedRef.current) return
 
     const handleOrientation = (e: DeviceOrientationEvent) => {
       const gamma = e.gamma || 0
@@ -1150,7 +1149,6 @@ export function TouchControls() {
 
   return (
     <>
-      {/* iOS Tilt Permission Prompt */}
       {showTiltPrompt && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <div className="bg-gray-900 rounded-2xl p-6 mx-4 max-w-sm border border-white/10">
@@ -1179,9 +1177,7 @@ export function TouchControls() {
         </div>
       )}
 
-      {/* Touch zones - fallback when tilt is not available */}
       <div className="absolute left-0 right-0 bottom-0 top-24 sm:top-28 z-10">
-        {/* Left tap zone */}
         <div
           className="absolute left-0 top-0 bottom-0 w-[35%] flex items-center justify-start pl-2 sm:pl-4 opacity-0 active:opacity-100 transition-opacity"
           onTouchStart={(e) => {
@@ -1202,7 +1198,6 @@ export function TouchControls() {
             }
           }}
         />
-        {/* Right tap zone */}
         <div
           className="absolute right-0 top-0 bottom-0 w-[35%] flex items-center justify-end pr-2 sm:pr-4 opacity-0 active:opacity-100 transition-opacity"
           onTouchStart={(e) => {
@@ -1226,7 +1221,7 @@ export function TouchControls() {
       </div>
 
       {/* Mobile Arrow Controls - Only visible on small screens */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-6 z-20 sm:hidden">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-16 z-20 sm:hidden">
         {/* Left Arrow */}
         <button
           onTouchStart={(e) => {
