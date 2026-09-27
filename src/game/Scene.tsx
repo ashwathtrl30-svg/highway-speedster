@@ -9,8 +9,23 @@ const ROAD_WIDTH = 14
 const SEGMENT_LENGTH = 20
 const NUM_SEGMENTS = 30
 const VISIBLE_DISTANCE = 400
-const TRAFFIC_SPAWN_DISTANCE = 50
 const PLAYER_Z = 5
+
+// Bike-specific spawn configurations
+const getSpawnConfig = (bikeId: string) => {
+  switch (bikeId) {
+    case 'blitz':
+    case 'apex':
+      return { baseDistance: 40, reductionRate: 3 }
+    case 'chronos':
+      return { baseDistance: 50, reductionRate: 2 }
+    case 'stratos':
+    case 'zenith':
+      return { baseDistance: 60, reductionRate: 2.5 }
+    default:
+      return { baseDistance: 40, reductionRate: 3 }
+  }
+}
 
 // Traffic vehicle types
 interface TrafficVehicle {
@@ -1003,8 +1018,11 @@ function TrafficSystem() {
     // Track survival time
     survivalTimeRef.current += clampedDelta
 
-    // Calculate spawn distance: starts at 50, decreases by 2.5 every 20 seconds (min 30)
-    const spawnDistance = Math.max(30, TRAFFIC_SPAWN_DISTANCE - (survivalTimeRef.current / 20) * 2.5)
+    // Get bike-specific spawn configuration
+    const spawnConfig = getSpawnConfig(state.selectedBike.id)
+
+    // Calculate spawn distance based on bike type
+    const spawnDistance = Math.max(30, spawnConfig.baseDistance - (survivalTimeRef.current / 20) * spawnConfig.reductionRate)
 
     // Spawn traffic
     spawnTimerRef.current -= clampedDelta
