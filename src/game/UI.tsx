@@ -178,14 +178,161 @@ export function HUD() {
   )
 }
 
+// ============== STATS SCREEN (SECRET - Only accessible via Ctrl+Shift+S or 5 quick taps) ==============
+function StatsScreen({ onClose }: { onClose: () => void }) {
+  const state = useGameStore()
+
+  // Format seconds to readable time
+  const formatTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = seconds % 60
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${secs}s`
+    } else if (minutes > 0) {
+      return `${minutes}m ${secs}s`
+    } else {
+      return `${secs}s`
+    }
+  }
+
+  // Sort users by playtime
+  const sortedUsers = Object.entries(state.userPlaytime)
+    .sort(([, a], [, b]) => b - a)
+
+  return (
+    <div className="absolute inset-0 flex flex-col bg-gradient-to-b from-gray-900 via-gray-950 to-black overflow-y-auto z-[200]">
+      {/* Header */}
+      <div className="flex items-center justify-between p-3 sm:p-4 border-b border-white/5">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onClose}
+            className="text-white text-xl sm:text-2xl active:scale-90 transition-transform w-8 h-8 flex items-center justify-center rounded-lg bg-white/5"
+          >
+            ✕
+          </button>
+          <h2 className="text-lg sm:text-xl font-bold text-white">📊 Admin Analytics Dashboard</h2>
+        </div>
+        <div className="text-xs text-gray-500">Real-time Data</div>
+      </div>
+
+      {/* Total Playtime */}
+      <div className="p-4 sm:p-6 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-b border-purple-500/20">
+        <div className="text-center">
+          <p className="text-gray-400 text-xs sm:text-sm uppercase tracking-wider mb-1">Total Playtime (All Users Combined)</p>
+          <p className="text-purple-400 font-black text-3xl sm:text-4xl tabular-nums">
+            ⏱️ {formatTime(state.totalPlaytime)}
+          </p>
+          <p className="text-gray-500 text-xs mt-2">Updates in real-time • Every second tracked</p>
+        </div>
+      </div>
+
+      {/* Individual User Stats */}
+      <div className="flex-1 px-3 sm:px-4 py-4 sm:py-6">
+        <h3 className="text-white font-bold text-base sm:text-lg mb-4">👥 Player Leaderboard</h3>
+        
+        {sortedUsers.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500 text-sm">No playtime data yet</p>
+            <p className="text-gray-600 text-xs mt-2">Players will appear here as they play</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {sortedUsers.map(([username, playtime], index) => (
+              <div 
+                key={username}
+                className={`rounded-xl p-3 sm:p-4 border ${
+                  username === state.username 
+                    ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/40' 
+                    : 'bg-white/[0.03] border-white/10'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl sm:text-3xl font-bold text-gray-500">
+                      #{index + 1}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-white font-bold text-sm sm:text-base">
+                          {username}
+                        </span>
+                        {username === state.username && (
+                          <span className="text-[10px] bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full font-semibold">
+                            YOU
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-gray-400 text-xs mt-0.5">
+                        Playtime: <span className="text-purple-400 font-semibold">{formatTime(playtime)}</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="p-3 border-t border-white/5 text-center">
+        <p className="text-gray-600 text-xs">Admin Access Only • Press Ctrl+Shift+S to toggle</p>
+      </div>
+    </div>
+  )
+}
+
 // ============== MAIN MENU ==============
 export function MainMenu() {
   const state = useGameStore()
   const [showBikes, setShowBikes] = useState(false)
   const [showStore, setShowStore] = useState(false)
   const [showPowerUpSelection, setShowPowerUpSelection] = useState(false)
+  const [showStats, setShowStats] = useState(false)
+  const tapCountRef = useRef(0)
+  const lastTapTimeRef = useRef(0)
+
+  // Secret keyboard shortcut for admin analytics (Ctrl+Shift+S)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+        e.preventDefault()
+        setShowStats(!showStats)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showStats])
+
+  // Secret mobile tap gesture (5 quick taps)
+  const handleSecretTap = () => {
+    const now = Date.now()
+    const timeSinceLastTap = now - lastTapTimeRef.current
+    
+    // Reset if too much time has passed (more than 2 seconds)
+    if (timeSinceLastTap > 2000) {
+      tapCountRef.current = 0
+    }
+    
+    tapCountRef.current += 1
+    lastTapTimeRef.current = now
+    
+    // If 5 taps in quick succession, show stats
+    if (tapCountRef.current >= 5) {
+      setShowStats(true)
+      tapCountRef.current = 0
+    }
+  }
 
   if (state.gameState !== 'menu') return null
+
+  // Show stats screen if accessed via secret shortcut
+  if (showStats) {
+    return <StatsScreen onClose={() => setShowStats(false)} />
+  }
 
   if (showBikes) {
     return <BikeSelection onBack={() => setShowBikes(false)} />
@@ -203,7 +350,10 @@ export function MainMenu() {
   }
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-indigo-950/95 via-purple-950/95 to-black/95 backdrop-blur-sm">
+    <div 
+      className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-indigo-950/95 via-purple-950/95 to-black/95 backdrop-blur-sm"
+      onClick={handleSecretTap}
+    >
       {/* Username Input (shows if no username set) */}
       <UsernameInput />
       
@@ -261,6 +411,7 @@ export function MainMenu() {
         <button
           onClick={() => { 
             actions.resetGame()
+            // Check if user has any power-ups
             const hasPowerUps = state.inventory.magnet > 0 || state.inventory.magnet2x > 0 || state.inventory.multiplier2x > 0 || state.inventory.multiplier4x > 0 || state.inventory.shield > 0
             if (hasPowerUps) {
               setShowPowerUpSelection(true)
@@ -542,6 +693,7 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
   const hasPowerUps = state.inventory.magnet > 0 || state.inventory.magnet2x > 0 || state.inventory.multiplier2x > 0 || state.inventory.multiplier4x > 0 || state.inventory.shield > 0
 
   if (!hasPowerUps) {
+    // No power-ups, just start the game
     onStart()
     return null
   }
