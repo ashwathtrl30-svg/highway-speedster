@@ -65,13 +65,21 @@ export function HUD() {
           </div>
         </div>
 
-        {/* Speed gauge */}
-        <div className="bg-black/70 backdrop-blur-sm rounded-xl px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-right border border-white/5">
-          <div className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wider font-medium">Speed</div>
-          <div className="text-base sm:text-2xl font-bold tabular-nums leading-tight">
-            <span className="text-white">{Math.floor(state.speed)}</span>
-            <span className="text-[10px] sm:text-xs text-gray-500 ml-0.5">km/h</span>
+        {/* Speed gauge & Pause */}
+        <div className="flex flex-col gap-1.5 items-end">
+          <div className="bg-black/70 backdrop-blur-sm rounded-xl px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-right border border-white/5">
+            <div className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wider font-medium">Speed</div>
+            <div className="text-base sm:text-2xl font-bold tabular-nums leading-tight">
+              <span className="text-white">{Math.floor(state.speed)}</span>
+              <span className="text-[10px] sm:text-xs text-gray-500 ml-0.5">km/h</span>
+            </div>
           </div>
+          <button
+            onClick={() => actions.setGameState('paused')}
+            className="pointer-events-auto bg-black/70 backdrop-blur-sm rounded-xl px-3 py-1.5 sm:px-4 sm:py-2 border border-white/10 active:scale-95 transition-all"
+          >
+            <span className="text-white text-sm sm:text-base font-bold">⏸ PAUSE</span>
+          </button>
         </div>
       </div>
 
@@ -735,42 +743,112 @@ export function PauseMenu() {
   if (state.gameState !== 'paused') return null
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/85 backdrop-blur-md z-50">
-      <div className="text-4xl mb-3">⏸️</div>
-      <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6 sm:mb-8">PAUSED</h2>
-      
-      <div className="flex flex-col gap-2.5 sm:gap-3 w-52 sm:w-60">
-        <button
-          onClick={() => actions.setGameState('playing')}
-          className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-base sm:text-lg py-3 rounded-xl active:scale-95 transition-all shadow-lg shadow-green-500/20"
-        >
-          ▶ RESUME
-        </button>
-        <button
-          onClick={() => { actions.resetGame(); actions.setGameState('menu') }}
-          className="bg-white/10 hover:bg-white/15 text-white font-bold text-base sm:text-lg py-3 rounded-xl active:scale-95 transition-all border border-white/10"
-        >
-          🏠 MAIN MENU
-        </button>
-      </div>
+    <div className="absolute inset-0 flex flex-col items-center bg-black/85 backdrop-blur-md z-50 overflow-y-auto">
+      <div className="flex flex-col items-center py-6 sm:py-8 px-4 w-full max-w-md">
+        <div className="text-4xl mb-3">⏸️</div>
+        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 sm:mb-6">PAUSED</h2>
+        
+        {/* Coins Display */}
+        <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl px-4 py-2 mb-4 border border-yellow-500/30 flex items-center gap-2">
+          <span className="text-xl">🪙</span>
+          <span className="text-yellow-400 font-bold text-lg tabular-nums">{state.totalCoins.toLocaleString()} coins</span>
+        </div>
 
-      {/* Stats */}
-      <div className="mt-6 sm:mt-8 grid grid-cols-2 gap-x-6 gap-y-3 text-center">
-        <div>
-          <p className="text-gray-500 text-[10px] uppercase tracking-wider">Score</p>
-          <p className="text-white font-bold text-lg tabular-nums">{state.score.toLocaleString()}</p>
+        {/* Power-Ups Shop */}
+        <div className="w-full mb-4">
+          <h3 className="text-white font-bold text-base sm:text-lg mb-3 text-center">⚡ Power-Ups Shop</h3>
+          
+          <div className="space-y-2">
+            {/* Magnet */}
+            <div className="bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-xl p-3 border border-blue-500/30">
+              <div className="flex items-center gap-2">
+                <div className="text-2xl">🧲</div>
+                <div className="flex-1">
+                  <h4 className="text-white font-bold text-sm">Coin Magnet</h4>
+                  <p className="text-blue-400 text-xs">Owned: {state.inventory.magnet}</p>
+                </div>
+                <button
+                  onClick={() => actions.buyMagnet()}
+                  disabled={state.totalCoins < 300}
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-xs px-3 py-1.5 rounded-lg active:scale-95 transition-all"
+                >
+                  🪙 300
+                </button>
+              </div>
+            </div>
+
+            {/* Multiplier */}
+            <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl p-3 border border-yellow-500/30">
+              <div className="flex items-center gap-2">
+                <div className="text-2xl">⭐</div>
+                <div className="flex-1">
+                  <h4 className="text-white font-bold text-sm">2× Score</h4>
+                  <p className="text-yellow-400 text-xs">Owned: {state.inventory.multiplier}</p>
+                </div>
+                <button
+                  onClick={() => actions.buyMultiplier()}
+                  disabled={state.totalCoins < 350}
+                  className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-xs px-3 py-1.5 rounded-lg active:scale-95 transition-all"
+                >
+                  🪙 350
+                </button>
+              </div>
+            </div>
+
+            {/* Shield */}
+            <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-3 border border-green-500/30">
+              <div className="flex items-center gap-2">
+                <div className="text-2xl">🛡️</div>
+                <div className="flex-1">
+                  <h4 className="text-white font-bold text-sm">Shield</h4>
+                  <p className="text-green-400 text-xs">Owned: {state.inventory.shield}</p>
+                </div>
+                <button
+                  onClick={() => actions.buyShield()}
+                  disabled={state.totalCoins < 450}
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-xs px-3 py-1.5 rounded-lg active:scale-95 transition-all"
+                >
+                  🪙 450
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div>
-          <p className="text-gray-500 text-[10px] uppercase tracking-wider">Distance</p>
-          <p className="text-white font-bold text-lg tabular-nums">{state.distance.toFixed(1)} km</p>
+
+        {/* Buttons */}
+        <div className="flex flex-col gap-2.5 sm:gap-3 w-full">
+          <button
+            onClick={() => actions.setGameState('playing')}
+            className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-base sm:text-lg py-3 rounded-xl active:scale-95 transition-all shadow-lg shadow-green-500/20"
+          >
+            ▶ RESUME
+          </button>
+          <button
+            onClick={() => { actions.resetGame(); actions.setGameState('menu') }}
+            className="bg-white/10 hover:bg-white/15 text-white font-bold text-base sm:text-lg py-3 rounded-xl active:scale-95 transition-all border border-white/10"
+          >
+            🏠 MAIN MENU
+          </button>
         </div>
-        <div>
-          <p className="text-gray-500 text-[10px] uppercase tracking-wider">Near Misses</p>
-          <p className="text-orange-400 font-bold text-lg tabular-nums">{state.nearMisses}</p>
-        </div>
-        <div>
-          <p className="text-gray-500 text-[10px] uppercase tracking-wider">Best Combo</p>
-          <p className="text-yellow-400 font-bold text-lg tabular-nums">×{state.combo}</p>
+
+        {/* Stats */}
+        <div className="mt-4 sm:mt-6 grid grid-cols-2 gap-x-6 gap-y-2 text-center w-full">
+          <div>
+            <p className="text-gray-500 text-[10px] uppercase tracking-wider">Score</p>
+            <p className="text-white font-bold text-base tabular-nums">{state.score.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-gray-500 text-[10px] uppercase tracking-wider">Distance</p>
+            <p className="text-white font-bold text-base tabular-nums">{state.distance.toFixed(1)} km</p>
+          </div>
+          <div>
+            <p className="text-gray-500 text-[10px] uppercase tracking-wider">Near Misses</p>
+            <p className="text-orange-400 font-bold text-base tabular-nums">{state.nearMisses}</p>
+          </div>
+          <div>
+            <p className="text-gray-500 text-[10px] uppercase tracking-wider">Best Combo</p>
+            <p className="text-yellow-400 font-bold text-base tabular-nums">×{state.combo}</p>
+          </div>
         </div>
       </div>
     </div>
