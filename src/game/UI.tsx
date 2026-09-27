@@ -178,9 +178,10 @@ export function HUD() {
   )
 }
 
-// ============== STATS SCREEN (SECRET - Only accessible via Ctrl+Shift+S or 5 quick taps) ==============
-function StatsScreen({ onClose }: { onClose: () => void }) {
+// ============== STATS SCREEN ==============
+function StatsScreen({ onBack }: { onBack: () => void }) {
   const state = useGameStore()
+  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'all'>('all')
 
   // Format seconds to readable time
   const formatTime = (seconds: number): string => {
@@ -197,45 +198,122 @@ function StatsScreen({ onClose }: { onClose: () => void }) {
     }
   }
 
+  // Filter playtime history based on time range
+  const getFilteredPlaytime = () => {
+    const now = new Date()
+    let startDate: Date
+    
+    if (timeFilter === 'week') {
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    } else if (timeFilter === 'month') {
+      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+    } else {
+      // All time - return total
+      return {
+        total: state.totalPlaytime,
+        users: state.userPlaytime
+      }
+    }
+    
+    const startDateStr = startDate.toISOString().split('T')[0]
+    
+    // Filter history entries
+    const filteredHistory = state.playtimeHistory.filter(entry => entry.date >= startDateStr)
+    
+    // Calculate totals from filtered history
+    const total = filteredHistory.reduce((sum, entry) => sum + entry.seconds, 0)
+    
+    // For user breakdown, we'll use the same filtered data
+    // Since we don't track per-user per-day, we'll estimate based on current ratios
+    const users: Record<string, number> = {}
+    const userNames = Object.keys(state.userPlaytime)
+    
+    if (userNames.length > 0 && total > 0) {
+      // Distribute proportionally based on all-time totals
+      userNames.forEach(username => {
+        const ratio = state.userPlaytime[username] / state.totalPlaytime
+        users[username] = Math.round(total * ratio)
+      })
+    }
+    
+    return { total, users }
+  }
+
+  const filteredData = getFilteredPlaytime()
+
   // Sort users by playtime
-  const sortedUsers = Object.entries(state.userPlaytime)
+  const sortedUsers = Object.entries(filteredData.users)
     .sort(([, a], [, b]) => b - a)
 
   return (
-    <div className="absolute inset-0 flex flex-col bg-gradient-to-b from-gray-900 via-gray-950 to-black overflow-y-auto z-[200]">
+    <div className="absolute inset-0 flex flex-col bg-gradient-to-b from-gray-900 via-gray-950 to-black overflow-y-auto">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 sm:p-4 border-b border-white/5">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center p-3 sm:p-4 border-b border-white/5">
+        <button
+          onClick={onBack}
+          className="text-white text-xl sm:text-2xl active:scale-90 transition-transform w-8 h-8 flex items-center justify-center rounded-lg bg-white/5"
+        >
+          ←
+        </button>
+        <h2 className="text-lg sm:text-xl font-bold text-white ml-3">📊 Statistics</h2>
+      </div>
+
+      {/* Time Filter Buttons */}
+      <div className="p-3 sm:p-4 border-b border-white/5">
+        <div className="flex gap-2 justify-center">
           <button
-            onClick={onClose}
-            className="text-white text-xl sm:text-2xl active:scale-90 transition-transform w-8 h-8 flex items-center justify-center rounded-lg bg-white/5"
+            onClick={() => setTimeFilter('week')}
+            className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+              timeFilter === 'week'
+                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/30'
+                : 'bg-white/10 text-gray-400 hover:bg-white/20'
+            }`}
           >
-            ✕
+            Last Week
           </button>
-          <h2 className="text-lg sm:text-xl font-bold text-white">📊 Admin Analytics Dashboard</h2>
+          <button
+            onClick={() => setTimeFilter('month')}
+            className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+              timeFilter === 'month'
+                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30'
+                : 'bg-white/10 text-gray-400 hover:bg-white/20'
+            }`}
+          >
+            Last Month
+          </button>
+          <button
+            onClick={() => setTimeFilter('all')}
+            className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+              timeFilter === 'all'
+                ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/30'
+                : 'bg-white/10 text-gray-400 hover:bg-white/20'
+            }`}
+          >
+            All Time
+          </button>
         </div>
-        <div className="text-xs text-gray-500">Real-time Data</div>
       </div>
 
       {/* Total Playtime */}
       <div className="p-4 sm:p-6 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-b border-purple-500/20">
         <div className="text-center">
-          <p className="text-gray-400 text-xs sm:text-sm uppercase tracking-wider mb-1">Total Playtime (All Users Combined)</p>
-          <p className="text-purple-400 font-black text-3xl sm:text-4xl tabular-nums">
-            ⏱️ {formatTime(state.totalPlaytime)}
+          <p className="text-gray-400 text-xs sm:text-sm uppercase tracking-wider mb-1">
+            Total Playtime {timeFilter === 'week' ? '(Last 7 Days)' : timeFilter === 'month' ? '(Last 30 Days)' : '(All Time)'}
           </p>
-          <p className="text-gray-500 text-xs mt-2">Updates in real-time • Every second tracked</p>
+          <p className="text-purple-400 font-black text-2xl sm:text-3xl tabular-nums">
+            ⏱️ {formatTime(filteredData.total)}
+          </p>
         </div>
       </div>
 
       {/* Individual User Stats */}
       <div className="flex-1 px-3 sm:px-4 py-4 sm:py-6">
-        <h3 className="text-white font-bold text-base sm:text-lg mb-4">👥 Player Leaderboard</h3>
+        <h3 className="text-white font-bold text-base sm:text-lg mb-4">👥 Player Statistics</h3>
         
         {sortedUsers.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-500 text-sm">No playtime data yet</p>
-            <p className="text-gray-600 text-xs mt-2">Players will appear here as they play</p>
+            <p className="text-gray-600 text-xs mt-2">Start playing to see your stats!</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -275,11 +353,6 @@ function StatsScreen({ onClose }: { onClose: () => void }) {
           </div>
         )}
       </div>
-
-      {/* Footer */}
-      <div className="p-3 border-t border-white/5 text-center">
-        <p className="text-gray-600 text-xs">Admin Access Only • Press Ctrl+Shift+S to toggle</p>
-      </div>
     </div>
   )
 }
@@ -294,10 +367,10 @@ export function MainMenu() {
   const tapCountRef = useRef(0)
   const lastTapTimeRef = useRef(0)
 
-  // Secret keyboard shortcut for admin analytics (Ctrl+Shift+S)
+  // Secret keyboard shortcut for admin analytics (Ctrl+Shift+S or Cmd+Shift+S)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'S' || e.key === 's')) {
         e.preventDefault()
         setShowStats(!showStats)
       }
@@ -331,7 +404,7 @@ export function MainMenu() {
 
   // Show stats screen if accessed via secret shortcut
   if (showStats) {
-    return <StatsScreen onClose={() => setShowStats(false)} />
+    return <StatsScreen onBack={() => setShowStats(false)} />
   }
 
   if (showBikes) {
@@ -1373,7 +1446,7 @@ export function TouchControls() {
       </div>
 
       {/* Mobile Arrow Controls - Only visible on small screens */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-16 z-20 sm:hidden">
+      <div className="absolute bottom-8 left-0 right-0 flex justify-between px-6 z-20 sm:hidden">
         {/* Left Arrow */}
         <button
           onTouchStart={(e) => {
