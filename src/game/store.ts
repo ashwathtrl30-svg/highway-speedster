@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
-// Bike definitions - 3 iconic Indian bikes
+// Bike definitions
 export interface Bike {
   id: string
   name: string
@@ -135,7 +135,6 @@ function loadSavedProgress(): { highScore: number; unlockedBikes: string[]; bike
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
       const data = JSON.parse(saved)
-      // Migrate old bike IDs to new names
       const migrate = (id: string) => {
         if (id === 'thunderbird') return 'blitz'
         if (id === 'dominar') return 'apex'
@@ -160,7 +159,6 @@ function saveProgress(highScore: number, unlockedBikes: string[], bikeSkins: Rec
   } catch (e) { /* ignore */ }
 }
 
-// Simple store using a listener pattern
 type Listener = () => void
 
 const savedProgress = loadSavedProgress()
@@ -219,13 +217,10 @@ export function subscribe(listener: Listener): () => void {
   return () => listeners.delete(listener)
 }
 
-// Actions
 export const actions = {
   setGameState(gameState: GameState) {
     setState({ gameState })
-    // Save progress when game ends
     if (gameState === 'gameover') {
-      // Add run coins to total coins but keep runCoins visible
       const newTotalCoins = state.totalCoins + state.runCoins
       setState({ totalCoins: newTotalCoins })
       saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, state.inventory)
@@ -235,9 +230,7 @@ export const actions = {
   addScore(points: number) {
     const newScore = state.score + points
     const newHighScore = Math.max(state.highScore, newScore)
-    let newUnlock: string | null = null
     
-    // Check bike unlocks
     for (const bike of BIKES) {
       if (newScore >= bike.unlockScore && !state.unlockedBikes.includes(bike.id)) {
         const newUnlocked = [...state.unlockedBikes, bike.id]
@@ -295,7 +288,6 @@ export const actions = {
     const newBikeSkins = { ...state.bikeSkins, [bikeId]: skin }
     const updates: Partial<GameData> = { bikeSkins: newBikeSkins }
     
-    // If this is the currently selected bike, update its colors
     if (state.selectedBike.id === bikeId) {
       updates.selectedBike = { ...state.selectedBike, color: colors.color, accentColor: colors.accentColor }
       updates.selectedSkin = skin
@@ -356,4 +348,113 @@ export const actions = {
       if (state.inventory[powerUp] > 0) {
         const newInventory = { ...state.inventory, [powerUp]: state.inventory[powerUp] - 1 }
         
-        if (powerUp === '
+        if (powerUp === 'magnet') {
+          setState({ magnetActive: true, magnetTimer: 10, inventory: newInventory })
+        } else if (powerUp === 'multiplier2x') {
+          setState({ multiplierActive: true, multiplierTimer: 10, multiplier4x: false, inventory: newInventory })
+        } else if (powerUp === 'multiplier4x') {
+          setState({ multiplierActive: true, multiplierTimer: 10, multiplier4x: true, inventory: newInventory })
+        } else if (powerUp === 'shield') {
+          setState({ shieldActive: true, shieldCount: 2, inventory: newInventory })
+        }
+        
+        saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, newInventory)
+      }
+    }
+  },
+
+  resetGame() {
+    setState({
+      score: 0,
+      distance: 0,
+      speed: 0,
+      nearMisses: 0,
+      combo: 0,
+      comboTimer: 0,
+      runCoins: 0,
+      playerLane: 0,
+      targetLane: 0,
+      playerX: 0,
+      newUnlock: null,
+      magnetActive: false,
+      magnetTimer: 0,
+      multiplierActive: false,
+      multiplierTimer: 0,
+      multiplier4x: false,
+      shieldActive: false,
+      shieldCount: 0,
+    })
+  },
+
+  clearNewUnlock() { setState({ newUnlock: null }) },
+
+  activateMagnet() {
+    setState({ magnetActive: true, magnetTimer: 10 })
+  },
+
+  activateMultiplier() {
+    setState({ multiplierActive: true, multiplierTimer: 10 })
+  },
+
+  activateShield() {
+    const newShieldCount = state.shieldCount + 1
+    setState({ shieldActive: true, shieldCount: newShieldCount })
+  },
+
+  useShield() {
+    const newShieldCount = Math.max(0, state.shieldCount - 1)
+    if (newShieldCount === 0) {
+      setState({ shieldActive: false, shieldCount: 0 })
+    } else {
+      setState({ shieldCount: newShieldCount })
+    }
+  },
+
+  tickPowerUps(delta: number) {
+    const updates: Partial<GameData> = {}
+    
+    if (state.magnetActive) {
+      const newTimer = state.magnetTimer - delta
+      if (newTimer <= 0) {
+        updates.magnetActive = false
+        updates.magnetTimer = 0
+      } else {
+        updates.magnetTimer = newTimer
+      }
+    }
+    
+    if (state.multiplierActive) {
+      const newTimer = state.multiplierTimer - delta
+      if (newTimer <= 0) {
+        updates.multiplierActive = false
+        updates.multiplierTimer = 0
+      } else {
+        updates.multiplierTimer = newTimer
+      }
+    }
+    
+    if (Object.keys(updates).length > 0) {
+      setState(updates)
+    }
+  },
+}
+
+export function useGameStore(): GameData
+export function useGameStore<T>(selector: (state: GameData) => T): T
+export function useGameStore<T>(selector?: (state: GameData) => T): T | GameData {
+  const [, forceUpdate] = useState(0)
+  
+  useEffect(() => {
+    const unsub = subscribe(() => forceUpdate((n) => n + 1))
+    return unsub
+  }, [])
+
+  if (selector) {
+    return selector(state)
+  }
+  return state
+}
+
+export function useGameActions() {
+  return useRef(actions).current
+}
