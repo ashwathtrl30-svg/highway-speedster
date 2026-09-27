@@ -682,53 +682,36 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
 // Bike icon component with distinct visuals for each bike
 function BikeIcon({ bike }: { bike: Bike }) {
   if (bike.id === 'blitz') {
-    // Blitz - Modern neo-retro cruiser (sleek, clean)
     return (
       <svg viewBox="0 0 100 60" className="w-full h-full">
-        {/* Wheels */}
         <circle cx="25" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
         <circle cx="75" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
-        {/* Frame */}
         <path d="M 25 45 L 40 30 L 60 30 L 75 45" fill="none" stroke={bike.color} strokeWidth="3"/>
-        {/* Body */}
         <ellipse cx="50" cy="32" rx="15" ry="8" fill={bike.color}/>
         <ellipse cx="50" cy="32" rx="12" ry="6" fill={bike.accentColor}/>
-        {/* Seat */}
         <ellipse cx="55" cy="28" rx="8" ry="4" fill="#1a1a1a"/>
-        {/* Handlebar */}
         <line x1="35" y1="25" x2="45" y2="20" stroke="#666" strokeWidth="2"/>
         <circle cx="45" cy="20" r="2" fill="#888"/>
-        {/* Headlight */}
         <circle cx="38" cy="28" r="3" fill="#ffffcc" opacity="0.8"/>
       </svg>
     )
   }
   
   if (bike.id === 'apex') {
-    // Apex - Classic muscular cruiser (bulkier, traditional)
     return (
       <svg viewBox="0 0 100 60" className="w-full h-full">
-        {/* Wheels */}
         <circle cx="22" cy="45" r="11" fill="#333" stroke="#555" strokeWidth="2"/>
         <circle cx="78" cy="45" r="11" fill="#333" stroke="#555" strokeWidth="2"/>
-        {/* Frame - thicker */}
         <path d="M 22 45 L 38 28 L 62 28 L 78 45" fill="none" stroke={bike.color} strokeWidth="4"/>
-        {/* Engine block - prominent */}
         <rect x="42" y="32" width="16" height="10" fill="#2a2a2a" rx="2"/>
         <rect x="44" y="34" width="12" height="6" fill="#444"/>
-        {/* Body - bulkier tank */}
         <ellipse cx="50" cy="30" rx="18" ry="10" fill={bike.color}/>
         <ellipse cx="50" cy="30" rx="15" ry="8" fill={bike.accentColor}/>
-        {/* Chrome strip */}
         <rect x="35" y="29" width="30" height="2" fill="#ccc" opacity="0.6"/>
-        {/* Seat - wider */}
         <ellipse cx="58" cy="26" rx="10" ry="5" fill="#1a1a1a"/>
-        {/* Handlebar - wider */}
         <line x1="32" y1="22" x2="48" y2="18" stroke="#777" strokeWidth="2.5"/>
         <circle cx="48" cy="18" r="2.5" fill="#999"/>
-        {/* Headlight - larger */}
         <circle cx="35" cy="26" r="4" fill="#ffffcc" opacity="0.8"/>
-        {/* Exhaust - dual */}
         <line x1="60" y1="38" x2="70" y2="42" stroke="#bbb" strokeWidth="2"/>
         <line x1="58" y1="40" x2="68" y2="44" stroke="#bbb" strokeWidth="2"/>
       </svg>
@@ -736,96 +719,65 @@ function BikeIcon({ bike }: { bike: Bike }) {
   }
   
   if (bike.id === 'chronos') {
-    // Chronos - Sport bike (aerodynamic, aggressive)
     return (
       <svg viewBox="0 0 100 60" className="w-full h-full">
-        {/* Wheels */}
         <circle cx="25" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
         <circle cx="75" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
-        {/* Fairing - full body */}
         <path d="M 30 40 L 35 25 L 50 20 L 65 25 L 70 40 Z" fill={bike.color}/>
         <path d="M 35 38 L 38 27 L 50 23 L 62 27 L 65 38 Z" fill={bike.accentColor}/>
-        {/* Windscreen */}
         <path d="M 40 25 L 45 18 L 55 18 L 60 25" fill="#333" opacity="0.5"/>
-        {/* Seat - low */}
         <ellipse cx="58" cy="32" rx="8" ry="3" fill="#1a1a1a"/>
-        {/* Tail */}
         <path d="M 65 30 L 72 35 L 70 40" fill={bike.color}/>
-        {/* Handlebar - clip-ons */}
         <line x1="38" y1="22" x2="45" y2="20" stroke="#666" strokeWidth="1.5"/>
-        {/* Headlight - twin */}
         <circle cx="37" cy="28" r="2.5" fill="#ffffcc" opacity="0.9"/>
         <circle cx="42" cy="26" r="2.5" fill="#ffffcc" opacity="0.9"/>
-        {/* Exhaust - under tail */}
         <line x1="62" y1="38" x2="68" y2="42" stroke="#aaa" strokeWidth="1.5"/>
       </svg>
     )
   }
   
   if (bike.id === 'stratos') {
-    // Stratos - High-performance sport bike (sleek, aggressive)
     return (
       <svg viewBox="0 0 100 60" className="w-full h-full">
-        {/* Wheels */}
         <circle cx="23" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
         <circle cx="77" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
-        {/* Full fairing - aggressive angle */}
         <path d="M 25 42 L 30 22 L 48 16 L 68 22 L 75 42 Z" fill={bike.color}/>
         <path d="M 32 40 L 35 25 L 48 20 L 63 25 L 68 40 Z" fill={bike.accentColor}/>
-        {/* Windscreen - sharper */}
         <path d="M 36 22 L 42 14 L 54 14 L 58 22" fill="#222" opacity="0.6"/>
-        {/* Seat - very low */}
         <ellipse cx="60" cy="30" rx="9" ry="2.5" fill="#1a1a1a"/>
-        {/* Tail - sharp */}
         <path d="M 68 28 L 78 32 L 75 40" fill={bike.color}/>
-        {/* Handlebar - very low clip-ons */}
         <line x1="35" y1="20" x2="44" y2="17" stroke="#555" strokeWidth="1.5"/>
-        {/* Headlight - aggressive single */}
         <path d="M 33 26 L 38 24 L 38 28 Z" fill="#ffffcc" opacity="0.9"/>
-        {/* Exhaust - side */}
         <line x1="65" y1="36" x2="73" y2="40" stroke="#999" strokeWidth="2"/>
-        {/* Racing stripe */}
         <line x1="40" y1="30" x2="60" y2="30" stroke={bike.accentColor} strokeWidth="1.5" opacity="0.7"/>
       </svg>
     )
   }
   
   if (bike.id === 'zenith') {
-    // Zenith - Ultimate hyperbike (extreme, futuristic)
     return (
       <svg viewBox="0 0 100 60" className="w-full h-full">
-        {/* Wheels */}
         <circle cx="22" cy="45" r="10" fill="#222" stroke="#444" strokeWidth="1.5"/>
         <circle cx="78" cy="45" r="10" fill="#222" stroke="#444" strokeWidth="1.5"/>
-        {/* Wheel spokes */}
         <line x1="22" y1="38" x2="22" y2="52" stroke="#555" strokeWidth="0.5"/>
         <line x1="15" y1="45" x2="29" y2="45" stroke="#555" strokeWidth="0.5"/>
         <line x1="78" y1="38" x2="78" y2="52" stroke="#555" strokeWidth="0.5"/>
         <line x1="71" y1="45" x2="85" y2="45" stroke="#555" strokeWidth="0.5"/>
-        {/* Full fairing - extreme angle */}
         <path d="M 22 43 L 28 18 L 46 12 L 70 18 L 78 43 Z" fill={bike.color}/>
         <path d="M 30 41 L 33 22 L 46 16 L 64 22 L 70 41 Z" fill={bike.accentColor}/>
-        {/* Windscreen - very sharp */}
         <path d="M 34 18 L 40 10 L 52 10 L 56 18" fill="#111" opacity="0.7"/>
-        {/* Seat - ultra low */}
         <ellipse cx="62" cy="28" rx="10" ry="2" fill="#0a0a0a"/>
-        {/* Tail - extreme */}
         <path d="M 70 25 L 82 28 L 78 40" fill={bike.color}/>
-        {/* Handlebar - ultra low */}
         <line x1="33" y1="16" x2="42" y2="13" stroke="#444" strokeWidth="1.5"/>
-        {/* Headlight - LED strip */}
         <rect x="30" y="22" width="8" height="2" rx="1" fill="#ffffcc" opacity="0.9"/>
-        {/* Exhaust - dual under tail */}
         <line x1="68" y1="34" x2="76" y2="38" stroke="#888" strokeWidth="1.5"/>
         <line x1="66" y1="36" x2="74" y2="40" stroke="#888" strokeWidth="1.5"/>
-        {/* Racing stripes */}
         <line x1="38" y1="28" x2="62" y2="28" stroke={bike.accentColor} strokeWidth="1" opacity="0.8"/>
         <line x1="40" y1="32" x2="60" y2="32" stroke={bike.accentColor} strokeWidth="1" opacity="0.5"/>
       </svg>
     )
   }
   
-  // Default fallback
   return <span className="text-2xl sm:text-3xl">🏍️</span>
 }
 
@@ -838,7 +790,6 @@ export function PauseMenu() {
     if (countdown === null) return
 
     if (countdown === 0) {
-      // Countdown finished, resume game
       actions.setGameState('playing')
       setCountdown(null)
       return
@@ -857,7 +808,6 @@ export function PauseMenu() {
 
   if (state.gameState !== 'paused') return null
 
-  // Show countdown overlay
   if (countdown !== null) {
     return (
       <div className="absolute inset-0 flex items-center justify-center bg-black/90 backdrop-blur-md z-50">
@@ -998,7 +948,6 @@ export function GameOverScreen() {
 
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md z-50">
-      {/* Red flash effect */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-t from-red-900/20 to-transparent" />
       </div>
@@ -1015,7 +964,6 @@ export function GameOverScreen() {
           </div>
         )}
 
-        {/* Stats card */}
         <div className="bg-white/[0.05] rounded-xl sm:rounded-2xl p-4 sm:p-5 mt-3 sm:mt-4 mb-5 sm:mb-7 border border-white/10 min-w-[240px] sm:min-w-[280px]">
           <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-3">
             <div>
@@ -1037,7 +985,6 @@ export function GameOverScreen() {
           </div>
         </div>
 
-        {/* Buttons */}
         <div className="flex flex-col gap-2.5 sm:gap-3 w-52 sm:w-56 mx-auto">
           <button
             onClick={() => { actions.resetGame(); actions.setGameState('playing') }}
@@ -1065,50 +1012,44 @@ export function TouchControls() {
   const tiltEnabledRef = useRef(false)
   const lastTiltLaneRef = useRef(0)
   const [showTiltPrompt, setShowTiltPrompt] = useState(false)
+  const hasPromptedRef = useRef(false)
 
-  // Tilt / Gyroscope controls
+  // Tilt / Gyroscope controls - only prompt once per session
   useEffect(() => {
     if (state.gameState !== 'playing') return
+    if (hasPromptedRef.current) return // Already prompted, skip
 
     const handleOrientation = (e: DeviceOrientationEvent) => {
-      // gamma is the left-right tilt (-90 to 90)
       const gamma = e.gamma || 0
       
-      // Only change lane when tilt crosses threshold
       const now = Date.now()
-      if (now - lastLaneChangeRef.current < 300) return // debounce
+      if (now - lastLaneChangeRef.current < 300) return
       
       const currentLane = getState().targetLane
       
       if (gamma < -15 && currentLane > -1) {
-        // Tilted left
         if (lastTiltLaneRef.current !== -1) {
           lastTiltLaneRef.current = -1
           lastLaneChangeRef.current = now
           actions.setTargetLane(currentLane - 1)
         }
       } else if (gamma > 15 && currentLane < 1) {
-        // Tilted right
         if (lastTiltLaneRef.current !== 1) {
           lastTiltLaneRef.current = 1
           lastLaneChangeRef.current = now
           actions.setTargetLane(currentLane + 1)
         }
       } else if (gamma > -10 && gamma < 10) {
-        // Centered - reset
         lastTiltLaneRef.current = 0
       }
     }
 
-    // Try to enable tilt controls
     const enableTilt = async () => {
-      // iOS 13+ requires permission
+      hasPromptedRef.current = true
+      
       if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-        // Show prompt for iOS users
         setShowTiltPrompt(true)
       } else if ('DeviceOrientationEvent' in window) {
-        // Android and older iOS - no permission needed
-        // Test if it actually works
         const testHandler = (e: DeviceOrientationEvent) => {
           if (e.gamma !== null) {
             tiltEnabledRef.current = true
@@ -1117,7 +1058,6 @@ export function TouchControls() {
           }
         }
         window.addEventListener('deviceorientation', testHandler)
-        // Remove test listener after 1 second if no data
         setTimeout(() => {
           window.removeEventListener('deviceorientation', testHandler)
         }, 1000)
@@ -1131,15 +1071,14 @@ export function TouchControls() {
     }
   }, [state.gameState])
 
-  // Handle iOS tilt permission
   const handleEnableTilt = async () => {
     try {
       const permission = await (DeviceOrientationEvent as any).requestPermission()
       if (permission === 'granted') {
         tiltEnabledRef.current = true
+        hasPromptedRef.current = true
         setShowTiltPrompt(false)
         
-        // Add orientation listener
         const handleOrientation = (e: DeviceOrientationEvent) => {
           const gamma = e.gamma || 0
           const now = Date.now()
@@ -1172,10 +1111,10 @@ export function TouchControls() {
   }
 
   const handleSkipTilt = () => {
+    hasPromptedRef.current = true
     setShowTiltPrompt(false)
   }
 
-  // Keyboard controls (desktop)
   useEffect(() => {
     if (state.gameState !== 'playing') return
 
@@ -1212,7 +1151,6 @@ export function TouchControls() {
 
   return (
     <>
-      {/* iOS Tilt Permission Prompt */}
       {showTiltPrompt && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <div className="bg-gray-900 rounded-2xl p-6 mx-4 max-w-sm border border-white/10">
@@ -1241,9 +1179,7 @@ export function TouchControls() {
         </div>
       )}
 
-      {/* Touch zones - fallback when tilt is not available */}
       <div className="absolute left-0 right-0 bottom-0 top-24 sm:top-28 z-10">
-        {/* Left tap zone */}
         <div
           className="absolute left-0 top-0 bottom-0 w-[35%] flex items-center justify-start pl-2 sm:pl-4 opacity-0 active:opacity-100 transition-opacity"
           onTouchStart={(e) => {
@@ -1264,7 +1200,6 @@ export function TouchControls() {
             }
           }}
         />
-        {/* Right tap zone */}
         <div
           className="absolute right-0 top-0 bottom-0 w-[35%] flex items-center justify-end pr-2 sm:pr-4 opacity-0 active:opacity-100 transition-opacity"
           onTouchStart={(e) => {
