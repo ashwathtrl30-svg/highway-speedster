@@ -219,9 +219,9 @@ export const actions = {
     setState({ gameState })
     // Save progress when game ends
     if (gameState === 'gameover') {
-      // Add run coins to total coins
+      // Add run coins to total coins but keep runCoins visible
       const newTotalCoins = state.totalCoins + state.runCoins
-      setState({ totalCoins: newTotalCoins, runCoins: 0 })
+      setState({ totalCoins: newTotalCoins })
       saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, state.inventory)
     }
   },

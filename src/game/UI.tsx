@@ -48,9 +48,9 @@ export function HUD() {
   if (state.gameState !== 'playing') return null
 
   return (
-    <div className="absolute inset-0 pointer-events-none select-none">
+    <div className="absolute inset-0 pointer-events-none select-none z-20">
       {/* Top bar */}
-      <div className="absolute top-0 left-0 right-0 flex justify-between items-start p-2.5 sm:p-4">
+      <div className="absolute top-0 left-0 right-0 flex justify-between items-start p-2.5 sm:p-4 pointer-events-auto">
         {/* Score & Coins */}
         <div className="flex flex-col gap-1.5">
           <div className="bg-black/70 backdrop-blur-sm rounded-xl px-2.5 py-1.5 sm:px-4 sm:py-2.5 border border-white/5">
@@ -1108,7 +1108,7 @@ export function TouchControls() {
       )}
 
       {/* Touch zones - fallback when tilt is not available */}
-      <div className="absolute inset-0 z-10">
+      <div className="absolute left-0 right-0 bottom-0 top-24 sm:top-28 z-10">
         {/* Left tap zone */}
         <div
           className="absolute left-0 top-0 bottom-0 w-[35%] flex items-center justify-start pl-2 sm:pl-4 opacity-0 active:opacity-100 transition-opacity"
