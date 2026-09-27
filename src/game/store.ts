@@ -99,6 +99,11 @@ export interface PowerUpInventory {
   shield: number
 }
 
+export interface PlaytimeEntry {
+  date: string // YYYY-MM-DD format
+  seconds: number
+}
+
 export interface GameData {
   gameState: GameState
   score: number
@@ -132,11 +137,12 @@ export interface GameData {
   username: string
   totalPlaytime: number
   userPlaytime: Record<string, number>
+  playtimeHistory: PlaytimeEntry[]
 }
 
 const STORAGE_KEY = 'highway-speedster-progress'
 
-function loadSavedProgress(): { highScore: number; unlockedBikes: string[]; bikeSkins: Record<string, BikeSkin>; totalCoins: number; inventory: PowerUpInventory; username: string; totalPlaytime: number; userPlaytime: Record<string, number> } {
+function loadSavedProgress(): { highScore: number; unlockedBikes: string[]; bikeSkins: Record<string, BikeSkin>; totalCoins: number; inventory: PowerUpInventory; username: string; totalPlaytime: number; userPlaytime: Record<string, number>; playtimeHistory: PlaytimeEntry[] } {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
@@ -157,15 +163,16 @@ function loadSavedProgress(): { highScore: number; unlockedBikes: string[]; bike
         username: data.username || '',
         totalPlaytime: data.totalPlaytime || 0,
         userPlaytime: data.userPlaytime || {},
+        playtimeHistory: data.playtimeHistory || [],
       }
     }
   } catch (e) { /* ignore */ }
-  return { highScore: 0, unlockedBikes: ['blitz'], bikeSkins: { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' }, totalCoins: 0, inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }, username: '', totalPlaytime: 0, userPlaytime: {} }
+  return { highScore: 0, unlockedBikes: ['blitz'], bikeSkins: { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' }, totalCoins: 0, inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }, username: '', totalPlaytime: 0, userPlaytime: {}, playtimeHistory: [] }
 }
 
-function saveProgress(highScore: number, unlockedBikes: string[], bikeSkins: Record<string, BikeSkin>, totalCoins: number, inventory: PowerUpInventory, username: string, totalPlaytime: number, userPlaytime: Record<string, number>) {
+function saveProgress(highScore: number, unlockedBikes: string[], bikeSkins: Record<string, BikeSkin>, totalCoins: number, inventory: PowerUpInventory, username: string, totalPlaytime: number, userPlaytime: Record<string, number>, playtimeHistory: PlaytimeEntry[]) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ highScore, unlockedBikes, bikeSkins, totalCoins, inventory, username, totalPlaytime, userPlaytime }))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ highScore, unlockedBikes, bikeSkins, totalCoins, inventory, username, totalPlaytime, userPlaytime, playtimeHistory }))
   } catch (e) { /* ignore */ }
 }
 
@@ -211,6 +218,7 @@ let state: GameData = {
   username: savedProgress.username,
   totalPlaytime: savedProgress.totalPlaytime,
   userPlaytime: savedProgress.userPlaytime,
+  playtimeHistory: savedProgress.playtimeHistory,
 }
 
 const listeners: Set<Listener> = new Set()
@@ -242,7 +250,7 @@ export const actions = {
       // Add run coins to total coins but keep runCoins visible
       const newTotalCoins = state.totalCoins + state.runCoins
       setState({ totalCoins: newTotalCoins })
-      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, state.inventory, state.username, state.totalPlaytime, state.userPlaytime)
+      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, state.inventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
     }
   },
 
@@ -261,14 +269,14 @@ export const actions = {
           unlockedBikes: newUnlocked,
           newUnlock: bike.name,
         })
-        saveProgress(newHighScore, newUnlocked, state.bikeSkins, state.totalCoins, state.inventory, state.username, state.totalPlaytime, state.userPlaytime)
+        saveProgress(newHighScore, newUnlocked, state.bikeSkins, state.totalCoins, state.inventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
         return
       }
     }
     
     setState({ score: newScore, highScore: newHighScore })
     if (newHighScore > state.highScore) {
-      saveProgress(newHighScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory, state.username, state.totalPlaytime, state.userPlaytime)
+      saveProgress(newHighScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
     }
   },
 
@@ -316,7 +324,7 @@ export const actions = {
     }
     
     setState(updates)
-    saveProgress(state.highScore, state.unlockedBikes, newBikeSkins, state.totalCoins, state.inventory, state.username, state.totalPlaytime, state.userPlaytime)
+    saveProgress(state.highScore, state.unlockedBikes, newBikeSkins, state.totalCoins, state.inventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
   },
 
   addCoins(amount: number) {
@@ -329,7 +337,7 @@ export const actions = {
       const newTotalCoins = state.totalCoins - 300
       const newInventory = { ...state.inventory, magnet: state.inventory.magnet + 1 }
       setState({ totalCoins: newTotalCoins, inventory: newInventory })
-      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory, state.username, state.totalPlaytime, state.userPlaytime)
+      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
     }
   },
 
@@ -338,7 +346,7 @@ export const actions = {
       const newTotalCoins = state.totalCoins - 300
       const newInventory = { ...state.inventory, magnet2x: state.inventory.magnet2x + 1 }
       setState({ totalCoins: newTotalCoins, inventory: newInventory })
-      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory, state.username, state.totalPlaytime, state.userPlaytime)
+      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
     }
   },
 
@@ -347,7 +355,7 @@ export const actions = {
       const newTotalCoins = state.totalCoins - 300
       const newInventory = { ...state.inventory, multiplier2x: state.inventory.multiplier2x + 1 }
       setState({ totalCoins: newTotalCoins, inventory: newInventory })
-      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory, state.username, state.totalPlaytime, state.userPlaytime)
+      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
     }
   },
 
@@ -356,7 +364,7 @@ export const actions = {
       const newTotalCoins = state.totalCoins - 350
       const newInventory = { ...state.inventory, multiplier4x: state.inventory.multiplier4x + 1 }
       setState({ totalCoins: newTotalCoins, inventory: newInventory })
-      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory, state.username, state.totalPlaytime, state.userPlaytime)
+      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
     }
   },
 
@@ -365,7 +373,7 @@ export const actions = {
       const newTotalCoins = state.totalCoins - 450
       const newInventory = { ...state.inventory, shield: state.inventory.shield + 2 }
       setState({ totalCoins: newTotalCoins, inventory: newInventory })
-      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory, state.username, state.totalPlaytime, state.userPlaytime)
+      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
     }
   },
 
@@ -391,7 +399,7 @@ export const actions = {
           setState({ shieldActive: true, shieldCount: 2, inventory: newInventory })
         }
         
-        saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, newInventory, state.username, state.totalPlaytime, state.userPlaytime)
+        saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, newInventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
       }
     }
   },
@@ -425,24 +433,36 @@ export const actions = {
 
   setUsername(username: string) {
     setState({ username })
-    saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory, username, state.totalPlaytime, state.userPlaytime)
+    saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory, username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
   },
 
   // Playtime tracking
   addPlaytime(seconds: number) {
     const newTotalPlaytime = state.totalPlaytime + seconds
     const newUserPlaytime = { ...state.userPlaytime }
+    const newPlaytimeHistory = [...state.playtimeHistory]
     
     // Add to total playtime
     if (state.username) {
       newUserPlaytime[state.username] = (newUserPlaytime[state.username] || 0) + seconds
     }
     
+    // Track playtime with today's date
+    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+    const existingEntry = newPlaytimeHistory.find(entry => entry.date === today)
+    
+    if (existingEntry) {
+      existingEntry.seconds += seconds
+    } else {
+      newPlaytimeHistory.push({ date: today, seconds })
+    }
+    
     setState({ 
       totalPlaytime: newTotalPlaytime, 
-      userPlaytime: newUserPlaytime 
+      userPlaytime: newUserPlaytime,
+      playtimeHistory: newPlaytimeHistory
     })
-    saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory, state.username, newTotalPlaytime, newUserPlaytime)
+    saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory, state.username, newTotalPlaytime, newUserPlaytime, newPlaytimeHistory)
   },
 
   activateMagnet() {
