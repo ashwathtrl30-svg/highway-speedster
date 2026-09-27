@@ -13,43 +13,90 @@ export interface Bike {
   description: string
 }
 
+export type BikeSkin = 'black' | 'blue' | 'red' | 'silver' | 'gold'
+
+export const BIKE_SKINS: Record<string, BikeSkin[]> = {
+  blitz: ['black', 'blue', 'red'],
+  apex: ['black', 'blue', 'red'],
+  chronos: ['black', 'blue', 'red'],
+  stratos: ['black', 'blue', 'red', 'silver'],
+  zenith: ['black', 'blue', 'red', 'silver', 'gold'],
+}
+
+export const SKIN_COLORS: Record<BikeSkin, { color: string; accentColor: string }> = {
+  black: { color: '#1a1a1a', accentColor: '#333333' },
+  blue: { color: '#1e40af', accentColor: '#3b82f6' },
+  red: { color: '#991b1b', accentColor: '#ef4444' },
+  silver: { color: '#6b7280', accentColor: '#9ca3af' },
+  gold: { color: '#b8860b', accentColor: '#ffd700' },
+}
+
 export const BIKES: Bike[] = [
   {
     id: 'blitz',
     name: 'Blitz',
     unlockScore: 0,
-    maxSpeed: 150,
+    maxSpeed: 100,
     acceleration: 0.8,
     handling: 1.0,
-    color: '#c0392b',
-    accentColor: '#e74c3c',
+    color: '#1a1a1a',
+    accentColor: '#333333',
     description: 'The classic cruiser. Balanced and reliable.',
   },
   {
     id: 'apex',
     name: 'Apex',
-    unlockScore: 30000,
-    maxSpeed: 200,
+    unlockScore: 20000,
+    maxSpeed: 120,
     acceleration: 1.2,
     handling: 0.9,
-    color: '#2c3e50',
-    accentColor: '#3498db',
+    color: '#1a1a1a',
+    accentColor: '#333333',
     description: 'Muscular sport-tourer. Raw power.',
   },
   {
     id: 'chronos',
     name: 'Chronos',
+    unlockScore: 30000,
+    maxSpeed: 150,
+    acceleration: 1.4,
+    handling: 0.85,
+    color: '#1a1a1a',
+    accentColor: '#333333',
+    description: 'Agile street fighter. Quick and nimble.',
+  },
+  {
+    id: 'stratos',
+    name: 'Stratos',
+    unlockScore: 40000,
+    maxSpeed: 180,
+    acceleration: 1.5,
+    handling: 0.8,
+    color: '#1a1a1a',
+    accentColor: '#333333',
+    description: 'High-performance machine. Built for speed.',
+  },
+  {
+    id: 'zenith',
+    name: 'Zenith',
     unlockScore: 50000,
     maxSpeed: 250,
-    acceleration: 1.6,
-    handling: 0.8,
-    color: '#f39c12',
-    accentColor: '#e67e22',
-    description: 'The legendary speed demon. Unleash the beast.',
+    acceleration: 1.8,
+    handling: 0.75,
+    color: '#1a1a1a',
+    accentColor: '#333333',
+    description: 'The ultimate speed demon. Unmatched power.',
   },
 ]
 
 export type GameState = 'menu' | 'playing' | 'paused' | 'gameover'
+
+export interface PowerUpInventory {
+  magnet: number
+  multiplier2x: number
+  multiplier4x: number
+  shield: number
+}
 
 export interface GameData {
   gameState: GameState
@@ -61,16 +108,29 @@ export interface GameData {
   combo: number
   comboTimer: number
   selectedBike: Bike
+  selectedSkin: BikeSkin
   unlockedBikes: string[]
+  bikeSkins: Record<string, BikeSkin>
+  totalCoins: number
+  runCoins: number
+  inventory: PowerUpInventory
+  selectedPowerUp: 'magnet' | 'multiplier2x' | 'multiplier4x' | 'shield' | null
   playerLane: number
   targetLane: number
   playerX: number
   newUnlock: string | null
+  magnetActive: boolean
+  magnetTimer: number
+  multiplierActive: boolean
+  multiplierTimer: number
+  multiplier4x: boolean
+  shieldActive: boolean
+  shieldCount: number
 }
 
 const STORAGE_KEY = 'highway-speedster-progress'
 
-function loadSavedProgress(): { highScore: number; unlockedBikes: string[] } {
+function loadSavedProgress(): { highScore: number; unlockedBikes: string[]; bikeSkins: Record<string, BikeSkin>; totalCoins: number; inventory: PowerUpInventory } {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
@@ -85,36 +145,58 @@ function loadSavedProgress(): { highScore: number; unlockedBikes: string[] } {
       return {
         highScore: data.highScore || 0,
         unlockedBikes: (data.unlockedBikes || ['blitz']).map(migrate),
+        bikeSkins: data.bikeSkins || { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' },
+        totalCoins: data.totalCoins || data.coins || 0,
+        inventory: { magnet: 0, multiplier2x: 0, multiplier4x: 0, shield: 0, ...(data.inventory || {}) },
       }
     }
   } catch (e) { /* ignore */ }
-  return { highScore: 0, unlockedBikes: ['blitz'] }
+  return { highScore: 0, unlockedBikes: ['blitz'], bikeSkins: { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' }, totalCoins: 0, inventory: { magnet: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 } }
 }
 
-function saveProgress(highScore: number, unlockedBikes: string[]) {
+function saveProgress(highScore: number, unlockedBikes: string[], bikeSkins: Record<string, BikeSkin>, totalCoins: number, inventory: PowerUpInventory) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ highScore, unlockedBikes }))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ highScore, unlockedBikes, bikeSkins, totalCoins, inventory }))
   } catch (e) { /* ignore */ }
 }
 
 // Simple store using a listener pattern
 type Listener = () => void
 
+const savedProgress = loadSavedProgress()
+const initialBike = BIKES[0]
+const initialSkin = savedProgress.bikeSkins[initialBike.id] || 'black'
+const initialColors = SKIN_COLORS[initialSkin]
+const defaultInventory = { magnet: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }
+
 let state: GameData = {
   gameState: 'menu',
   score: 0,
-  highScore: loadSavedProgress().highScore,
+  highScore: savedProgress.highScore,
   distance: 0,
   speed: 0,
   nearMisses: 0,
   combo: 0,
   comboTimer: 0,
-  selectedBike: BIKES[0],
-  unlockedBikes: loadSavedProgress().unlockedBikes,
+  selectedBike: { ...initialBike, color: initialColors.color, accentColor: initialColors.accentColor },
+  selectedSkin: initialSkin,
+  unlockedBikes: savedProgress.unlockedBikes,
+  bikeSkins: savedProgress.bikeSkins,
+  totalCoins: savedProgress.totalCoins,
+  runCoins: 0,
+  inventory: { ...defaultInventory, ...savedProgress.inventory },
+  selectedPowerUp: null,
   playerLane: 0,
   targetLane: 0,
   playerX: 0,
   newUnlock: null,
+  magnetActive: false,
+  magnetTimer: 0,
+  multiplierActive: false,
+  multiplierTimer: 0,
+  multiplier4x: false,
+  shieldActive: false,
+  shieldCount: 0,
 }
 
 const listeners: Set<Listener> = new Set()
@@ -143,7 +225,10 @@ export const actions = {
     setState({ gameState })
     // Save progress when game ends
     if (gameState === 'gameover') {
-      saveProgress(state.highScore, state.unlockedBikes)
+      // Add run coins to total coins but keep runCoins visible
+      const newTotalCoins = state.totalCoins + state.runCoins
+      setState({ totalCoins: newTotalCoins })
+      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, state.inventory)
     }
   },
 
@@ -162,14 +247,14 @@ export const actions = {
           unlockedBikes: newUnlocked,
           newUnlock: bike.name,
         })
-        saveProgress(newHighScore, newUnlocked)
+        saveProgress(newHighScore, newUnlocked, state.bikeSkins, state.totalCoins, state.inventory)
         return
       }
     }
     
     setState({ score: newScore, highScore: newHighScore })
     if (newHighScore > state.highScore) {
-      saveProgress(newHighScore, state.unlockedBikes)
+      saveProgress(newHighScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory)
     }
   },
 
@@ -196,44 +281,79 @@ export const actions = {
 
   setPlayerX(x: number) { setState({ playerX: x }) },
 
-  selectBike(bike: Bike) { setState({ selectedBike: bike }) },
-
-  resetGame() {
-    setState({
-      score: 0,
-      distance: 0,
-      speed: 0,
-      nearMisses: 0,
-      combo: 0,
-      comboTimer: 0,
-      playerLane: 0,
-      targetLane: 0,
-      playerX: 0,
-      newUnlock: null,
+  selectBike(bike: Bike) {
+    const skin = state.bikeSkins[bike.id] || 'black'
+    const colors = SKIN_COLORS[skin]
+    setState({ 
+      selectedBike: { ...bike, color: colors.color, accentColor: colors.accentColor },
+      selectedSkin: skin,
     })
   },
 
-  clearNewUnlock() { setState({ newUnlock: null }) },
-}
+  selectSkin(bikeId: string, skin: BikeSkin) {
+    const colors = SKIN_COLORS[skin]
+    const newBikeSkins = { ...state.bikeSkins, [bikeId]: skin }
+    const updates: Partial<GameData> = { bikeSkins: newBikeSkins }
+    
+    // If this is the currently selected bike, update its colors
+    if (state.selectedBike.id === bikeId) {
+      updates.selectedBike = { ...state.selectedBike, color: colors.color, accentColor: colors.accentColor }
+      updates.selectedSkin = skin
+    }
+    
+    setState(updates)
+    saveProgress(state.highScore, state.unlockedBikes, newBikeSkins, state.totalCoins, state.inventory)
+  },
 
-// React hook
-export function useGameStore(): GameData
-export function useGameStore<T>(selector: (state: GameData) => T): T
-export function useGameStore<T>(selector?: (state: GameData) => T): T | GameData {
-  const [, forceUpdate] = useState(0)
-  
-  useEffect(() => {
-    const unsub = subscribe(() => forceUpdate((n) => n + 1))
-    return unsub
-  }, [])
+  addCoins(amount: number) {
+    const newRunCoins = state.runCoins + amount
+    setState({ runCoins: newRunCoins })
+  },
 
-  if (selector) {
-    return selector(state)
-  }
-  return state
-}
+  buyMagnet() {
+    if (state.totalCoins >= 300) {
+      const newTotalCoins = state.totalCoins - 300
+      const newInventory = { ...state.inventory, magnet: state.inventory.magnet + 1 }
+      setState({ totalCoins: newTotalCoins, inventory: newInventory })
+      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory)
+    }
+  },
 
-// Hook for specific actions that need stable references
-export function useGameActions() {
-  return useRef(actions).current
-}
+  buyMultiplier() {
+    if (state.totalCoins >= 300) {
+      const newTotalCoins = state.totalCoins - 300
+      const newInventory = { ...state.inventory, multiplier2x: state.inventory.multiplier2x + 1 }
+      setState({ totalCoins: newTotalCoins, inventory: newInventory })
+      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory)
+    }
+  },
+
+  buyMultiplier4x() {
+    if (state.totalCoins >= 350) {
+      const newTotalCoins = state.totalCoins - 350
+      const newInventory = { ...state.inventory, multiplier4x: state.inventory.multiplier4x + 1 }
+      setState({ totalCoins: newTotalCoins, inventory: newInventory })
+      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory)
+    }
+  },
+
+  buyShield() {
+    if (state.totalCoins >= 450) {
+      const newTotalCoins = state.totalCoins - 450
+      const newInventory = { ...state.inventory, shield: state.inventory.shield + 2 }
+      setState({ totalCoins: newTotalCoins, inventory: newInventory })
+      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory)
+    }
+  },
+
+  selectPowerUp(powerUp: 'magnet' | 'multiplier2x' | 'multiplier4x' | 'shield' | null) {
+    setState({ selectedPowerUp: powerUp as any })
+  },
+
+  useSelectedPowerUp() {
+    if (state.selectedPowerUp) {
+      const powerUp = state.selectedPowerUp as 'magnet' | 'multiplier2x' | 'multiplier4x' | 'shield'
+      if (state.inventory[powerUp] > 0) {
+        const newInventory = { ...state.inventory, [powerUp]: state.inventory[powerUp] - 1 }
+        
+        if (powerUp === '
