@@ -261,7 +261,6 @@ export function MainMenu() {
         <button
           onClick={() => { 
             actions.resetGame()
-            // Check if user has any power-ups
             const hasPowerUps = state.inventory.magnet > 0 || state.inventory.magnet2x > 0 || state.inventory.multiplier2x > 0 || state.inventory.multiplier4x > 0 || state.inventory.shield > 0
             if (hasPowerUps) {
               setShowPowerUpSelection(true)
@@ -1151,6 +1150,7 @@ export function TouchControls() {
 
   return (
     <>
+      {/* iOS Tilt Permission Prompt */}
       {showTiltPrompt && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <div className="bg-gray-900 rounded-2xl p-6 mx-4 max-w-sm border border-white/10">
@@ -1179,7 +1179,9 @@ export function TouchControls() {
         </div>
       )}
 
+      {/* Touch zones - fallback when tilt is not available */}
       <div className="absolute left-0 right-0 bottom-0 top-24 sm:top-28 z-10">
+        {/* Left tap zone */}
         <div
           className="absolute left-0 top-0 bottom-0 w-[35%] flex items-center justify-start pl-2 sm:pl-4 opacity-0 active:opacity-100 transition-opacity"
           onTouchStart={(e) => {
@@ -1200,6 +1202,7 @@ export function TouchControls() {
             }
           }}
         />
+        {/* Right tap zone */}
         <div
           className="absolute right-0 top-0 bottom-0 w-[35%] flex items-center justify-end pr-2 sm:pr-4 opacity-0 active:opacity-100 transition-opacity"
           onTouchStart={(e) => {
@@ -1220,6 +1223,57 @@ export function TouchControls() {
             }
           }}
         />
+      </div>
+
+      {/* Mobile Arrow Controls - Only visible on small screens */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-6 z-20 sm:hidden">
+        {/* Left Arrow */}
+        <button
+          onTouchStart={(e) => {
+            e.preventDefault()
+            const now = Date.now()
+            if (now - lastTapRef.current > 150) {
+              lastTapRef.current = now
+              actions.setTargetLane(getState().targetLane - 1)
+            }
+          }}
+          onClick={() => {
+            const now = Date.now()
+            if (now - lastTapRef.current > 150) {
+              lastTapRef.current = now
+              actions.setTargetLane(getState().targetLane - 1)
+            }
+          }}
+          className="w-16 h-16 bg-white/20 backdrop-blur-sm border-2 border-white/40 rounded-full flex items-center justify-center active:scale-90 active:bg-white/30 transition-all shadow-lg"
+        >
+          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        {/* Right Arrow */}
+        <button
+          onTouchStart={(e) => {
+            e.preventDefault()
+            const now = Date.now()
+            if (now - lastTapRef.current > 150) {
+              lastTapRef.current = now
+              actions.setTargetLane(getState().targetLane + 1)
+            }
+          }}
+          onClick={() => {
+            const now = Date.now()
+            if (now - lastTapRef.current > 150) {
+              lastTapRef.current = now
+              actions.setTargetLane(getState().targetLane + 1)
+            }
+          }}
+          className="w-16 h-16 bg-white/20 backdrop-blur-sm border-2 border-white/40 rounded-full flex items-center justify-center active:scale-90 active:bg-white/30 transition-all shadow-lg"
+        >
+          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
     </>
   )
