@@ -1406,9 +1406,9 @@ function createCoinMesh(): THREE.Group {
 function PowerUpSystem() {
   const powerUpsRef = useRef<PowerUp[]>([])
   const nextIdRef = useRef(0)
-  const magnetTimerRef = useRef(8)
-  const multiplierTimerRef = useRef(12)
-  const shieldTimerRef = useRef(15)
+  const magnetTimerRef = useRef(10)
+  const multiplierTimerRef = useRef(18)
+  const shieldTimerRef = useRef(25)
   const meshCacheRef = useRef<Map<number, THREE.Group>>(new Map())
   const groupRef = useRef<THREE.Group>(null)
   const lastGameStateRef = useRef<string>('menu')
@@ -1419,9 +1419,9 @@ function PowerUpSystem() {
     // Clear power-ups when game restarts
     if (state.gameState === 'playing' && lastGameStateRef.current !== 'playing') {
       powerUpsRef.current = []
-      magnetTimerRef.current = 8
-      multiplierTimerRef.current = 12
-      shieldTimerRef.current = 15
+      magnetTimerRef.current = 10
+      multiplierTimerRef.current = 18
+      shieldTimerRef.current = 25
     }
     lastGameStateRef.current = state.gameState
     
@@ -1434,10 +1434,10 @@ function PowerUpSystem() {
     // Tick power-up timers
     actions.tickPowerUps(clampedDelta)
 
-    // Spawn magnet every 8 seconds
+    // Spawn magnet every 10 seconds
     magnetTimerRef.current -= clampedDelta
     if (magnetTimerRef.current <= 0) {
-      magnetTimerRef.current = 8
+      magnetTimerRef.current = 10
       const lane = Math.floor(Math.random() * 3) - 1
       powerUpsRef.current.push({
         id: nextIdRef.current++,
@@ -1448,10 +1448,10 @@ function PowerUpSystem() {
       })
     }
 
-    // Spawn multiplier every 12 seconds
+    // Spawn multiplier every 18 seconds
     multiplierTimerRef.current -= clampedDelta
     if (multiplierTimerRef.current <= 0) {
-      multiplierTimerRef.current = 12
+      multiplierTimerRef.current = 18
       const lane = Math.floor(Math.random() * 3) - 1
       powerUpsRef.current.push({
         id: nextIdRef.current++,
@@ -1462,10 +1462,10 @@ function PowerUpSystem() {
       })
     }
 
-    // Spawn shield every 15 seconds
+    // Spawn shield every 25 seconds
     shieldTimerRef.current -= clampedDelta
     if (shieldTimerRef.current <= 0) {
-      shieldTimerRef.current = 15
+      shieldTimerRef.current = 25
       const lane = Math.floor(Math.random() * 3) - 1
       powerUpsRef.current.push({
         id: nextIdRef.current++,
