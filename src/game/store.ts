@@ -93,6 +93,7 @@ export type GameState = 'menu' | 'playing' | 'paused' | 'gameover'
 
 export interface PowerUpInventory {
   magnet: number
+  magnet2x: number
   multiplier2x: number
   multiplier4x: number
   shield: number
@@ -114,13 +115,15 @@ export interface GameData {
   totalCoins: number
   runCoins: number
   inventory: PowerUpInventory
-  selectedPowerUp: 'magnet' | 'multiplier2x' | 'multiplier4x' | 'shield' | null
+  selectedPowerUp: 'magnet' | 'magnet2x' | 'multiplier2x' | 'multiplier4x' | 'shield' | null
   playerLane: number
   targetLane: number
   playerX: number
   newUnlock: string | null
   magnetActive: boolean
   magnetTimer: number
+  magnet2xActive: boolean
+  magnet2xTimer: number
   multiplierActive: boolean
   multiplierTimer: number
   multiplier4x: boolean
@@ -148,12 +151,12 @@ function loadSavedProgress(): { highScore: number; unlockedBikes: string[]; bike
         unlockedBikes: (data.unlockedBikes || ['blitz']).map(migrate),
         bikeSkins: data.bikeSkins || { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' },
         totalCoins: data.totalCoins || data.coins || 0,
-        inventory: { magnet: 0, multiplier2x: 0, multiplier4x: 0, shield: 0, ...(data.inventory || {}) },
+        inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0, ...(data.inventory || {}) },
         username: data.username || '',
       }
     }
   } catch (e) { /* ignore */ }
-  return { highScore: 0, unlockedBikes: ['blitz'], bikeSkins: { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' }, totalCoins: 0, inventory: { magnet: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }, username: '' }
+  return { highScore: 0, unlockedBikes: ['blitz'], bikeSkins: { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' }, totalCoins: 0, inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }, username: '' }
 }
 
 function saveProgress(highScore: number, unlockedBikes: string[], bikeSkins: Record<string, BikeSkin>, totalCoins: number, inventory: PowerUpInventory, username: string) {
@@ -169,7 +172,7 @@ const savedProgress = loadSavedProgress()
 const initialBike = BIKES[0]
 const initialSkin = savedProgress.bikeSkins[initialBike.id] || 'black'
 const initialColors = SKIN_COLORS[initialSkin]
-const defaultInventory = { magnet: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }
+const defaultInventory = { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }
 
 let state: GameData = {
   gameState: 'menu',
@@ -194,6 +197,8 @@ let state: GameData = {
   newUnlock: null,
   magnetActive: false,
   magnetTimer: 0,
+  magnet2xActive: false,
+  magnet2xTimer: 0,
   multiplierActive: false,
   multiplierTimer: 0,
   multiplier4x: false,
@@ -322,6 +327,15 @@ export const actions = {
     }
   },
 
+  buyMagnet2x() {
+    if (state.totalCoins >= 300) {
+      const newTotalCoins = state.totalCoins - 300
+      const newInventory = { ...state.inventory, magnet2x: state.inventory.magnet2x + 1 }
+      setState({ totalCoins: newTotalCoins, inventory: newInventory })
+      saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory, state.username)
+    }
+  },
+
   buyMultiplier() {
     if (state.totalCoins >= 300) {
       const newTotalCoins = state.totalCoins - 300
@@ -349,18 +363,20 @@ export const actions = {
     }
   },
 
-  selectPowerUp(powerUp: 'magnet' | 'multiplier2x' | 'multiplier4x' | 'shield' | null) {
+  selectPowerUp(powerUp: 'magnet' | 'magnet2x' | 'multiplier2x' | 'multiplier4x' | 'shield' | null) {
     setState({ selectedPowerUp: powerUp as any })
   },
 
   useSelectedPowerUp() {
     if (state.selectedPowerUp) {
-      const powerUp = state.selectedPowerUp as 'magnet' | 'multiplier2x' | 'multiplier4x' | 'shield'
+      const powerUp = state.selectedPowerUp as 'magnet' | 'magnet2x' | 'multiplier2x' | 'multiplier4x' | 'shield'
       if (state.inventory[powerUp] > 0) {
         const newInventory = { ...state.inventory, [powerUp]: state.inventory[powerUp] - 1 }
         
         if (powerUp === 'magnet') {
           setState({ magnetActive: true, magnetTimer: 10, inventory: newInventory })
+        } else if (powerUp === 'magnet2x') {
+          setState({ magnet2xActive: true, magnet2xTimer: 10, inventory: newInventory })
         } else if (powerUp === 'multiplier2x') {
           setState({ multiplierActive: true, multiplierTimer: 10, multiplier4x: false, inventory: newInventory })
         } else if (powerUp === 'multiplier4x') {
@@ -389,6 +405,8 @@ export const actions = {
       newUnlock: null,
       magnetActive: false,
       magnetTimer: 0,
+      magnet2xActive: false,
+      magnet2xTimer: 0,
       multiplierActive: false,
       multiplierTimer: 0,
       multiplier4x: false,
@@ -406,6 +424,10 @@ export const actions = {
 
   activateMagnet() {
     setState({ magnetActive: true, magnetTimer: 10 })
+  },
+
+  activateMagnet2x() {
+    setState({ magnet2xActive: true, magnet2xTimer: 10 })
   },
 
   activateMultiplier() {
@@ -436,6 +458,16 @@ export const actions = {
         updates.magnetTimer = 0
       } else {
         updates.magnetTimer = newTimer
+      }
+    }
+    
+    if (state.magnet2xActive) {
+      const newTimer = state.magnet2xTimer - delta
+      if (newTimer <= 0) {
+        updates.magnet2xActive = false
+        updates.magnet2xTimer = 0
+      } else {
+        updates.magnet2xTimer = newTimer
       }
     }
     
