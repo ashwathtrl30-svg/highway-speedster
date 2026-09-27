@@ -982,6 +982,7 @@ function TrafficSystem() {
   const spawnTimerRef = useRef(0)
   const lastGameStateRef = useRef<string>('menu')
   const survivalTimeRef = useRef(0)
+  const playtimeTrackerRef = useRef(0)
 
   const vehicleColors = useMemo(() => [
     '#e74c3c', '#3498db', '#27ae60', '#f39c12', '#8e44ad',
@@ -1006,6 +1007,7 @@ function TrafficSystem() {
       vehiclesRef.current = []
       spawnTimerRef.current = 0
       survivalTimeRef.current = 0
+      playtimeTrackerRef.current = 0
     }
     lastGameStateRef.current = state.gameState
     
@@ -1017,6 +1019,14 @@ function TrafficSystem() {
 
     // Track survival time
     survivalTimeRef.current += clampedDelta
+
+    // Track playtime (every second)
+    playtimeTrackerRef.current += clampedDelta
+    if (playtimeTrackerRef.current >= 1) {
+      const secondsToAdd = Math.floor(playtimeTrackerRef.current)
+      playtimeTrackerRef.current -= secondsToAdd
+      actions.addPlaytime(secondsToAdd)
+    }
 
     // Get bike-specific spawn configuration
     const spawnConfig = getSpawnConfig(state.selectedBike.id)
