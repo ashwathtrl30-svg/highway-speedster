@@ -46,7 +46,7 @@ export const BIKES: Bike[] = [
   {
     id: 'apex',
     name: 'Apex',
-    unlockScore: 20000,
+    unlockScore: 30000,
     maxSpeed: 120,
     acceleration: 1.2,
     handling: 0.9,
@@ -57,7 +57,7 @@ export const BIKES: Bike[] = [
   {
     id: 'chronos',
     name: 'Chronos',
-    unlockScore: 30000,
+    unlockScore: 50000,
     maxSpeed: 150,
     acceleration: 1.4,
     handling: 0.85,
@@ -68,7 +68,7 @@ export const BIKES: Bike[] = [
   {
     id: 'stratos',
     name: 'Stratos',
-    unlockScore: 40000,
+    unlockScore: 80000,
     maxSpeed: 180,
     acceleration: 1.5,
     handling: 0.8,
@@ -79,7 +79,7 @@ export const BIKES: Bike[] = [
   {
     id: 'zenith',
     name: 'Zenith',
-    unlockScore: 50000,
+    unlockScore: 100000,
     maxSpeed: 250,
     acceleration: 1.8,
     handling: 0.75,
