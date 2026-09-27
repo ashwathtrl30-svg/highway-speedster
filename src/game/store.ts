@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 
-// Bike definitions
+// Bike definitions - 3 iconic Indian bikes
 export interface Bike {
   id: string
   name: string
@@ -135,6 +135,7 @@ function loadSavedProgress(): { highScore: number; unlockedBikes: string[]; bike
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
       const data = JSON.parse(saved)
+      // Migrate old bike IDs to new names
       const migrate = (id: string) => {
         if (id === 'thunderbird') return 'blitz'
         if (id === 'dominar') return 'apex'
@@ -159,6 +160,7 @@ function saveProgress(highScore: number, unlockedBikes: string[], bikeSkins: Rec
   } catch (e) { /* ignore */ }
 }
 
+// Simple store using a listener pattern
 type Listener = () => void
 
 const savedProgress = loadSavedProgress()
@@ -217,10 +219,13 @@ export function subscribe(listener: Listener): () => void {
   return () => listeners.delete(listener)
 }
 
+// Actions
 export const actions = {
   setGameState(gameState: GameState) {
     setState({ gameState })
+    // Save progress when game ends
     if (gameState === 'gameover') {
+      // Add run coins to total coins but keep runCoins visible
       const newTotalCoins = state.totalCoins + state.runCoins
       setState({ totalCoins: newTotalCoins })
       saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, state.inventory)
@@ -230,7 +235,9 @@ export const actions = {
   addScore(points: number) {
     const newScore = state.score + points
     const newHighScore = Math.max(state.highScore, newScore)
+    let newUnlock: string | null = null
     
+    // Check bike unlocks
     for (const bike of BIKES) {
       if (newScore >= bike.unlockScore && !state.unlockedBikes.includes(bike.id)) {
         const newUnlocked = [...state.unlockedBikes, bike.id]
@@ -288,6 +295,7 @@ export const actions = {
     const newBikeSkins = { ...state.bikeSkins, [bikeId]: skin }
     const updates: Partial<GameData> = { bikeSkins: newBikeSkins }
     
+    // If this is the currently selected bike, update its colors
     if (state.selectedBike.id === bikeId) {
       updates.selectedBike = { ...state.selectedBike, color: colors.color, accentColor: colors.accentColor }
       updates.selectedSkin = skin
@@ -439,6 +447,7 @@ export const actions = {
   },
 }
 
+// React hook
 export function useGameStore(): GameData
 export function useGameStore<T>(selector: (state: GameData) => T): T
 export function useGameStore<T>(selector?: (state: GameData) => T): T | GameData {
@@ -455,6 +464,7 @@ export function useGameStore<T>(selector?: (state: GameData) => T): T | GameData
   return state
 }
 
+// Hook for specific actions that need stable references
 export function useGameActions() {
   return useRef(actions).current
 }
