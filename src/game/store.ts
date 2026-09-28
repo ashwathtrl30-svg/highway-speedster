@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { syncAnalyticsToSupabase } from './supabase'
 
 // Bike definitions - 3 iconic Indian bikes
 export interface Bike {
@@ -251,6 +252,16 @@ export const actions = {
       const newTotalCoins = state.totalCoins + state.runCoins
       setState({ totalCoins: newTotalCoins })
       saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, state.inventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
+      
+      // Sync to Supabase when game ends
+      if (state.username) {
+        syncAnalyticsToSupabase(
+          state.username,
+          state.totalPlaytime,
+          state.highScore,
+          newTotalCoins
+        )
+      }
     }
   },
 
@@ -463,6 +474,16 @@ export const actions = {
       playtimeHistory: newPlaytimeHistory
     })
     saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory, state.username, newTotalPlaytime, newUserPlaytime, newPlaytimeHistory)
+    
+    // Sync to Supabase every 30 seconds
+    if (state.username && newTotalPlaytime % 30 === 0) {
+      syncAnalyticsToSupabase(
+        state.username,
+        newTotalPlaytime,
+        state.highScore,
+        state.totalCoins
+      )
+    }
   },
 
   activateMagnet() {
