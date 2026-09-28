@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGameStore, actions, BIKES, BIKE_SKINS, getState, type Bike, type BikeSkin } from './store'
-import { fetchAllAnalytics } from './supabase'
+import { fetchAllAnalytics } from '../supabase'
 
 // ============== LOADING SCREEN ==============
 export function LoadingScreen() {
