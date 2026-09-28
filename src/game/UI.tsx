@@ -247,11 +247,23 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
     return map
   }, {})
 
-  // Overall includes users whose cumulative record exists even if their historical events predate this system.
+  // Overall must not undercount the event history. Playtime events are written
+  // in 30-second batches and the cumulative user row can briefly lag behind.
+  // Reconcile both sources without double-counting by taking the larger total
+  // for each user. This preserves all existing cumulative/legacy playtime.
+  const allEventByUser = analytics.events.reduce((map: Record<string, number>, event: any) => {
+    map[event.username] = (map[event.username] || 0) + Number(event.seconds || 0)
+    return map
+  }, {})
+
   const overallByUser = analytics.users.reduce((map: Record<string, number>, user: any) => {
     map[user.username] = Math.max(map[user.username] || 0, Number(user.playtime_seconds || 0))
     return map
   }, {})
+
+  Object.entries(allEventByUser).forEach(([username, seconds]) => {
+    overallByUser[username] = Math.max(overallByUser[username] || 0, Number(seconds || 0))
+  })
 
   const leaderboard = Object.entries(timeFilter === 'all' ? overallByUser : periodByUser)
     .map(([username, seconds]) => ({ username, seconds }))
