@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { syncAnalyticsToSupabase } from './supabase'
+import { syncAnalyticsToSupabase } from '../supabase'
 
 // Bike definitions - 3 iconic Indian bikes
 export interface Bike {
