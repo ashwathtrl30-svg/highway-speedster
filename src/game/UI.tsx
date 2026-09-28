@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGameStore, actions, BIKES, BIKE_SKINS, getState, type Bike, type BikeSkin } from './store'
+import { fetchAllAnalytics } from './supabase'
 
 // ============== LOADING SCREEN ==============
 export function LoadingScreen() {
@@ -182,6 +183,23 @@ export function HUD() {
 function StatsScreen({ onBack }: { onBack: () => void }) {
   const state = useGameStore()
   const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'all'>('all')
+  const [supabaseData, setSupabaseData] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Fetch analytics from Supabase
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      const data = await fetchAllAnalytics()
+      setSupabaseData(data)
+      setLoading(false)
+    }
+    fetchData()
+    
+    // Refresh every 10 seconds
+    const interval = setInterval(fetchData, 10000)
+    return () => clearInterval(interval)
+  }, [])
 
   // Format seconds to readable time
   const formatTime = (seconds: number): string => {
@@ -198,52 +216,36 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
     }
   }
 
-  // Filter playtime history based on time range
-  const getFilteredPlaytime = () => {
+  // Get data based on time filter
+  const getFilteredData = () => {
+    if (supabaseData.length === 0) {
+      return { total: 0, users: [] }
+    }
+
     const now = new Date()
-    let startDate: Date
-    
+    let filteredUsers = supabaseData
+
     if (timeFilter === 'week') {
-      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      filteredUsers = supabaseData.filter(user => 
+        new Date(user.last_updated) >= weekAgo
+      )
     } else if (timeFilter === 'month') {
-      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-    } else {
-      // All time - return total
-      return {
-        total: state.totalPlaytime,
-        users: state.userPlaytime
-      }
+      const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+      filteredUsers = supabaseData.filter(user => 
+        new Date(user.last_updated) >= monthAgo
+      )
     }
+
+    const total = filteredUsers.reduce((sum, user) => sum + (user.playtime_seconds || 0), 0)
     
-    const startDateStr = startDate.toISOString().split('T')[0]
-    
-    // Filter history entries
-    const filteredHistory = state.playtimeHistory.filter(entry => entry.date >= startDateStr)
-    
-    // Calculate totals from filtered history
-    const total = filteredHistory.reduce((sum, entry) => sum + entry.seconds, 0)
-    
-    // For user breakdown, we'll use the same filtered data
-    // Since we don't track per-user per-day, we'll estimate based on current ratios
-    const users: Record<string, number> = {}
-    const userNames = Object.keys(state.userPlaytime)
-    
-    if (userNames.length > 0 && total > 0) {
-      // Distribute proportionally based on all-time totals
-      userNames.forEach(username => {
-        const ratio = state.userPlaytime[username] / state.totalPlaytime
-        users[username] = Math.round(total * ratio)
-      })
+    return {
+      total,
+      users: filteredUsers.sort((a, b) => (b.playtime_seconds || 0) - (a.playtime_seconds || 0))
     }
-    
-    return { total, users }
   }
 
-  const filteredData = getFilteredPlaytime()
-
-  // Sort users by playtime
-  const sortedUsers = Object.entries(filteredData.users)
-    .sort(([, a], [, b]) => b - a)
+  const filteredData = getFilteredData()
 
   return (
     <div className="absolute inset-0 flex flex-col bg-gradient-to-b from-gray-900 via-gray-950 to-black overflow-y-auto">
@@ -310,18 +312,22 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
       <div className="flex-1 px-3 sm:px-4 py-4 sm:py-6">
         <h3 className="text-white font-bold text-base sm:text-lg mb-4">👥 Player Statistics</h3>
         
-        {sortedUsers.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500 text-sm">Loading analytics...</p>
+          </div>
+        ) : filteredData.users.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-500 text-sm">No playtime data yet</p>
             <p className="text-gray-600 text-xs mt-2">Start playing to see your stats!</p>
           </div>
         ) : (
           <div className="space-y-2">
-            {sortedUsers.map(([username, playtime], index) => (
+            {filteredData.users.map((user: any, index: number) => (
               <div 
-                key={username}
+                key={user.username}
                 className={`rounded-xl p-3 sm:p-4 border ${
-                  username === state.username 
+                  user.username === state.username 
                     ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/40' 
                     : 'bg-white/[0.03] border-white/10'
                 }`}
@@ -334,16 +340,19 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-white font-bold text-sm sm:text-base">
-                          {username}
+                          {user.username}
                         </span>
-                        {username === state.username && (
+                        {user.username === state.username && (
                           <span className="text-[10px] bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full font-semibold">
                             YOU
                           </span>
                         )}
                       </div>
                       <p className="text-gray-400 text-xs mt-0.5">
-                        Playtime: <span className="text-purple-400 font-semibold">{formatTime(playtime)}</span>
+                        Playtime: <span className="text-purple-400 font-semibold">{formatTime(user.playtime_seconds || 0)}</span>
+                      </p>
+                      <p className="text-gray-500 text-[10px] mt-0.5">
+                        High Score: {user.high_score?.toLocaleString() || 0} | Coins: {user.total_coins?.toLocaleString() || 0}
                       </p>
                     </div>
                   </div>
