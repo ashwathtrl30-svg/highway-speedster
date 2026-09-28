@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { syncAnalyticsToSupabase } from '../supabase'
+import { syncAnalyticsToSupabase, recordPlaytimeEvent } from '../supabase'
 
 // Bike definitions - 3 iconic Indian bikes
 export interface Bike {
@@ -242,6 +242,9 @@ export function subscribe(listener: Listener): () => void {
   return () => listeners.delete(listener)
 }
 
+// Analytics batches playtime into 30-second events so weekly/monthly history is accurate.
+let pendingAnalyticsSeconds = 0
+
 // Actions
 export const actions = {
   setGameState(gameState: GameState) {
@@ -253,8 +256,13 @@ export const actions = {
       setState({ totalCoins: newTotalCoins })
       saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, state.inventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
       
-      // Sync to Supabase when game ends
+      // Flush any remaining playtime and sync the cumulative user record.
       if (state.username) {
+        if (pendingAnalyticsSeconds > 0) {
+          const remainingSeconds = pendingAnalyticsSeconds
+          pendingAnalyticsSeconds = 0
+          recordPlaytimeEvent(state.username, remainingSeconds)
+        }
         syncAnalyticsToSupabase(
           state.username,
           state.totalPlaytime,
@@ -475,14 +483,14 @@ export const actions = {
     })
     saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory, state.username, newTotalPlaytime, newUserPlaytime, newPlaytimeHistory)
     
-    // Sync to Supabase every 30 seconds
-    if (state.username && newTotalPlaytime % 30 === 0) {
-      syncAnalyticsToSupabase(
-        state.username,
-        newTotalPlaytime,
-        state.highScore,
-        state.totalCoins
-      )
+    // Record real historical playtime in 30-second batches.
+    if (state.username) {
+      pendingAnalyticsSeconds += seconds
+      if (pendingAnalyticsSeconds >= 30) {
+        const eventSeconds = pendingAnalyticsSeconds
+        pendingAnalyticsSeconds = 0
+        recordPlaytimeEvent(state.username, eventSeconds)
+      }
     }
   },
 
