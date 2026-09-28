@@ -182,180 +182,167 @@ export function HUD() {
 // ============== STATS SCREEN ==============
 function StatsScreen({ onBack }: { onBack: () => void }) {
   const state = useGameStore()
-  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'all'>('all')
-  const [supabaseData, setSupabaseData] = useState<any[]>([])
+  type Filter = 'yesterday' | '7d' | '30d' | '90d' | '180d' | '365d' | 'all'
+  const [timeFilter, setTimeFilter] = useState<Filter>('all')
+  const [analytics, setAnalytics] = useState<{ users: any[]; events: any[] }>({ users: [], events: [] })
   const [loading, setLoading] = useState(true)
 
-  // Fetch analytics from Supabase
   useEffect(() => {
-    const fetchData = async () => {
+    const load = async () => {
       setLoading(true)
       const data = await fetchAllAnalytics()
-      setSupabaseData(data)
+      setAnalytics(data)
       setLoading(false)
     }
-    fetchData()
-    
-    // Refresh every 10 seconds
-    const interval = setInterval(fetchData, 10000)
+    load()
+    const interval = setInterval(load, 10000)
     return () => clearInterval(interval)
   }, [])
 
-  // Format seconds to readable time
-  const formatTime = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600)
-    const minutes = Math.floor((seconds % 3600) / 60)
-    const secs = seconds % 60
-    
-    if (hours > 0) {
-      return `${hours}h ${minutes}m ${secs}s`
-    } else if (minutes > 0) {
-      return `${minutes}m ${secs}s`
-    } else {
-      return `${secs}s`
-    }
+  const formatTime = (seconds: number) => {
+    const total = Math.max(0, Math.floor(seconds || 0))
+    const days = Math.floor(total / 86400)
+    const hours = Math.floor((total % 86400) / 3600)
+    const minutes = Math.floor((total % 3600) / 60)
+    const secs = total % 60
+    if (days > 0) return `${days}d ${hours}h ${minutes}m`
+    if (hours > 0) return `${hours}h ${minutes}m ${secs}s`
+    if (minutes > 0) return `${minutes}m ${secs}s`
+    return `${secs}s`
   }
 
-  // Get data based on time filter
-  const getFilteredData = () => {
-    if (supabaseData.length === 0) {
-      return { total: 0, users: [] }
-    }
+  const filterLabel: Record<Filter, string> = {
+    yesterday: 'Yesterday',
+    '7d': 'Last 7 Days',
+    '30d': 'Last 30 Days',
+    '90d': 'Last 3 Months',
+    '180d': 'Last 6 Months',
+    '365d': 'Last 1 Year',
+    all: 'Overall'
+  }
 
+  const getStartDate = (filter: Filter) => {
     const now = new Date()
-    let filteredUsers = supabaseData
-
-    if (timeFilter === 'week') {
-      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-      filteredUsers = supabaseData.filter(user => 
-        new Date(user.last_updated) >= weekAgo
-      )
-    } else if (timeFilter === 'month') {
-      const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-      filteredUsers = supabaseData.filter(user => 
-        new Date(user.last_updated) >= monthAgo
-      )
+    if (filter === 'yesterday') {
+      const start = new Date(now)
+      start.setHours(0, 0, 0, 0)
+      start.setDate(start.getDate() - 1)
+      const end = new Date(start)
+      end.setDate(end.getDate() + 1)
+      return { start, end }
     }
-
-    const total = filteredUsers.reduce((sum, user) => sum + (user.playtime_seconds || 0), 0)
-    
-    return {
-      total,
-      users: filteredUsers.sort((a, b) => (b.playtime_seconds || 0) - (a.playtime_seconds || 0))
-    }
+    if (filter === 'all') return { start: null, end: null }
+    const days = filter === '7d' ? 7 : filter === '30d' ? 30 : filter === '90d' ? 90 : filter === '180d' ? 180 : 365
+    return { start: new Date(now.getTime() - days * 86400000), end: null }
   }
 
-  const filteredData = getFilteredData()
+  const { start, end } = getStartDate(timeFilter)
+  const filteredEvents = analytics.events.filter((event: any) => {
+    const date = new Date(event.recorded_at)
+    return (!start || date >= start) && (!end || date < end)
+  })
+
+  const periodByUser = filteredEvents.reduce((map: Record<string, number>, event: any) => {
+    map[event.username] = (map[event.username] || 0) + Number(event.seconds || 0)
+    return map
+  }, {})
+
+  // Overall includes users whose cumulative record exists even if their historical events predate this system.
+  const overallByUser = analytics.users.reduce((map: Record<string, number>, user: any) => {
+    map[user.username] = Math.max(map[user.username] || 0, Number(user.playtime_seconds || 0))
+    return map
+  }, {})
+
+  const leaderboard = Object.entries(timeFilter === 'all' ? overallByUser : periodByUser)
+    .map(([username, seconds]) => ({ username, seconds }))
+    .sort((a, b) => b.seconds - a.seconds)
+
+  const totalPlaytime = leaderboard.reduce((sum, user) => sum + user.seconds, 0)
+  const totalUsers = analytics.users.length
 
   return (
     <div className="absolute inset-0 flex flex-col bg-gradient-to-b from-gray-900 via-gray-950 to-black overflow-y-auto">
-      {/* Header */}
-      <div className="flex items-center p-3 sm:p-4 border-b border-white/5">
-        <button
-          onClick={onBack}
-          className="text-white text-xl sm:text-2xl active:scale-90 transition-transform w-8 h-8 flex items-center justify-center rounded-lg bg-white/5"
-        >
-          ←
-        </button>
-        <h2 className="text-lg sm:text-xl font-bold text-white ml-3">📊 Statistics</h2>
+      <div className="flex items-center p-3 sm:p-4 border-b border-white/5 sticky top-0 bg-gray-950/95 backdrop-blur z-10">
+        <button onClick={onBack} className="text-white text-xl sm:text-2xl active:scale-90 transition-transform w-8 h-8 flex items-center justify-center rounded-lg bg-white/5">←</button>
+        <div className="ml-3">
+          <h2 className="text-lg sm:text-xl font-bold text-white">📊 Analytics</h2>
+          <p className="text-[10px] text-gray-500">Live Supabase analytics • refreshes every 10s</p>
+        </div>
       </div>
 
-      {/* Time Filter Buttons */}
       <div className="p-3 sm:p-4 border-b border-white/5">
-        <div className="flex gap-2 justify-center">
-          <button
-            onClick={() => setTimeFilter('week')}
-            className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
-              timeFilter === 'week'
-                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/30'
-                : 'bg-white/10 text-gray-400 hover:bg-white/20'
-            }`}
-          >
-            Last Week
-          </button>
-          <button
-            onClick={() => setTimeFilter('month')}
-            className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
-              timeFilter === 'month'
-                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30'
-                : 'bg-white/10 text-gray-400 hover:bg-white/20'
-            }`}
-          >
-            Last Month
-          </button>
-          <button
-            onClick={() => setTimeFilter('all')}
-            className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
-              timeFilter === 'all'
-                ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/30'
-                : 'bg-white/10 text-gray-400 hover:bg-white/20'
-            }`}
-          >
-            All Time
-          </button>
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {(Object.keys(filterLabel) as Filter[]).map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setTimeFilter(filter)}
+              className={`px-3 py-2 rounded-lg font-semibold text-xs sm:text-sm whitespace-nowrap transition-all ${
+                timeFilter === filter
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                  : 'bg-white/10 text-gray-400 hover:bg-white/20'
+              }`}
+            >
+              {filterLabel[filter]}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Total Playtime */}
-      <div className="p-4 sm:p-6 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-b border-purple-500/20">
-        <div className="text-center">
-          <p className="text-gray-400 text-xs sm:text-sm uppercase tracking-wider mb-1">
-            Total Playtime {timeFilter === 'week' ? '(Last 7 Days)' : timeFilter === 'month' ? '(Last 30 Days)' : '(All Time)'}
-          </p>
-          <p className="text-purple-400 font-black text-2xl sm:text-3xl tabular-nums">
-            ⏱️ {formatTime(filteredData.total)}
-          </p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 sm:p-4">
+        <div className="rounded-xl p-3 bg-white/[0.04] border border-white/10">
+          <p className="text-gray-500 text-[10px] uppercase">Players</p>
+          <p className="text-white text-xl font-black">{totalUsers}</p>
+        </div>
+        <div className="rounded-xl p-3 bg-purple-500/10 border border-purple-500/20">
+          <p className="text-gray-500 text-[10px] uppercase">Period Playtime</p>
+          <p className="text-purple-400 text-lg font-black">⏱ {formatTime(totalPlaytime)}</p>
+        </div>
+        <div className="rounded-xl p-3 bg-yellow-500/10 border border-yellow-500/20">
+          <p className="text-gray-500 text-[10px] uppercase">Top Player</p>
+          <p className="text-yellow-400 text-lg font-black truncate">{leaderboard[0]?.username || '—'}</p>
+        </div>
+        <div className="rounded-xl p-3 bg-green-500/10 border border-green-500/20">
+          <p className="text-gray-500 text-[10px] uppercase">Filter</p>
+          <p className="text-green-400 text-sm font-bold">{filterLabel[timeFilter]}</p>
         </div>
       </div>
 
-      {/* Individual User Stats */}
-      <div className="flex-1 px-3 sm:px-4 py-4 sm:py-6">
-        <h3 className="text-white font-bold text-base sm:text-lg mb-4">👥 Player Statistics</h3>
-        
+      <div className="px-3 sm:px-4 pb-6">
+        <h3 className="text-white font-bold text-base sm:text-lg mb-3">🏆 Playtime Leaderboard</h3>
         {loading ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500 text-sm">Loading analytics...</p>
-          </div>
-        ) : filteredData.users.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500 text-sm">No playtime data yet</p>
-            <p className="text-gray-600 text-xs mt-2">Start playing to see your stats!</p>
+          <div className="text-center py-10 text-gray-500">Loading analytics...</div>
+        ) : leaderboard.length === 0 ? (
+          <div className="text-center py-10">
+            <p className="text-gray-500">No playtime recorded for this period.</p>
+            <p className="text-gray-600 text-xs mt-2">Play for at least a few seconds, then finish the run.</p>
           </div>
         ) : (
           <div className="space-y-2">
-            {filteredData.users.map((user: any, index: number) => (
-              <div 
+            {leaderboard.map((user, index) => (
+              <div
                 key={user.username}
                 className={`rounded-xl p-3 sm:p-4 border ${
-                  user.username === state.username 
-                    ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/40' 
+                  user.username === state.username
+                    ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/40'
                     : 'bg-white/[0.03] border-white/10'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="text-2xl sm:text-3xl font-bold text-gray-500">
-                      #{index + 1}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-10 text-center font-black text-lg ${
+                      index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-orange-400' : 'text-gray-500'
+                    }`}>
+                      {index < 3 ? ['🥇', '🥈', '🥉'][index] : `#${index + 1}`}
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-white font-bold text-sm sm:text-base">
-                          {user.username}
-                        </span>
-                        {user.username === state.username && (
-                          <span className="text-[10px] bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full font-semibold">
-                            YOU
-                          </span>
-                        )}
+                        <span className="text-white font-bold truncate">{user.username}</span>
+                        {user.username === state.username && <span className="text-[10px] bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full font-semibold">YOU</span>}
                       </div>
-                      <p className="text-gray-400 text-xs mt-0.5">
-                        Playtime: <span className="text-purple-400 font-semibold">{formatTime(user.playtime_seconds || 0)}</span>
-                      </p>
-                      <p className="text-gray-500 text-[10px] mt-0.5">
-                        High Score: {user.high_score?.toLocaleString() || 0} | Coins: {user.total_coins?.toLocaleString() || 0}
-                      </p>
+                      <p className="text-gray-400 text-xs mt-1">Playtime in {filterLabel[timeFilter]}</p>
                     </div>
                   </div>
+                  <div className="text-purple-400 font-black text-sm sm:text-base whitespace-nowrap">{formatTime(user.seconds)}</div>
                 </div>
               </div>
             ))}
