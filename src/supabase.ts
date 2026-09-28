@@ -5,78 +5,70 @@ const supabaseAnonKey = 'sb_publishable_Wh5xFjsVYK8kkXgVwHpWbg_Io5b85cD'
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Sync user analytics to Supabase
 export async function syncAnalyticsToSupabase(
   username: string,
   playtimeSeconds: number,
   highScore: number,
   totalCoins: number
 ) {
+  if (!username.trim()) return
   try {
-    // Check if user already exists
     const { data: existingUser, error: fetchError } = await supabase
       .from('user_analytics')
-      .select('*')
+      .select('high_score')
       .eq('username', username)
-      .single()
+      .maybeSingle()
 
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      console.error('Error fetching user:', fetchError)
-      return
-    }
+    if (fetchError) throw fetchError
 
-    if (existingUser) {
-      // Update existing user
-      const { error: updateError } = await supabase
-        .from('user_analytics')
-        .update({
-          playtime_seconds: playtimeSeconds,
-          high_score: Math.max(existingUser.high_score, highScore),
-          total_coins: totalCoins,
-          last_updated: new Date().toISOString()
-        })
-        .eq('username', username)
+    const { error } = await supabase
+      .from('user_analytics')
+      .upsert({
+        username,
+        playtime_seconds: Math.max(0, Math.floor(playtimeSeconds)),
+        high_score: Math.max(existingUser?.high_score ?? 0, highScore),
+        total_coins: totalCoins,
+        last_updated: new Date().toISOString()
+      }, { onConflict: 'username' })
 
-      if (updateError) {
-        console.error('Error updating user:', updateError)
-      }
-    } else {
-      // Insert new user
-      const { error: insertError } = await supabase
-        .from('user_analytics')
-        .insert({
-          username,
-          playtime_seconds: playtimeSeconds,
-          high_score: highScore,
-          total_coins: totalCoins,
-          last_updated: new Date().toISOString()
-        })
-
-      if (insertError) {
-        console.error('Error inserting user:', insertError)
-      }
-    }
+    if (error) throw error
   } catch (error) {
     console.error('Error syncing analytics:', error)
   }
 }
 
-// Fetch all users analytics from Supabase
+export async function recordPlaytimeEvent(username: string, seconds: number) {
+  if (!username.trim() || seconds <= 0) return
+  try {
+    const { error } = await supabase
+      .from('playtime_events')
+      .insert({
+        username,
+        seconds: Math.floor(seconds)
+      })
+
+    if (error) throw error
+  } catch (error) {
+    console.error('Error recording playtime event:', error)
+  }
+}
+
 export async function fetchAllAnalytics() {
   try {
-    const { data, error } = await supabase
-      .from('user_analytics')
-      .select('*')
-      .order('playtime_seconds', { ascending: false })
+    const [{ data: users, error: usersError }, { data: events, error: eventsError }] = await Promise.all([
+      supabase.from('user_analytics').select('*').order('playtime_seconds', { ascending: false }),
+      supabase.from('playtime_events').select('username, seconds, recorded_at').order('recorded_at', { ascending: false })
+    ])
 
-    if (error) {
-      console.error('Error fetching analytics:', error)
-      return []
+    if (usersError) throw usersError
+    if (eventsError) throw eventsError
+
+    return {
+      users: users || [],
+      events: events || []
     }
-
-    return data || []
   } catch (error) {
     console.error('Error fetching analytics:', error)
-    return []
+    return { users: [], events: [] }
   }
 }
