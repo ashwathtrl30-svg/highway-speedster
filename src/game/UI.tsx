@@ -656,7 +656,7 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
             {BIKES.map((bike) => {
               const isUnlocked = state.unlockedBikes.includes(bike.id)
               const isSelected = state.vehicleMode === 'bike' && state.selectedBike.id === bike.id
-              const progress = isUnlocked ? 100 : Math.min(100, (state.highScore / bike.unlockScore) * 100)
+              const progress = isUnlocked ? 100 : Math.min(100, (state.bikeHighScore / bike.unlockScore) * 100)
 
               return (
                 <div
@@ -709,7 +709,7 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
                             />
                           </div>
                           <p className="text-[9px] sm:text-[10px] text-gray-500 mt-0.5 tabular-nums">
-                            {state.highScore.toLocaleString()} / {bike.unlockScore.toLocaleString()}
+                            {state.bikeHighScore.toLocaleString()} / {bike.unlockScore.toLocaleString()}
                           </p>
                         </div>
                       )}
@@ -746,7 +746,7 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
             {CARS.map((car) => {
               const isUnlocked = state.unlockedCars.includes(car.id)
               const isSelected = state.vehicleMode === 'car' && state.selectedCar.id === car.id
-              const progress = isUnlocked ? 100 : Math.min(100, (state.highScore / car.unlockScore) * 100)
+              const progress = isUnlocked ? 100 : Math.min(100, (state.carHighScore / car.unlockScore) * 100)
 
               return (
                 <div
@@ -797,7 +797,7 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
                             />
                           </div>
                           <p className="text-[9px] sm:text-[10px] text-gray-500 mt-0.5 tabular-nums">
-                            {state.highScore.toLocaleString()} / {requiredBike?.unlockScore.toLocaleString()}
+                            {state.carHighScore.toLocaleString()} / {car.unlockScore.toLocaleString()}
                           </p>
                         </div>
                       )}
