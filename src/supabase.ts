@@ -72,3 +72,21 @@ export async function fetchAllAnalytics() {
     return { users: [], events: [] }
   }
 }
+
+
+export async function fetchUserHighScore(username: string): Promise<number | null> {
+  if (!username.trim()) return null
+  try {
+    const { data, error } = await supabase
+      .from('user_analytics')
+      .select('high_score')
+      .eq('username', username)
+      .maybeSingle()
+
+    if (error) throw error
+    return data ? Math.max(0, Number(data.high_score || 0)) : 0
+  } catch (error) {
+    console.error('Error fetching user high score:', error)
+    return null
+  }
+}
