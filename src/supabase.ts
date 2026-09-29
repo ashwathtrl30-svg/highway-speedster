@@ -75,9 +75,9 @@ export interface CloudGameProgress {
   carHighScore: number
   unlockedBikes: string[]
   unlockedCars: string[]
-  bikeSkins: Record<string, string>
+  bikeSkins: Record<string, any>
   totalCoins: number
-  inventory: Record<string, number>
+  inventory: any
   vehicleMode: 'bike' | 'car'
   selectedBikeId: string
   selectedCarId: string
