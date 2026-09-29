@@ -1468,113 +1468,9 @@ export function GameOverScreen() {
 // ============== TOUCH CONTROLS ==============
 export function TouchControls() {
   const state = useGameStore()
-  const lastTapRef = useRef(0)
-  const lastLaneChangeRef = useRef(0)
-  const tiltEnabledRef = useRef(false)
-  const lastTiltLaneRef = useRef(0)
-  const [showTiltPrompt, setShowTiltPrompt] = useState(false)
-  const hasPromptedRef = useRef(false)
-
-  // Tilt / Gyroscope controls - only prompt once per session
-  useEffect(() => {
-    if (state.gameState !== 'playing') return
-    if (hasPromptedRef.current) return
-
-    const handleOrientation = (e: DeviceOrientationEvent) => {
-      const gamma = e.gamma || 0
-      
-      const now = Date.now()
-      if (now - lastLaneChangeRef.current < 300) return
-      
-      const currentLane = getState().targetLane
-      
-      if (gamma < -15 && currentLane > -1) {
-        if (lastTiltLaneRef.current !== -1) {
-          lastTiltLaneRef.current = -1
-          lastLaneChangeRef.current = now
-          actions.setTargetLane(currentLane - 1)
-        }
-      } else if (gamma > 15 && currentLane < 1) {
-        if (lastTiltLaneRef.current !== 1) {
-          lastTiltLaneRef.current = 1
-          lastLaneChangeRef.current = now
-          actions.setTargetLane(currentLane + 1)
-        }
-      } else if (gamma > -10 && gamma < 10) {
-        lastTiltLaneRef.current = 0
-      }
-    }
-
-    const enableTilt = async () => {
-      hasPromptedRef.current = true
-      
-      if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-        setShowTiltPrompt(true)
-      } else if ('DeviceOrientationEvent' in window) {
-        const testHandler = (e: DeviceOrientationEvent) => {
-          if (e.gamma !== null) {
-            tiltEnabledRef.current = true
-            window.removeEventListener('deviceorientation', testHandler)
-            window.addEventListener('deviceorientation', handleOrientation)
-          }
-        }
-        window.addEventListener('deviceorientation', testHandler)
-        setTimeout(() => {
-          window.removeEventListener('deviceorientation', testHandler)
-        }, 1000)
-      }
-    }
-
-    enableTilt()
-
-    return () => {
-      window.removeEventListener('deviceorientation', handleOrientation)
-    }
-  }, [state.gameState])
-
-  const handleEnableTilt = async () => {
-    try {
-      const permission = await (DeviceOrientationEvent as any).requestPermission()
-      if (permission === 'granted') {
-        tiltEnabledRef.current = true
-        hasPromptedRef.current = true
-        setShowTiltPrompt(false)
-        
-        const handleOrientation = (e: DeviceOrientationEvent) => {
-          const gamma = e.gamma || 0
-          const now = Date.now()
-          if (now - lastLaneChangeRef.current < 300) return
-          
-          const currentLane = getState().targetLane
-          
-          if (gamma < -15 && currentLane > -1) {
-            if (lastTiltLaneRef.current !== -1) {
-              lastTiltLaneRef.current = -1
-              lastLaneChangeRef.current = now
-              actions.setTargetLane(currentLane - 1)
-            }
-          } else if (gamma > 15 && currentLane < 1) {
-            if (lastTiltLaneRef.current !== 1) {
-              lastTiltLaneRef.current = 1
-              lastLaneChangeRef.current = now
-              actions.setTargetLane(currentLane + 1)
-            }
-          } else if (gamma > -10 && gamma < 10) {
-            lastTiltLaneRef.current = 0
-          }
-        }
-        
-        window.addEventListener('deviceorientation', handleOrientation)
-      }
-    } catch (e) {
-      setShowTiltPrompt(false)
-    }
-  }
-
-  const handleSkipTilt = () => {
-    hasPromptedRef.current = true
-    setShowTiltPrompt(false)
-  }
+  const touchStartXRef = useRef<number | null>(null)
+  const touchStartYRef = useRef<number | null>(null)
+  const lastSwipeRef = useRef(0)
 
   useEffect(() => {
     if (state.gameState !== 'playing') return
@@ -1608,132 +1504,50 @@ export function TouchControls() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [state.gameState])
 
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    const touch = e.changedTouches[0]
+    if (!touch) return
+    touchStartXRef.current = touch.clientX
+    touchStartYRef.current = touch.clientY
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    const touch = e.changedTouches[0]
+    const startX = touchStartXRef.current
+    const startY = touchStartYRef.current
+    touchStartXRef.current = null
+    touchStartYRef.current = null
+
+    if (!touch || startX === null || startY === null) return
+
+    const deltaX = touch.clientX - startX
+    const deltaY = touch.clientY - startY
+    const now = Date.now()
+
+    // Ignore taps and mostly-vertical gestures. A deliberate horizontal swipe
+    // changes exactly one lane, keeping steering predictable.
+    const SWIPE_THRESHOLD = 45
+    if (Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaX) <= Math.abs(deltaY)) return
+    if (now - lastSwipeRef.current < 120) return
+
+    lastSwipeRef.current = now
+    actions.setTargetLane(getState().targetLane + (deltaX > 0 ? 1 : -1))
+  }
+
   if (state.gameState !== 'playing') return null
 
   return (
-    <>
-      {showTiltPrompt && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-gray-900 rounded-2xl p-6 mx-4 max-w-sm border border-white/10">
-            <div className="text-center">
-              <div className="text-5xl mb-3">📱</div>
-              <h3 className="text-white font-bold text-lg mb-2">Enable Tilt Controls?</h3>
-              <p className="text-gray-400 text-sm mb-4">
-                Tilt your phone to steer the bike for the best experience!
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={handleEnableTilt}
-                  className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-2.5 rounded-xl active:scale-95 transition-all"
-                >
-                  Enable Tilt
-                </button>
-                <button
-                  onClick={handleSkipTilt}
-                  className="flex-1 bg-white/10 text-white font-bold py-2.5 rounded-xl active:scale-95 transition-all"
-                >
-                  Use Tap
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="absolute left-0 right-0 bottom-0 top-24 sm:top-28 z-10">
-        <div
-          className="absolute left-0 top-0 bottom-0 w-[35%] flex items-center justify-start pl-2 sm:pl-4 opacity-0 active:opacity-100 transition-opacity"
-          onTouchStart={(e) => {
-            if (tiltEnabledRef.current) return
-            e.preventDefault()
-            const now = Date.now()
-            if (now - lastTapRef.current > 150) {
-              lastTapRef.current = now
-              actions.setTargetLane(getState().targetLane - 1)
-            }
-          }}
-          onClick={() => {
-            if (tiltEnabledRef.current) return
-            const now = Date.now()
-            if (now - lastTapRef.current > 150) {
-              lastTapRef.current = now
-              actions.setTargetLane(getState().targetLane - 1)
-            }
-          }}
-        />
-        <div
-          className="absolute right-0 top-0 bottom-0 w-[35%] flex items-center justify-end pr-2 sm:pr-4 opacity-0 active:opacity-100 transition-opacity"
-          onTouchStart={(e) => {
-            if (tiltEnabledRef.current) return
-            e.preventDefault()
-            const now = Date.now()
-            if (now - lastTapRef.current > 150) {
-              lastTapRef.current = now
-              actions.setTargetLane(getState().targetLane + 1)
-            }
-          }}
-          onClick={() => {
-            if (tiltEnabledRef.current) return
-            const now = Date.now()
-            if (now - lastTapRef.current > 150) {
-              lastTapRef.current = now
-              actions.setTargetLane(getState().targetLane + 1)
-            }
-          }}
-        />
+    <div
+      className="absolute left-0 right-0 bottom-0 top-24 sm:top-28 z-10 sm:pointer-events-none"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      style={{ touchAction: 'none' }}
+      aria-label="Swipe left or right to steer"
+    >
+      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white/50 backdrop-blur-sm sm:hidden">
+        ← Swipe to steer →
       </div>
-
-      {/* Mobile Arrow Controls - Only visible on small screens */}
-      <div className="absolute bottom-8 left-0 right-0 flex justify-between px-6 z-20 sm:hidden">
-        {/* Left Arrow */}
-        <button
-          onTouchStart={(e) => {
-            e.preventDefault()
-            const now = Date.now()
-            if (now - lastTapRef.current > 150) {
-              lastTapRef.current = now
-              actions.setTargetLane(getState().targetLane - 1)
-            }
-          }}
-          onClick={() => {
-            const now = Date.now()
-            if (now - lastTapRef.current > 150) {
-              lastTapRef.current = now
-              actions.setTargetLane(getState().targetLane - 1)
-            }
-          }}
-          className="w-16 h-16 bg-white/20 backdrop-blur-sm border-2 border-white/40 rounded-full flex items-center justify-center active:scale-90 active:bg-white/30 transition-all shadow-lg"
-        >
-          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-
-        {/* Right Arrow */}
-        <button
-          onTouchStart={(e) => {
-            e.preventDefault()
-            const now = Date.now()
-            if (now - lastTapRef.current > 150) {
-              lastTapRef.current = now
-              actions.setTargetLane(getState().targetLane + 1)
-            }
-          }}
-          onClick={() => {
-            const now = Date.now()
-            if (now - lastTapRef.current > 150) {
-              lastTapRef.current = now
-              actions.setTargetLane(getState().targetLane + 1)
-            }
-          }}
-          className="w-16 h-16 bg-white/20 backdrop-blur-sm border-2 border-white/40 rounded-full flex items-center justify-center active:scale-90 active:bg-white/30 transition-all shadow-lg"
-        >
-          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
-    </>
+    </div>
   )
 }
 
