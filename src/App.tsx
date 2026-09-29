@@ -31,7 +31,7 @@ function App() {
     // Reconcile the local high score with the shared username record every time
     // the game is opened, so another device cannot show a stale lower score.
     if (getState().username) {
-      actions.syncSharedHighScore()
+      void actions.restoreCloudProgress(getState().username).then(() => actions.syncSharedHighScore())
     }
     // Simulate loading time for 3D assets
     const timer = setTimeout(() => setLoaded(true), 1500)
