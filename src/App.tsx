@@ -46,12 +46,11 @@ function App() {
     return () => clearTimeout(timer)
   }, [authenticated])
 
+  if (window.location.pathname === '/highscores') return <HighScoreAnalytics />
+  if (window.location.pathname === '/leaderboard' && authReady && authenticated && accountReady) return <LeaderboardViewer />
   if (!authReady) return <LoadingScreen />
   if (!authenticated) return <AuthScreen />
   if (!accountReady) return <LoadingScreen />
-
-  if (window.location.pathname === '/leaderboard') return <LeaderboardViewer />
-  if (window.location.pathname === '/highscores') return <HighScoreAnalytics />
 
   return (
     <div className="w-full h-full relative overflow-hidden bg-black">
