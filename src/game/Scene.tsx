@@ -1482,7 +1482,7 @@ function PowerUpSystem() {
   const nextIdRef = useRef(0)
   const magnetTimerRef = useRef(10)
   const multiplierTimerRef = useRef(18)
-  const shieldTimerRef = useRef(25)
+  const shieldTimerRef = useRef(35)
   const meshCacheRef = useRef<Map<number, THREE.Group>>(new Map())
   const groupRef = useRef<THREE.Group>(null)
   const lastGameStateRef = useRef<string>('menu')
@@ -1539,7 +1539,7 @@ function PowerUpSystem() {
     // Spawn shield every 25 seconds
     shieldTimerRef.current -= clampedDelta
     if (shieldTimerRef.current <= 0) {
-      shieldTimerRef.current = 25
+      shieldTimerRef.current = 35
       const lane = Math.floor(Math.random() * 3) - 1
       powerUpsRef.current.push({
         id: nextIdRef.current++,
