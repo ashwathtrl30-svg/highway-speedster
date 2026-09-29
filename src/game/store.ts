@@ -14,6 +14,19 @@ export interface Bike {
   description: string
 }
 
+export interface Car {
+  id: string
+  name: string
+  unlockScore: number
+  maxSpeed: number
+  acceleration: number
+  handling: number
+  color: string
+  accentColor: string
+  description: string
+  inspiration: string
+}
+
 export type BikeSkin = 'black' | 'blue' | 'red' | 'silver' | 'gold'
 
 export const BIKE_SKINS: Record<string, BikeSkin[]> = {
@@ -90,6 +103,69 @@ export const BIKES: Bike[] = [
   },
 ]
 
+export const CARS: Car[] = [
+  {
+    id: 'kanto-zip',
+    name: 'Kanto Zip',
+    unlockScore: 0,
+    maxSpeed: 120,
+    acceleration: 0.9,
+    handling: 1.0,
+    color: '#d7d9dc',
+    accentColor: '#1f2937',
+    description: 'The urban beginner. Lightweight and agile.',
+    inspiration: 'Maruti Suzuki Alto',
+  },
+  {
+    id: 'saber-swift',
+    name: 'Saber Swift',
+    unlockScore: 30000,
+    maxSpeed: 150,
+    acceleration: 1.1,
+    handling: 0.95,
+    color: '#5b7fa8',
+    accentColor: '#d9e2ec',
+    description: 'The daily performer. Balanced and reliable.',
+    inspiration: 'Honda City',
+  },
+  {
+    id: 'goliath-titan',
+    name: 'Goliath Titan',
+    unlockScore: 50000,
+    maxSpeed: 200,
+    acceleration: 1.2,
+    handling: 0.82,
+    color: '#65707a',
+    accentColor: '#d1d5db',
+    description: 'The terrain conqueror. Tough and unstoppable.',
+    inspiration: 'Land Rover Defender 110',
+  },
+  {
+    id: 'kaiser-monarch',
+    name: 'Kaiser Monarch',
+    unlockScore: 80000,
+    maxSpeed: 250,
+    acceleration: 1.55,
+    handling: 0.78,
+    color: '#252a31',
+    accentColor: '#bfc5cd',
+    description: 'The executive missile. Powerful and refined.',
+    inspiration: 'BMW M8 Competition',
+  },
+  {
+    id: 'scuderia-fury',
+    name: 'Scuderia Fury',
+    unlockScore: 100000,
+    maxSpeed: 300,
+    acceleration: 1.8,
+    handling: 0.72,
+    color: '#9b1c22',
+    accentColor: '#ffd166',
+    description: 'The ultimate apex. Fast and fearless.',
+    inspiration: 'Ferrari 296 GTB',
+  },
+]
+
 export type GameState = 'menu' | 'playing' | 'paused' | 'gameover'
 
 export interface PowerUpInventory {
@@ -115,6 +191,8 @@ export interface GameData {
   combo: number
   comboTimer: number
   selectedBike: Bike
+  selectedCar: Car
+  vehicleMode: 'bike' | 'car'
   selectedSkin: BikeSkin
   unlockedBikes: string[]
   bikeSkins: Record<string, BikeSkin>
@@ -143,7 +221,7 @@ export interface GameData {
 
 const STORAGE_KEY = 'highway-speedster-progress'
 
-function loadSavedProgress(): { highScore: number; unlockedBikes: string[]; bikeSkins: Record<string, BikeSkin>; totalCoins: number; inventory: PowerUpInventory; username: string; totalPlaytime: number; userPlaytime: Record<string, number>; playtimeHistory: PlaytimeEntry[] } {
+function loadSavedProgress(): { highScore: number; unlockedBikes: string[]; bikeSkins: Record<string, BikeSkin>; totalCoins: number; inventory: PowerUpInventory; username: string; totalPlaytime: number; userPlaytime: Record<string, number>; playtimeHistory: PlaytimeEntry[]; vehicleMode: 'bike' | 'car'; selectedCarId: string } {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
@@ -174,15 +252,45 @@ function loadSavedProgress(): { highScore: number; unlockedBikes: string[]; bike
         totalPlaytime: data.totalPlaytime || 0,
         userPlaytime: data.userPlaytime || {},
         playtimeHistory: data.playtimeHistory || [],
+        vehicleMode: data.vehicleMode === 'car' ? 'car' : 'bike',
+        selectedCarId: typeof data.selectedCarId === 'string' && CARS.some((car) => car.id === data.selectedCarId) ? data.selectedCarId : CARS[0].id,
       }
     }
   } catch (e) { /* ignore */ }
-  return { highScore: 0, unlockedBikes: ['blitz'], bikeSkins: { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' }, totalCoins: 0, inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }, username: '', totalPlaytime: 0, userPlaytime: {}, playtimeHistory: [] }
+  return { highScore: 0, unlockedBikes: ['blitz'], bikeSkins: { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' }, totalCoins: 0, inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }, username: '', totalPlaytime: 0, userPlaytime: {}, playtimeHistory: [], vehicleMode: 'bike', selectedCarId: CARS[0].id }
 }
 
 function saveProgress(highScore: number, unlockedBikes: string[], bikeSkins: Record<string, BikeSkin>, totalCoins: number, inventory: PowerUpInventory, username: string, totalPlaytime: number, userPlaytime: Record<string, number>, playtimeHistory: PlaytimeEntry[]) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ highScore, unlockedBikes, bikeSkins, totalCoins, inventory, username, totalPlaytime, userPlaytime, playtimeHistory }))
+    const existing = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      highScore,
+      unlockedBikes,
+      bikeSkins,
+      totalCoins,
+      inventory,
+      username,
+      totalPlaytime,
+      userPlaytime,
+      playtimeHistory,
+      vehicleMode: existing.vehicleMode === 'car' ? 'car' : 'bike',
+      selectedCarId: typeof existing.selectedCarId === 'string' && CARS.some((car) => car.id === existing.selectedCarId)
+        ? existing.selectedCarId
+        : CARS[0].id,
+    }))
+  } catch (e) { /* ignore */ }
+}
+
+function saveVehicleSelection(vehicleMode: 'bike' | 'car', selectedVehicleId: string) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      ...saved,
+      vehicleMode,
+      selectedCarId: vehicleMode === 'car'
+        ? selectedVehicleId
+        : (saved.selectedCarId || CARS[0].id),
+    }))
   } catch (e) { /* ignore */ }
 }
 
@@ -193,6 +301,7 @@ const savedProgress = loadSavedProgress()
 const initialBike = BIKES[0]
 const initialSkin = savedProgress.bikeSkins[initialBike.id] || 'black'
 const initialColors = SKIN_COLORS[initialSkin]
+const initialCar = CARS.find((car) => car.id === savedProgress.selectedCarId) || CARS[0]
 const defaultInventory = { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }
 
 let state: GameData = {
@@ -205,6 +314,8 @@ let state: GameData = {
   combo: 0,
   comboTimer: 0,
   selectedBike: { ...initialBike, color: initialColors.color, accentColor: initialColors.accentColor },
+  selectedCar: initialCar,
+  vehicleMode: savedProgress.vehicleMode,
   selectedSkin: initialSkin,
   unlockedBikes: savedProgress.unlockedBikes,
   bikeSkins: savedProgress.bikeSkins,
@@ -347,7 +458,18 @@ export const actions = {
     setState({ 
       selectedBike: { ...bike, color: colors.color, accentColor: colors.accentColor },
       selectedSkin: skin,
+      vehicleMode: 'bike',
     })
+    saveVehicleSelection('bike', bike.id)
+  },
+
+  selectCar(car: Car) {
+    if (state.highScore < car.unlockScore) return
+    setState({
+      selectedCar: car,
+      vehicleMode: 'car',
+    })
+    saveVehicleSelection('car', car.id)
   },
 
   selectSkin(bikeId: string, skin: BikeSkin) {
