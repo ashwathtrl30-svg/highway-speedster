@@ -667,7 +667,7 @@ export const actions = {
         )
       }
     })
-  }
+  },
 
   setUsername(username: string) {
     setState({ username })
