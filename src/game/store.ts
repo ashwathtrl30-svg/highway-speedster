@@ -235,7 +235,7 @@ export function getPlayerId(): string {
   return id
 }
 
-function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHighScore: number; unlockedBikes: string[]; unlockedCars: string[]; bikeSkins: Record<string, BikeSkin>; totalCoins: number; inventory: PowerUpInventory; username: string; totalPlaytime: number; userPlaytime: Record<string, number>; playtimeHistory: PlaytimeEntry[]; vehicleMode: 'bike' | 'car'; selectedCarId: string } {
+function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHighScore: number; unlockedBikes: string[]; unlockedCars: string[]; bikeSkins: Record<string, BikeSkin>; totalCoins: number; inventory: PowerUpInventory; username: string; totalPlaytime: number; userPlaytime: Record<string, number>; playtimeHistory: PlaytimeEntry[]; vehicleMode: 'bike' | 'car'; selectedBikeId: string; selectedCarId: string; selectedSkin: BikeSkin } {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
@@ -380,7 +380,7 @@ let state: GameData = {
   playtimeHistory: savedProgress.playtimeHistory,
 }
 
-const playerId = getPlayerId()
+let playerId = getPlayerId()
 
 let cloudSaveTimer: ReturnType<typeof setTimeout> | null = null
 let cloudHydratingUser = ''
