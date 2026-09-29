@@ -151,7 +151,7 @@ export function HighScoreAnalytics() {
 
                 return (
                   <div
-                    key={user.playerId || `${user.username}-${index}`}
+                    key={`${user.username}-${index}`}
                     className={`flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-3 border-b border-white/5 ${
                       isYou
                         ? 'bg-yellow-500/15 border-l-4 border-l-yellow-400'
