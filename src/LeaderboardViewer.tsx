@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchLeaderboardAnalytics } from './supabase'
 
-type Filter = 'all'
+type Filter = 'all' | '7d' | '30d' | '90d' | '180d' | '365d'
 
 const FILTERS: { key: Filter; label: string }[] = [  { key: '7d', label: 'Last 7 Days' },
   { key: '30d', label: 'Last 30 Days' },
