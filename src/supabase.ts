@@ -6,37 +6,19 @@ const supabaseAnonKey = 'sb_publishable_Wh5xFjsVYK8kkXgVwHpWbg_Io5b85cD'
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export async function syncAnalyticsToSupabase(
-  playerId: string,
-  username: string,
-  playtimeSeconds: number,
-  highScore: number,
-  totalCoins: number
+  playerId: string, username: string, playtimeSeconds: number, highScore: number, totalCoins: number
 ) {
   if (!playerId.trim() || !username.trim()) return
-  try {
-    const { data: existingUser, error: fetchError } = await supabase
-      .from('user_analytics')
-      .select('high_score')
-      .eq('player_id', playerId)
-      .maybeSingle()
-
-    if (fetchError) throw fetchError
-
-    const { error } = await supabase
-      .from('user_analytics')
-      .upsert({
-        player_id: playerId,
-        username,
-        playtime_seconds: Math.max(0, Math.floor(playtimeSeconds)),
-        high_score: Math.max(existingUser?.high_score ?? 0, highScore),
-        total_coins: totalCoins,
-        last_updated: new Date().toISOString()
-      }, { onConflict: 'player_id' })
-
-    if (error) throw error
-  } catch (error) {
-    console.error('Error syncing analytics:', error)
-  }
+  const { data: session } = await supabase.auth.getSession()
+  if (!session.session) return
+  const { error } = await supabase.from('user_analytics').upsert({
+    player_id: playerId, auth_user_id: session.session.user.id, username,
+    playtime_seconds: Math.max(0, Math.floor(playtimeSeconds)),
+    high_score: Math.max(0, Math.floor(highScore)),
+    total_coins: Math.max(0, Math.floor(totalCoins)),
+    last_updated: new Date().toISOString()
+  }, { onConflict: 'player_id' })
+  if (error) console.error('Error syncing analytics:', error)
 }
 
 export async function recordPlaytimeEvent(playerId: string, username: string, seconds: number) {
@@ -57,23 +39,9 @@ export async function recordPlaytimeEvent(playerId: string, username: string, se
 }
 
 export async function fetchAllAnalytics() {
-  try {
-    const [{ data: users, error: usersError }, { data: events, error: eventsError }] = await Promise.all([
-      supabase.from('user_analytics').select('*').order('playtime_seconds', { ascending: false }),
-      supabase.from('playtime_events').select('player_id, username, seconds, recorded_at').order('recorded_at', { ascending: false })
-    ])
-
-    if (usersError) throw usersError
-    if (eventsError) throw eventsError
-
-    return {
-      users: users || [],
-      events: events || []
-    }
-  } catch (error) {
-    console.error('Error fetching analytics:', error)
-    return { users: [], events: [] }
-  }
+  const { data, error } = await supabase.rpc('get_public_playtime_leaderboard', { p_limit: 500 })
+  if (error) { console.error('Error fetching analytics:', error); return { users: [], events: [] } }
+  return { users: data || [], events: [] }
 }
 
 
