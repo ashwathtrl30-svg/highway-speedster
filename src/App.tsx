@@ -9,9 +9,6 @@ import { actions, getState } from './game/store'
 function App() {
   const [loaded, setLoaded] = useState(false)
 
-  if (window.location.pathname === '/leaderboard') return <LeaderboardViewer />
-  if (window.location.pathname === '/highscores') return <HighScoreAnalytics />
-
   useEffect(() => {
     // Load saved local progress on mount.
     actions.resetGame()
@@ -26,6 +23,9 @@ function App() {
     const timer = setTimeout(() => setLoaded(true), 1500)
     return () => clearTimeout(timer)
   }, [])
+
+  if (window.location.pathname === '/leaderboard') return <LeaderboardViewer />
+  if (window.location.pathname === '/highscores') return <HighScoreAnalytics />
 
   return (
     <div className="w-full h-full relative overflow-hidden bg-black">
