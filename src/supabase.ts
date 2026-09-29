@@ -74,6 +74,28 @@ export async function fetchAllAnalytics() {
 }
 
 
+export async function fetchMyPlaytimeRank(username: string): Promise<{ rank: number; playtimeSeconds: number; totalPlayers: number } | null> {
+  if (!username.trim()) return null
+  try {
+    const { data, error } = await supabase.rpc('get_my_playtime_rank', {
+      p_username: username.trim()
+    })
+
+    if (error) throw error
+    const row = Array.isArray(data) ? data[0] : data
+    if (!row) return null
+
+    return {
+      rank: Number(row.player_rank || 0),
+      playtimeSeconds: Number(row.playtime_seconds || 0),
+      totalPlayers: Number(row.total_players || 0)
+    }
+  } catch (error) {
+    console.error('Error fetching playtime rank:', error)
+    return null
+  }
+}
+
 export async function fetchUserHighScore(username: string): Promise<number | null> {
   if (!username.trim()) return null
   try {
