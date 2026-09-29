@@ -63,7 +63,7 @@ export function LeaderboardViewer() {
     let mounted = true
 
     const load = async () => {
-      const data = await fetchLeaderboardAnalytics()
+      const data = await fetchLeaderboardAnalytics(filter)
       if (!mounted) return
       setAnalytics(data)
       setLoading(false)
@@ -76,52 +76,23 @@ export function LeaderboardViewer() {
       mounted = false
       window.clearInterval(interval)
     }
-  }, [])
+  }, [filter])
 
   const leaderboard = useMemo(() => {
-    const allEventByUser = analytics.events.reduce((map: Record<string, number>, event: any) => {
-      const key = event.player_id || `legacy:${event.username}`
-      map[key] = (map[key] || 0) + Number(event.seconds || 0)
-      return map
-    }, {})
-
-    const overallByUser = analytics.users.reduce((map: Record<string, number>, user: any) => {
-      const key = user.player_id || `legacy:${user.username}`
-      map[key] = Math.max(map[key] || 0, Number(user.playtime_seconds || 0))
-      return map
-    }, {})
-
-    Object.entries(allEventByUser).forEach(([playerId, seconds]) => {
-      overallByUser[playerId] = Math.max(overallByUser[playerId] || 0, Number(seconds || 0))
-    })
-
-    const { start, end } = getWindow(filter)
-    const windowContainsEntireGameLifetime =
-      filter === 'all' || (start !== null && start <= GAME_LAUNCH_AT)
-
-    const periodByUser = analytics.events.reduce((map: Record<string, number>, event: any) => {
-      const date = new Date(event.recorded_at)
-      if ((!start || date >= start) && (!end || date < end)) {
-        map[event.username] = (map[event.username] || 0) + Number(event.seconds || 0)
-      }
-      return map
-    }, {})
-
-    const source = windowContainsEntireGameLifetime ? overallByUser : periodByUser
-
-    return Object.entries(source)
-      .map(([playerId, seconds]) => {
-        const user = analytics.users.find((u: any) => (u.player_id || `legacy:${u.username}`) === playerId)
-        const eventUser = analytics.events.find((e: any) => (e.player_id || `legacy:${e.username}`) === playerId)
-        return { playerId, username: user?.username || eventUser?.username || 'Unknown', seconds: Number(seconds) }
-      })
+    return analytics.users
+      .map((user: any) => ({
+        playerId: String(user.player_id || ''),
+        username: String(user.username || 'Unknown'),
+        seconds: Number(user.playtime_seconds ?? user.seconds ?? 0),
+        is_me: Boolean(user.is_me)
+      }))
+      .filter((user) => user.username)
       .sort((a, b) => b.seconds - a.seconds)
-  }, [analytics, filter])
+  }, [analytics])
 
   const totalPlaytime = leaderboard.reduce((sum, user) => sum + user.seconds, 0)
   const topPlayer = leaderboard[0]
-  const playerId = (() => { try { return localStorage.getItem('highway-speedster-player-id') || '' } catch { return '' } })()
-  const playerIndex = playerId ? leaderboard.findIndex((user) => user.playerId === playerId) : -1
+  const playerIndex = leaderboard.findIndex((user: any) => user.is_me)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-950 to-black text-white overflow-y-auto">
@@ -170,7 +141,7 @@ export function LeaderboardViewer() {
                 key={item.key}
                 type="button"
                 onClick={() => setFilter(item.key)}
-                className={``shrink-0 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold transition-all ${
+                className={`shrink-0 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold transition-all ${
                   filter === item.key
                     ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
                     : 'bg-white/10 text-gray-400 hover:bg-white/15'

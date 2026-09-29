@@ -24,39 +24,40 @@ export async function syncAnalyticsToSupabase(
 export async function recordPlaytimeEvent(playerId: string, username: string, seconds: number) {
   if (!playerId.trim() || !username.trim() || seconds <= 0) return
   try {
-    const { error } = await supabase
-      .from('playtime_events')
-      .insert({
-        player_id: playerId,
-        username,
-        seconds: Math.floor(seconds)
-      })
-
+    const { data: authData, error: authError } = await supabase.auth.getUser()
+    if (authError || !authData.user) return
+    const { error } = await supabase.from('playtime_events').insert({
+      player_id: playerId,
+      auth_user_id: authData.user.id,
+      username,
+      seconds: Math.floor(seconds)
+    })
     if (error) throw error
   } catch (error) {
     console.error('Error recording playtime event:', error)
   }
 }
 
+
+
 export async function fetchAllAnalytics() {
-  const { data, error } = await supabase.rpc('get_public_playtime_leaderboard', { p_limit: 500 })
-  if (error) { console.error('Error fetching analytics:', error); return { users: [], events: [] } }
-  return { users: data || [], events: [] }
+  try {
+    const { data, error } = await supabase.rpc('get_public_playtime_leaderboard', { p_period: 'all', p_limit: 500 })
+    if (error) throw error
+    return { users: data || [], events: [] }
+  } catch (error) {
+    console.error('Error fetching analytics:', error)
+    return { users: [], events: [] }
+  }
 }
 
 
-export async function fetchMyPlaytimeRank(playerId: string, username: string): Promise<{ rank: number; playtimeSeconds: number; totalPlayers: number } | null> {
-  if (!playerId.trim() || !username.trim()) return null
+export async function fetchMyPlaytimeRank(): Promise<{ rank: number; playtimeSeconds: number; totalPlayers: number } | null> {
   try {
-    const { data, error } = await supabase.rpc('get_my_playtime_rank', {
-      p_player_id: playerId.trim(),
-      p_username: username.trim()
-    })
-
+    const { data, error } = await supabase.rpc('get_my_playtime_rank')
     if (error) throw error
     const row = Array.isArray(data) ? data[0] : data
     if (!row) return null
-
     return {
       rank: Number(row.player_rank || 0),
       playtimeSeconds: Number(row.playtime_seconds || 0),
@@ -169,27 +170,23 @@ export async function fetchUserHighScore(playerId: string): Promise<number | nul
 }
 
 
-export async function fetchHighScoreLeaderboard(): Promise<Array<{ username: string; high_score: number; last_updated: string | null }>> {
+export async function fetchHighScoreLeaderboard(): Promise<Array<{ username: string; high_score: number; is_me: boolean }>> {
   try {
-    const { data, error } = await supabase
-      .from('user_analytics')
-      .select('player_id, username, high_score, last_updated')
-      .order('high_score', { ascending: false })
-      .order('username', { ascending: true })
-
+    const { data, error } = await supabase.rpc('get_public_high_score_leaderboard', { p_limit: 500 })
     if (error) throw error
-
     return (data || []).map((user: any) => ({
-      player_id: String(user.player_id || '').trim(),
       username: String(user.username || '').trim(),
       high_score: Math.max(0, Number(user.high_score || 0)),
-      last_updated: user.last_updated || null,
-    })).filter((user) => user.username)
+      is_me: Boolean(user.is_me)
+    })).filter((user: any) => user.username)
   } catch (error) {
     console.error('Error fetching high score leaderboard:', error)
     return []
   }
 }
+
+
+export async function fetchLeaderboardAnalytics
 
 
 export async function fetchLeaderboardAnalytics(period: 'all'|'7d'|'30d'|'90d'|'180d'|'365d' = 'all') {
