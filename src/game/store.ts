@@ -369,6 +369,7 @@ let state: GameData = {
 }
 
 let cloudSaveTimer: ReturnType<typeof setTimeout> | null = null
+let cloudHydratingUser = ''
 
 function buildCloudProgress(): CloudGameProgress | null {
   const current = getState()
@@ -401,6 +402,7 @@ function saveCloudProgressNow() {
 }
 
 function queueCloudSave() {
+  if (cloudHydratingUser) return
   if (cloudSaveTimer) clearTimeout(cloudSaveTimer)
   cloudSaveTimer = setTimeout(() => {
     cloudSaveTimer = null
@@ -409,8 +411,13 @@ function queueCloudSave() {
 }
 
 async function loadCloudProgress(username: string) {
+  cloudHydratingUser = username.trim()
   const cloud = await fetchUserGameProgress(username)
-  if (!cloud) return
+  if (!cloud) {
+    cloudHydratingUser = ''
+    queueCloudSave()
+    return
+  }
 
   const current = getState()
   if (current.username.trim() !== username.trim()) return
@@ -469,6 +476,7 @@ async function loadCloudProgress(username: string) {
     { ...current.userPlaytime, ...(cloud.userPlaytime || {}) },
     cloud.playtimeHistory?.length ? cloud.playtimeHistory : current.playtimeHistory
   )
+  cloudHydratingUser = ''
   queueCloudSave()
 }
 
@@ -746,6 +754,12 @@ export const actions = {
 
   clearNewUnlock() { setState({ newUnlock: null }) },
 
+  restoreCloudProgress(username = state.username) {
+    const trimmed = username.trim()
+    if (!trimmed) return
+    void loadCloudProgress(trimmed)
+  },
+
   syncSharedHighScore() {
     const username = state.username.trim()
     if (!username) return
@@ -777,11 +791,12 @@ export const actions = {
   },
 
   setUsername(username: string) {
-    setState({ username })
-    saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory, username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
+    const trimmed = username.trim()
+    setState({ username: trimmed })
+    saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory, trimmed, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
 
     // A username represents the same player across devices.
-    actions.syncSharedHighScore()
+    void loadCloudProgress(trimmed).then(() => actions.syncSharedHighScore())
   },
 
   // Playtime tracking
