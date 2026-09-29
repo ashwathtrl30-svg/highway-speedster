@@ -1285,8 +1285,11 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
 interface Coin {
   id: number
   lane: number
+  x: number
+  y: number
   z: number
   collected: boolean
+  magnetized: boolean
 }
 
 function CoinSystem() {
@@ -1309,8 +1312,6 @@ function CoinSystem() {
     
     if (state.gameState !== 'playing') return
 
-    const speed = state.speed
-    const playerX = state.playerX
     const clampedDelta = Math.min(delta, 0.05)
 
     // Spawn coins
@@ -1323,8 +1324,11 @@ function CoinSystem() {
       coinsRef.current.push({
         id: nextIdRef.current++,
         lane,
+        x: lane * LANE_WIDTH,
+        y: 1.2,
         z: -80 - Math.random() * 20,
         collected: false,
+        magnetized: false,
       })
     }
 
@@ -1332,26 +1336,56 @@ function CoinSystem() {
     const coins = coinsRef.current
     for (let i = coins.length - 1; i >= 0; i--) {
       const coin = coins[i]
-      coin.z += (speed + 20) * clampedDelta * 0.5
 
-      // Remove if past player
-      if (coin.z > 20) {
+      // Normal forward movement until the magnet grabs the coin.
+      if (!coin.magnetized) {
+        coin.z += (state.speed + 20) * clampedDelta * 0.5
+      }
+
+      // Remove if past player and not currently being pulled.
+      if (!coin.magnetized && coin.z > 20) {
         coins.splice(i, 1)
         continue
       }
 
-      // Collection detection
-      if (!coin.collected) {
-        const coinX = coin.lane * LANE_WIDTH
-        const lateralDist = Math.abs(playerX - coinX)
-        const longitudinalDist = Math.abs(coin.z - PLAYER_Z)
-        
-        // Magnet extends collection range to 2 lanes
-        const collectionRange = state.magnetActive ? 7.0 : 1.0
+      // Magnetic attraction: visually pull nearby coins toward the motorcycle.
+      if (!coin.collected && state.magnetActive && !coin.magnetized) {
+        const dx = state.playerX - coin.x
+        const dz = PLAYER_Z - coin.z
+        const magnetDistance = Math.sqrt(dx * dx + dz * dz)
 
-        if (lateralDist < collectionRange && longitudinalDist < 1.5) {
+        if (magnetDistance < 11) {
+          coin.magnetized = true
+        }
+      }
+
+      if (!coin.collected && coin.magnetized) {
+        const dx = state.playerX - coin.x
+        const dy = 1.05 - coin.y
+        const dz = PLAYER_Z - coin.z
+        const distance = Math.sqrt(dx * dx + dy * dy + dz * dz)
+
+        // Ease the coin rapidly toward the motorcycle, creating the
+        // visible "magnet pull" effect instead of instant collection.
+        const pull = 1 - Math.exp(-13 * clampedDelta)
+        coin.x += dx * pull
+        coin.y += dy * pull
+        coin.z += dz * pull
+
+        if (distance < 0.65) {
           coin.collected = true
-          // 2x Magnet (store-bought) doubles coin value
+          const coinsToAdd = state.magnet2xActive ? 2 : 1
+          actions.addCoins(coinsToAdd)
+          actions.addScore(50)
+        }
+      } else if (!coin.collected) {
+        // Normal collection behavior when no magnet is active.
+        const coinX = coin.lane * LANE_WIDTH
+        const lateralDist = Math.abs(state.playerX - coinX)
+        const longitudinalDist = Math.abs(coin.z - PLAYER_Z)
+
+        if (lateralDist < 1.0 && longitudinalDist < 1.5) {
+          coin.collected = true
           const coinsToAdd = state.magnet2xActive ? 2 : 1
           actions.addCoins(coinsToAdd)
           actions.addScore(50)
@@ -1373,9 +1407,16 @@ function CoinSystem() {
         meshCacheRef.current.set(coin.id, mesh)
         groupRef.current!.add(mesh)
       }
-      
-      mesh.position.set(coin.lane * LANE_WIDTH, 1.2, coin.z)
-      mesh.rotation.y += clampedDelta * 3
+
+      // Move the visible coin toward the bike while the magnet is pulling it.
+      mesh.position.set(coin.x, coin.y, coin.z)
+      mesh.rotation.y += clampedDelta * (coin.magnetized ? 8 : 3)
+
+      // Subtle pulse while being magnetized to make the attraction easier to see.
+      const pulse = coin.magnetized
+        ? 1 + Math.sin(performance.now() * 0.02 + coin.id) * 0.12
+        : 1
+      mesh.scale.setScalar(pulse)
     })
 
     // Remove collected/old meshes
