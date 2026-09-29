@@ -248,12 +248,54 @@ function RoadsideBush({ position }: { position: [number, number, number] }) {
 }
 
 // ============== MOTORCYCLE ==============
+function ShieldBubble({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
+  const bubbleRef = useRef<THREE.Group>(null)
+  const radius = vehicleMode === 'car' ? 2.8 : 1.75
+
+  useFrame((_, delta) => {
+    if (!bubbleRef.current) return
+    bubbleRef.current.rotation.y += delta * 0.2
+    const pulse = 1 + Math.sin(performance.now() * 0.004) * 0.02
+    bubbleRef.current.scale.setScalar(pulse)
+  })
+
+  return (
+    <group ref={bubbleRef} position={[0, 0.95, 0]}>
+      <mesh>
+        <sphereGeometry args={[radius, 24, 16]} />
+        <meshStandardMaterial
+          color="#168cff"
+          emissive="#0077ff"
+          emissiveIntensity={0.65}
+          transparent
+          opacity={0.12}
+          depthWrite={false}
+          roughness={0.2}
+          metalness={0.1}
+        />
+      </mesh>
+      <mesh scale={1.015}>
+        <sphereGeometry args={[radius, 16, 12]} />
+        <meshBasicMaterial
+          color="#39a7ff"
+          transparent
+          opacity={0.2}
+          wireframe
+          depthWrite={false}
+        />
+      </mesh>
+    </group>
+  )
+}
+
 function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
   const meshRef = useRef<THREE.Group>(null)
   const currentXRef = useRef(0)
   const tiltRef = useRef(0)
   const bikeRef = useRef(bike)
   const wheelSpinRef = useRef(0)
+  const shieldActive = useGameStore((s) => s.shieldActive)
+  const vehicleMode = useGameStore((s) => s.vehicleMode)
 
   useEffect(() => { bikeRef.current = bike }, [bike])
 
@@ -306,7 +348,8 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
 
   return (
     <group ref={meshRef} position={[0, 0, PLAYER_Z]}>
-      {getState().vehicleMode === 'car' ? renderCarModel() : renderBikeModel()}
+      {vehicleMode === 'car' ? renderCarModel() : renderBikeModel()}
+      {shieldActive && <ShieldBubble vehicleMode={vehicleMode} />}
     </group>
   )
 }
