@@ -183,7 +183,7 @@ export function HUD() {
 // ============== STATS SCREEN ==============
 function StatsScreen({ onBack }: { onBack: () => void }) {
   const state = useGameStore()
-  type Filter = 'yesterday' | '7d' | '30d' | '90d' | '180d' | '365d' | 'all'
+  type Filter = '7d' | '30d' | '90d' | '180d' | '365d' | 'all'
   const [timeFilter, setTimeFilter] = useState<Filter>('all')
   const [analytics, setAnalytics] = useState<{ users: any[]; events: any[] }>({ users: [], events: [] })
   const [loading, setLoading] = useState(true)
@@ -212,9 +212,7 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
     return `${secs}s`
   }
 
-  const filterLabel: Record<Filter, string> = {
-    yesterday: 'Yesterday',
-    '7d': 'Last 7 Days',
+  const filterLabel: Record<Filter, string> = {    '7d': 'Last 7 Days',
     '30d': 'Last 30 Days',
     '90d': 'Last 3 Months',
     '180d': 'Last 6 Months',
@@ -224,14 +222,6 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
 
   const getStartDate = (filter: Filter) => {
     const now = new Date()
-    if (filter === 'yesterday') {
-      const start = new Date(now)
-      start.setHours(0, 0, 0, 0)
-      start.setDate(start.getDate() - 1)
-      const end = new Date(start)
-      end.setDate(end.getDate() + 1)
-      return { start, end }
-    }
     if (filter === 'all') return { start: null, end: null }
     const days = filter === '7d' ? 7 : filter === '30d' ? 30 : filter === '90d' ? 90 : filter === '180d' ? 180 : 365
     return { start: new Date(now.getTime() - days * 86400000), end: null }
