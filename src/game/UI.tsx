@@ -220,7 +220,7 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
     all: 'Overall'
   }
 
-  const getStartDate = (filter: Filter) => {
+  const getStartDate = (filter: Filter): { start: Date | null; end: Date | null } => {
     const now = new Date()
     if (filter === 'all') return { start: null, end: null }
     const days = filter === '7d' ? 7 : filter === '30d' ? 30 : filter === '90d' ? 90 : filter === '180d' ? 180 : 365
