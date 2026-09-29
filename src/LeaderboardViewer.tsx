@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchLeaderboardAnalytics } from './supabase'
 
-type Filter = 'yesterday' | '7d' | '30d' | '90d' | '180d' | '365d' | 'all'
+type Filter = '7d' | '30d' | '90d' | '180d' | '365d' | 'all'
 
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: 'yesterday', label: 'Yesterday' },
-  { key: '7d', label: 'Last 7 Days' },
+const FILTERS: { key: Filter; label: string }[] = [  { key: '7d', label: 'Last 7 Days' },
   { key: '30d', label: 'Last 30 Days' },
   { key: '90d', label: 'Last 3 Months' },
   { key: '180d', label: 'Last 6 Months' },
@@ -30,15 +28,6 @@ function formatTime(seconds: number) {
 
 function getWindow(filter: Filter) {
   const now = new Date()
-
-  if (filter === 'yesterday') {
-    const start = new Date(now)
-    start.setHours(0, 0, 0, 0)
-    start.setDate(start.getDate() - 1)
-    const end = new Date(start)
-    end.setDate(end.getDate() + 1)
-    return { start, end }
-  }
 
   if (filter === 'all') return { start: null, end: null }
 
