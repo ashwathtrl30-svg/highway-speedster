@@ -373,7 +373,7 @@ function PlaytimeRankCard({ username }: { username: string }) {
     let cancelled = false
     if (!username.trim()) return
 
-    fetchMyPlaytimeRank(username).then((result) => {
+    fetchMyPlaytimeRank().then((result) => {
       if (!cancelled) setRank(result)
     })
 
