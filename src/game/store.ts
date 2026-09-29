@@ -236,11 +236,12 @@ function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHig
         if (id === 'hayabusa') return 'chronos'
         return id
       }
-      const legacyHighScore = data.highScore || 0
-      // Keep bike and car unlock progress separate. Older saves only had one global high score,
-      // so that legacy score is treated as bike progress; car progress starts at Kanto.
-      const bikeHighScore = typeof data.bikeHighScore === 'number' ? data.bikeHighScore : legacyHighScore
-      const carHighScore = typeof data.carHighScore === 'number' ? data.carHighScore : 0
+      const legacyHighScore = Number(data.highScore || 0)
+      // Keep bike and car progression separate, but recover legacy/global bike scores.
+      // Some saves contain a valid global highScore alongside an outdated 0 bikeHighScore.
+      const storedBikeHighScore = typeof data.bikeHighScore === 'number' ? data.bikeHighScore : 0
+      const bikeHighScore = Math.max(0, legacyHighScore, storedBikeHighScore)
+      const carHighScore = typeof data.carHighScore === 'number' ? Math.max(0, data.carHighScore) : 0
       const highScore = Math.max(legacyHighScore, bikeHighScore, carHighScore)
 
       const savedUnlockedBikes = (data.unlockedBikes || ['blitz']).map(migrate)
@@ -425,11 +426,24 @@ async function loadCloudProgress(username: string) {
     return
   }
 
+  const cloudGlobalHighScore = Number(cloud.highScore || 0)
   const cloudBikeHighScore = Number(cloud.bikeHighScore || 0)
   const cloudCarHighScore = Number(cloud.carHighScore || 0)
-  const mergedBikeHighScore = Math.max(current.bikeHighScore, cloudBikeHighScore)
+
+  // Recover legacy/global bike progress as well as the explicit bike score.
+  // Car progress remains strictly tied to car runs.
+  const mergedBikeHighScore = Math.max(
+    current.bikeHighScore,
+    cloudBikeHighScore,
+    Number.isFinite(cloudGlobalHighScore) ? cloudGlobalHighScore : 0
+  )
   const mergedCarHighScore = Math.max(current.carHighScore, cloudCarHighScore)
-  const mergedHighScore = Math.max(current.highScore, Number(cloud.highScore || 0), mergedBikeHighScore, mergedCarHighScore)
+  const mergedHighScore = Math.max(
+    current.highScore,
+    Number.isFinite(cloudGlobalHighScore) ? cloudGlobalHighScore : 0,
+    mergedBikeHighScore,
+    mergedCarHighScore
+  )
 
   const unlockedBikes = BIKES
     .filter((bike) => bike.unlockScore <= mergedBikeHighScore)
