@@ -202,10 +202,65 @@ export async function fetchLeaderboardAnalytics(period: 'all'|'7d'|'30d'|'90d'|'
 }
 
 export async function getSession() {
-  const { data, error } = await supabase.auth.getSession(); if (error) throw error; return data.session
+  const { data, error } = await supabase.auth.getSession()
+  if (error) throw error
+  return data.session
 }
-export async function loginWithGoogle() { return supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } }) }
-export async function loginWithApple() { return supabase.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo: window.location.origin } }) }
-export async function sendEmailLogin(email: string) { return supabase.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: window.location.origin } }) }
-export async function claimPlayerForAccount(playerId: string, username: string) { const { data, error } = await supabase.rpc('get_or_claim_player', { p_local_player_id: playerId, p_username: username }); if (error) throw error; return data }
-export function watchAuth(callback: (session: any) => void) { return supabase.auth.onAuthStateChange((_event, session) => callback(session)) }
+
+function getAuthRedirectUrl() {
+  // The production URL must also be present in Supabase Auth > URL Configuration.
+  return window.location.origin.endsWith('/') ? window.location.origin : `${window.location.origin}/`
+}
+
+async function ensureOAuthProviderEnabled(provider: 'google' | 'apple') {
+  try {
+    const response = await fetch(`${supabaseUrl}/auth/v1/settings`, {
+      headers: { apikey: supabaseAnonKey },
+    })
+    if (!response.ok) return true
+    const settings = await response.json()
+    if (settings?.external && settings.external[provider] === false) {
+      throw new Error(`${provider === 'google' ? 'Google' : 'Apple'} sign-in is not enabled in the game's Supabase authentication settings yet.`)
+    }
+  } catch (error: any) {
+    // Keep the normal OAuth flow available when the settings endpoint is unavailable.
+    if (error?.message?.includes('sign-in is not enabled')) throw error
+  }
+  return true
+}
+
+export async function loginWithGoogle() {
+  await ensureOAuthProviderEnabled('google')
+  return supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: getAuthRedirectUrl() },
+  })
+}
+
+export async function loginWithApple() {
+  await ensureOAuthProviderEnabled('apple')
+  return supabase.auth.signInWithOAuth({
+    provider: 'apple',
+    options: { redirectTo: getAuthRedirectUrl() },
+  })
+}
+
+export async function sendEmailLogin(email: string) {
+  return supabase.auth.signInWithOtp({
+    email: email.trim(),
+    options: { emailRedirectTo: getAuthRedirectUrl() },
+  })
+}
+
+export async function claimPlayerForAccount(playerId: string, username: string) {
+  const { data, error } = await supabase.rpc('get_or_claim_player', {
+    p_local_player_id: playerId,
+    p_username: username
+  })
+  if (error) throw error
+  return data
+}
+
+export function watchAuth(callback: (session: any) => void) {
+  return supabase.auth.onAuthStateChange((_event, session) => callback(session))
+}
