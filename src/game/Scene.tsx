@@ -1495,7 +1495,7 @@ function PowerUpSystem() {
       powerUpsRef.current = []
       magnetTimerRef.current = 10
       multiplierTimerRef.current = 18
-      shieldTimerRef.current = 25
+      shieldTimerRef.current = 35
     }
     lastGameStateRef.current = state.gameState
     
@@ -1536,7 +1536,7 @@ function PowerUpSystem() {
       })
     }
 
-    // Spawn shield every 25 seconds
+    // Spawn shield every 35 seconds
     shieldTimerRef.current -= clampedDelta
     if (shieldTimerRef.current <= 0) {
       shieldTimerRef.current = 35
