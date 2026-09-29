@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchLeaderboardAnalytics } from './supabase'
 
-type Filter = '7d' | '30d' | '90d' | '180d' | '365d' | 'all'
+type Filter = 'all'
 
 const FILTERS: { key: Filter; label: string }[] = [  { key: '7d', label: 'Last 7 Days' },
   { key: '30d', label: 'Last 30 Days' },
@@ -52,7 +52,7 @@ function getStoredUsername() {
 }
 
 export function LeaderboardViewer() {
-  const [filter, setFilter] = useState<Filter>('all')
+  const filter: Filter = 'all'
   const [analytics, setAnalytics] = useState<{ users: any[]; events: any[] }>({ users: [], events: [] })
   const [loading, setLoading] = useState(true)
   const [playerName, setPlayerName] = useState('')
@@ -79,20 +79,20 @@ export function LeaderboardViewer() {
   }, [])
 
   const leaderboard = useMemo(() => {
-    const { start, end } = getWindow(filter)
-
     const allEventByUser = analytics.events.reduce((map: Record<string, number>, event: any) => {
-      map[event.username] = (map[event.username] || 0) + Number(event.seconds || 0)
+      const key = event.player_id || `legacy:${event.username}`
+      map[key] = (map[key] || 0) + Number(event.seconds || 0)
       return map
     }, {})
 
     const overallByUser = analytics.users.reduce((map: Record<string, number>, user: any) => {
-      map[user.username] = Math.max(map[user.username] || 0, Number(user.playtime_seconds || 0))
+      const key = user.player_id || `legacy:${user.username}`
+      map[key] = Math.max(map[key] || 0, Number(user.playtime_seconds || 0))
       return map
     }, {})
 
-    Object.entries(allEventByUser).forEach(([username, seconds]) => {
-      overallByUser[username] = Math.max(overallByUser[username] || 0, Number(seconds || 0))
+    Object.entries(allEventByUser).forEach(([playerId, seconds]) => {
+      overallByUser[playerId] = Math.max(overallByUser[playerId] || 0, Number(seconds || 0))
     })
 
     const windowContainsEntireGameLifetime =
@@ -109,16 +109,18 @@ export function LeaderboardViewer() {
     const source = windowContainsEntireGameLifetime ? overallByUser : periodByUser
 
     return Object.entries(source)
-      .map(([username, seconds]) => ({ username, seconds: Number(seconds) }))
+      .map(([playerId, seconds]) => {
+        const user = analytics.users.find((u: any) => (u.player_id || `legacy:${u.username}`) === playerId)
+        const eventUser = analytics.events.find((e: any) => (e.player_id || `legacy:${e.username}`) === playerId)
+        return { playerId, username: user?.username || eventUser?.username || 'Unknown', seconds: Number(seconds) }
+      })
       .sort((a, b) => b.seconds - a.seconds)
   }, [analytics, filter])
 
   const totalPlaytime = leaderboard.reduce((sum, user) => sum + user.seconds, 0)
   const topPlayer = leaderboard[0]
-  const normalizedPlayer = playerName.trim().toLowerCase()
-  const playerIndex = normalizedPlayer
-    ? leaderboard.findIndex((user) => user.username.trim().toLowerCase() === normalizedPlayer)
-    : -1
+  const playerId = (() => { try { return localStorage.getItem('highway-speedster-player-id') || '' } catch { return '' } })()
+  const playerIndex = playerId ? leaderboard.findIndex((user) => user.playerId === playerId) : -1
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-950 to-black text-white overflow-y-auto">
@@ -165,7 +167,6 @@ export function LeaderboardViewer() {
             {FILTERS.map((item) => (
               <button
                 key={item.key}
-                onClick={() => setFilter(item.key)}
                 className={`shrink-0 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold transition-all ${
                   filter === item.key
                     ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
@@ -196,7 +197,7 @@ export function LeaderboardViewer() {
 
                 return (
                   <div
-                    key={user.username}
+                    key={user.playerId || `${user.username}-${index}`}
                     className={`flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-3 border-b border-white/5 ${
                       isYou
                         ? 'bg-yellow-500/15 border-l-4 border-l-yellow-400'
