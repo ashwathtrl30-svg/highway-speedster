@@ -1070,14 +1070,18 @@ function CarBase({ car, shape = 'sedan' }: { car: Car; shape?: 'hatch' | 'sedan'
       </mesh>
       {[-1, 1].map((side) => (
         <group key={side}>
-          <mesh position={[side * w * 0.52, h * 0.24, -wheelZ]} rotation={[0, Math.PI / 2, 0]}>
-            <cylinderGeometry args={[0.27, 0.27, 0.16, 12]} />
-            <meshStandardMaterial color="#111111" roughness={0.85} />
-          </mesh>
-          <mesh position={[side * w * 0.52, h * 0.24, wheelZ]} rotation={[0, Math.PI / 2, 0]}>
-            <cylinderGeometry args={[0.27, 0.27, 0.16, 12]} />
-            <meshStandardMaterial color="#111111" roughness={0.85} />
-          </mesh>
+          {[-wheelZ, wheelZ].map((z) => (
+            <group key={z} position={[side * w * 0.52, h * 0.24, z]}>
+              <mesh rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[0.27, 0.27, 0.22, 16]} />
+                <meshStandardMaterial color="#101010" roughness={0.82} metalness={0.05} />
+              </mesh>
+              <mesh position={[side > 0 ? 0.115 : -0.115, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[0.13, 0.13, 0.025, 16]} />
+                <meshStandardMaterial color="#9ca3af" metalness={0.75} roughness={0.2} />
+              </mesh>
+            </group>
+          ))}
         </group>
       ))}
       <mesh position={[-w * 0.3, h * 0.36, -l / 2 - 0.01]}>
