@@ -283,11 +283,12 @@ function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHig
         playtimeHistory: data.playtimeHistory || [],
         vehicleMode: data.vehicleMode === 'car' ? 'car' : 'bike',
         selectedBikeId: typeof data.selectedBikeId === 'string' && BIKES.some((bike) => bike.id === migrate(data.selectedBikeId)) ? migrate(data.selectedBikeId) : BIKES[0].id,
+        selectedSkin: typeof data.selectedSkin === 'string' ? data.selectedSkin as BikeSkin : 'black',
         selectedCarId: typeof data.selectedCarId === 'string' && CARS.some((car) => car.id === data.selectedCarId) ? data.selectedCarId : CARS[0].id,
       }
     }
   } catch (e) { /* ignore */ }
-  return { highScore: 0, bikeHighScore: 0, carHighScore: 0, unlockedBikes: ['blitz'], unlockedCars: ['kanto-zip'], bikeSkins: { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' }, totalCoins: 0, inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }, username: '', totalPlaytime: 0, userPlaytime: {}, playtimeHistory: [], vehicleMode: 'bike', selectedBikeId: BIKES[0].id, selectedCarId: CARS[0].id }
+  return { highScore: 0, bikeHighScore: 0, carHighScore: 0, unlockedBikes: ['blitz'], unlockedCars: ['kanto-zip'], bikeSkins: { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' }, totalCoins: 0, inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }, username: '', totalPlaytime: 0, userPlaytime: {}, playtimeHistory: [], vehicleMode: 'bike', selectedBikeId: BIKES[0].id, selectedCarId: CARS[0].id, selectedSkin: 'black' }
 }
 
 function saveProgress(highScore: number, unlockedBikes: string[], bikeSkins: Record<string, BikeSkin>, totalCoins: number, inventory: PowerUpInventory, username: string, totalPlaytime: number, userPlaytime: Record<string, number>, playtimeHistory: PlaytimeEntry[]) {
