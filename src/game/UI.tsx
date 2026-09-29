@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useGameStore, actions, BIKES, BIKE_SKINS, getState, type Bike, type BikeSkin } from './store'
+import { useGameStore, actions, BIKES, CARS, BIKE_SKINS, getState, type Bike, type Car, type BikeSkin } from './store'
 import { fetchAllAnalytics, fetchMyPlaytimeRank } from '../supabase'
 import { HighScoreAnalytics } from '../HighScoreAnalytics'
 
@@ -448,7 +448,7 @@ export function MainMenu() {
   }
 
   if (showBikes) {
-    return <BikeSelection onBack={() => setShowBikes(false)} />
+    return <GarageSelection onBack={() => setShowBikes(false)} />
   }
 
   if (showStore) {
@@ -500,14 +500,18 @@ export function MainMenu() {
         </h1>
       </div>
 
-      {/* Current bike */}
+      {/* Current vehicle */}
       <div className="relative z-10 mb-5 sm:mb-7">
         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center border border-white/10 overflow-hidden"
-          style={{ background: `linear-gradient(135deg, ${state.selectedBike.color}30, ${state.selectedBike.accentColor}30)` }}>
-          <BikeIcon bike={state.selectedBike} />
+          style={{
+            background: state.vehicleMode === 'car'
+              ? `linear-gradient(135deg, ${state.selectedCar.color}30, ${state.selectedCar.accentColor}30)`
+              : `linear-gradient(135deg, ${state.selectedBike.color}30, ${state.selectedBike.accentColor}30)`,
+          }}>
+          {state.vehicleMode === 'car' ? <CarIcon car={state.selectedCar} /> : <BikeIcon bike={state.selectedBike} />}
         </div>
         <p className="text-center text-white font-bold mt-2 text-sm sm:text-base">
-          {state.selectedBike.name}
+          {state.vehicleMode === 'car' ? state.selectedCar.name : state.selectedBike.name}
         </p>
       </div>
 
@@ -601,9 +605,10 @@ function SkinSelector({ bikeId }: { bikeId: string }) {
   )
 }
 
-// ============== BIKE SELECTION ==============
-function BikeSelection({ onBack }: { onBack: () => void }) {
+// ============== GARAGE ==============
+function GarageSelection({ onBack }: { onBack: () => void }) {
   const state = useGameStore()
+  const [section, setSection] = useState<'bikes' | 'cars'>('bikes')
 
   return (
     <div className="absolute inset-0 flex flex-col bg-gradient-to-b from-gray-900 via-gray-950 to-black overflow-y-auto">
@@ -618,101 +623,295 @@ function BikeSelection({ onBack }: { onBack: () => void }) {
         <h2 className="text-lg sm:text-xl font-bold text-white ml-3">Garage</h2>
       </div>
 
-      {/* Bike list */}
-      <div className="flex-1 px-3 sm:px-4 py-3 sm:py-4 space-y-3">
-        {BIKES.map((bike) => {
-          const isUnlocked = state.unlockedBikes.includes(bike.id)
-          const isSelected = state.selectedBike.id === bike.id
-          const progress = isUnlocked ? 100 : Math.min(100, (state.highScore / bike.unlockScore) * 100)
+      {/* Vehicle tabs */}
+      <div className="px-3 sm:px-4 pt-3 sm:pt-4">
+        <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-white/[0.04] border border-white/5">
+          <button
+            onClick={() => setSection('bikes')}
+            className={`rounded-lg py-2.5 text-xs sm:text-sm font-bold transition-all ${
+              section === 'bikes'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-700 text-white shadow-lg'
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            🏍️ BIKES
+          </button>
+          <button
+            onClick={() => setSection('cars')}
+            className={`rounded-lg py-2.5 text-xs sm:text-sm font-bold transition-all ${
+              section === 'cars'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-700 text-white shadow-lg'
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            🚗 CARS
+          </button>
+        </div>
+      </div>
 
-          return (
-            <div
-              key={bike.id}
-              className={`relative rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all ${
-                isSelected
-                  ? 'bg-gradient-to-r from-yellow-500/10 to-orange-500/10 ring-1 ring-yellow-400/40'
-                  : isUnlocked
-                  ? 'bg-white/[0.04] hover:bg-white/[0.07]'
-                  : 'bg-white/[0.02]'
-              }`}
-            >
-              <div className="flex items-center gap-3 sm:gap-4">
-                {/* Bike icon */}
+      {section === 'bikes' ? (
+        <>
+          {/* Bike list — same card layout as the original garage */}
+          <div className="flex-1 px-3 sm:px-4 py-3 sm:py-4 space-y-3">
+            {BIKES.map((bike) => {
+              const isUnlocked = state.unlockedBikes.includes(bike.id)
+              const isSelected = state.vehicleMode === 'bike' && state.selectedBike.id === bike.id
+              const progress = isUnlocked ? 100 : Math.min(100, (state.highScore / bike.unlockScore) * 100)
+
+              return (
                 <div
-                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
-                  style={{
-                    background: isUnlocked
-                      ? `linear-gradient(135deg, ${bike.color}30, ${bike.accentColor}30)`
-                      : 'rgba(255,255,255,0.03)',
-                  }}
+                  key={bike.id}
+                  className={`relative rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all ${
+                    isSelected
+                      ? 'bg-gradient-to-r from-yellow-500/10 to-orange-500/10 ring-1 ring-yellow-400/40'
+                      : isUnlocked
+                      ? 'bg-white/[0.04] hover:bg-white/[0.07]'
+                      : 'bg-white/[0.02]'
+                  }`}
                 >
-                  {isUnlocked ? <BikeIcon bike={bike} /> : <span className="text-2xl sm:text-3xl">🔒</span>}
-                </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-bold text-sm sm:text-base truncate">
-                    {bike.name}
-                  </h3>
-                  <p className="text-gray-400 text-[10px] sm:text-xs truncate">
-                    {isUnlocked ? bike.description : `Unlock at ${bike.unlockScore.toLocaleString()} pts`}
-                  </p>
-                  
-                  {/* Top Speed */}
-                  {isUnlocked && (
-                    <div className="mt-1.5">
-                      <p className="text-[10px] sm:text-xs text-gray-400">
-                        Top Speed: <span className="text-white font-semibold">{bike.maxSpeed} kmph</span>
-                      </p>
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    {/* Bike icon */}
+                    <div
+                      className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
+                      style={{
+                        background: isUnlocked
+                          ? `linear-gradient(135deg, ${bike.color}30, ${bike.accentColor}30)`
+                          : 'rgba(255,255,255,0.03)',
+                      }}
+                    >
+                      {isUnlocked ? <BikeIcon bike={bike} /> : <span className="text-2xl sm:text-3xl">🔒</span>}
                     </div>
-                  )}
 
-                  {/* Skin Selection */}
-                  {isUnlocked && (
-                    <SkinSelector bikeId={bike.id} />
-                  )}
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white font-bold text-sm sm:text-base truncate">{bike.name}</h3>
+                      <p className="text-gray-400 text-[10px] sm:text-xs truncate">
+                        {isUnlocked ? bike.description : `Unlock at ${bike.unlockScore.toLocaleString()} pts`}
+                      </p>
 
-                  {/* Unlock progress */}
-                  {!isUnlocked && (
-                    <div className="mt-1.5">
-                      <div className="h-1 sm:h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full transition-all duration-500"
-                          style={{ width: `${progress}%` }}
-                        />
+                      {isUnlocked && (
+                        <>
+                          <div className="mt-1.5">
+                            <p className="text-[10px] sm:text-xs text-gray-400">
+                              Top Speed: <span className="text-white font-semibold">{bike.maxSpeed} kmph</span>
+                            </p>
+                          </div>
+                          <SkinSelector bikeId={bike.id} />
+                        </>
+                      )}
+
+                      {!isUnlocked && (
+                        <div className="mt-1.5">
+                          <div className="h-1 sm:h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full transition-all duration-500"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                          <p className="text-[9px] sm:text-[10px] text-gray-500 mt-0.5 tabular-nums">
+                            {state.highScore.toLocaleString()} / {bike.unlockScore.toLocaleString()}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action */}
+                    {isUnlocked && !isSelected && (
+                      <button
+                        onClick={() => actions.selectBike(bike)}
+                        className="bg-white/10 hover:bg-white/20 text-white text-[10px] sm:text-xs font-semibold px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg active:scale-95 transition-all shrink-0"
+                      >
+                        SELECT
+                      </button>
+                    )}
+                    {isSelected && (
+                      <div className="text-yellow-400 text-[10px] sm:text-xs font-bold shrink-0 bg-yellow-400/10 px-2 py-1 rounded-md">
+                        ACTIVE
                       </div>
-                      <p className="text-[9px] sm:text-[10px] text-gray-500 mt-0.5 tabular-nums">
-                        {state.highScore.toLocaleString()} / {bike.unlockScore.toLocaleString()}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Action */}
-                {isUnlocked && !isSelected && (
-                  <button
-                    onClick={() => actions.selectBike(bike)}
-                    className="bg-white/10 hover:bg-white/20 text-white text-[10px] sm:text-xs font-semibold px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg active:scale-95 transition-all shrink-0"
-                  >
-                    SELECT
-                  </button>
-                )}
-                {isSelected && (
-                  <div className="text-yellow-400 text-[10px] sm:text-xs font-bold shrink-0 bg-yellow-400/10 px-2 py-1 rounded-md">
-                    ACTIVE
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+                </div>
+              )
+            })}
+          </div>
 
-      {/* Unlocked count at bottom */}
-      <div className="pb-4 pt-2 text-center">
-        <span className="text-xs text-gray-500">{state.unlockedBikes.length} out of {BIKES.length} Bikes unlocked</span>
-      </div>
+          <div className="pb-4 pt-2 text-center">
+            <span className="text-xs text-gray-500">{state.unlockedBikes.length} out of {BIKES.length} Bikes unlocked</span>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Car list — same card spacing/arrangement as the Bike garage */}
+          <div className="flex-1 px-3 sm:px-4 py-3 sm:py-4 space-y-3">
+            {CARS.map((car) => {
+              const isUnlocked = state.highScore >= car.unlockScore
+              const isSelected = state.vehicleMode === 'car' && state.selectedCar.id === car.id
+              const progress = isUnlocked ? 100 : Math.min(100, (state.highScore / car.unlockScore) * 100)
+
+              return (
+                <div
+                  key={car.id}
+                  className={`relative rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all ${
+                    isSelected
+                      ? 'bg-gradient-to-r from-yellow-500/10 to-orange-500/10 ring-1 ring-yellow-400/40'
+                      : isUnlocked
+                      ? 'bg-white/[0.04] hover:bg-white/[0.07]'
+                      : 'bg-white/[0.02]'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    {/* Car icon */}
+                    <div
+                      className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
+                      style={{
+                        background: isUnlocked
+                          ? `linear-gradient(135deg, ${car.color}30, ${car.accentColor}30)`
+                          : 'rgba(255,255,255,0.03)',
+                      }}
+                    >
+                      {isUnlocked ? <CarIcon car={car} /> : <span className="text-2xl sm:text-3xl">🔒</span>}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white font-bold text-sm sm:text-base truncate">{car.name}</h3>
+                      <p className="text-gray-400 text-[10px] sm:text-xs truncate">{isUnlocked ? car.description : `Unlock at ${car.unlockScore.toLocaleString()} pts`}</p>
+
+                      {isUnlocked && (
+                        <>
+                          <div className="mt-1.5">
+                            <p className="text-[10px] sm:text-xs text-gray-400">
+                              Top Speed: <span className="text-white font-semibold">{car.maxSpeed} kmph</span>
+                            </p>
+                          </div>
+                          <p className="text-[9px] sm:text-[10px] text-gray-500 mt-0.5 truncate">Inspired by {car.inspiration}</p>
+                        </>
+                      )}
+
+                      {!isUnlocked && (
+                        <div className="mt-1.5">
+                          <div className="h-1 sm:h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full transition-all duration-500"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                          <p className="text-[9px] sm:text-[10px] text-gray-500 mt-0.5 tabular-nums">
+                            {state.highScore.toLocaleString()} / {car.unlockScore.toLocaleString()}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action */}
+                    {isUnlocked && !isSelected && (
+                      <button
+                        onClick={() => actions.selectCar(car)}
+                        className="bg-white/10 hover:bg-white/20 text-white text-[10px] sm:text-xs font-semibold px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg active:scale-95 transition-all shrink-0"
+                      >
+                        SELECT
+                      </button>
+                    )}
+                    {isSelected && (
+                      <div className="text-yellow-400 text-[10px] sm:text-xs font-bold shrink-0 bg-yellow-400/10 px-2 py-1 rounded-md">
+                        ACTIVE
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="pb-4 pt-2 text-center">
+            <span className="text-xs text-gray-500">
+              {CARS.filter((car) => state.highScore >= car.unlockScore).length} out of {CARS.length} Cars unlocked
+            </span>
+          </div>
+        </>
+      )}
     </div>
+  )
+}
+
+// Car icon component with five distinct silhouettes inspired by the requested real-life vehicles.
+function CarIcon({ car }: { car: Car }) {
+  const common = { fill: car.color, accent: car.accentColor }
+
+  if (car.id === 'kanto-zip') {
+    return (
+      <svg viewBox="0 0 100 60" className="w-full h-full">
+        <circle cx="23" cy="46" r="9" fill="#222" stroke="#555" strokeWidth="2"/>
+        <circle cx="77" cy="46" r="9" fill="#222" stroke="#555" strokeWidth="2"/>
+        <path d="M15 42 L20 29 L36 25 L56 25 L68 31 L82 38 L85 43 L15 43Z" fill={common.fill}/>
+        <path d="M28 29 L39 20 L57 20 L67 30 L30 30Z" fill={common.accent} opacity="0.95"/>
+        <path d="M40 22 L55 22 L62 28 L43 28Z" fill="#1b2638"/>
+        <rect x="19" y="35" width="10" height="3" rx="1.5" fill="#eee"/>
+        <rect x="72" y="37" width="8" height="3" rx="1.5" fill="#d33"/>
+        <rect x="31" y="40" width="38" height="3" rx="1.5" fill="#2b2b2b"/>
+      </svg>
+    )
+  }
+
+  if (car.id === 'saber-swift') {
+    return (
+      <svg viewBox="0 0 100 60" className="w-full h-full">
+        <circle cx="21" cy="46" r="9.5" fill="#1e1e1e" stroke="#555" strokeWidth="2"/>
+        <circle cx="79" cy="46" r="9.5" fill="#1e1e1e" stroke="#555" strokeWidth="2"/>
+        <path d="M13 42 L19 31 L33 27 L44 20 L64 21 L72 29 L85 36 L87 43 L13 43Z" fill={common.fill}/>
+        <path d="M31 28 L44 21 L61 22 L69 29 L35 29Z" fill="#1e2b3a"/>
+        <path d="M17 34 L30 30 L70 30 L82 36 L82 39 L18 39Z" fill={common.accent} opacity="0.35"/>
+        <path d="M16 40 L29 40 L29 43 L16 43Z" fill="#222"/>
+        <path d="M72 39 L84 39 L84 42 L72 42Z" fill="#c7363d"/>
+        <rect x="41" y="34" width="29" height="3" rx="1.5" fill="#dfe6ee" opacity="0.65"/>
+      </svg>
+    )
+  }
+
+  if (car.id === 'goliath-titan') {
+    return (
+      <svg viewBox="0 0 100 60" className="w-full h-full">
+        <circle cx="21" cy="47" r="10" fill="#202020" stroke="#555" strokeWidth="2"/>
+        <circle cx="79" cy="47" r="10" fill="#202020" stroke="#555" strokeWidth="2"/>
+        <path d="M12 43 L17 28 L29 24 L29 17 L68 17 L78 25 L86 29 L89 43 L12 43Z" fill={common.fill}/>
+        <rect x="30" y="20" width="34" height="13" rx="2" fill="#23303a"/>
+        <path d="M18 29 L29 27 L29 36 L17 37Z" fill={common.accent} opacity="0.55"/>
+        <rect x="28" y="36" width="45" height="5" rx="2" fill="#3b4147"/>
+        <rect x="75" y="34" width="9" height="4" rx="1.5" fill="#cf3434"/>
+        <circle cx="83" cy="29" r="3.2" fill="#333" stroke="#777" strokeWidth="1"/>
+        <rect x="33" y="15" width="34" height="2" rx="1" fill="#141414"/>
+        <rect x="19" y="40" width="12" height="3" fill="#ddd"/>
+      </svg>
+    )
+  }
+
+  if (car.id === 'kaiser-monarch') {
+    return (
+      <svg viewBox="0 0 100 60" className="w-full h-full">
+        <circle cx="21" cy="46" r="9.5" fill="#191919" stroke="#555" strokeWidth="2"/>
+        <circle cx="79" cy="46" r="9.5" fill="#191919" stroke="#555" strokeWidth="2"/>
+        <path d="M11 42 L18 31 L34 28 L46 20 L65 21 L74 29 L85 34 L89 42 L11 42Z" fill={common.fill}/>
+        <path d="M31 29 L46 21 L63 22 L71 29Z" fill="#16202c"/>
+        <path d="M17 34 L30 31 L75 31 L83 35 L81 39 L18 39Z" fill={common.accent} opacity="0.32"/>
+        <rect x="36" y="38" width="44" height="2.2" rx="1" fill="#bfc5cd" opacity="0.75"/>
+        <rect x="14" y="39" width="11" height="2.5" rx="1" fill="#f4f0c8"/>
+        <path d="M74 37 L85 37 L85 40 L74 40Z" fill="#d92f3b"/>
+      </svg>
+    )
+  }
+
+  return (
+    <svg viewBox="0 0 100 60" className="w-full h-full">
+      <circle cx="20" cy="46" r="9.5" fill="#121212" stroke="#555" strokeWidth="2"/>
+      <circle cx="80" cy="46" r="9.5" fill="#121212" stroke="#555" strokeWidth="2"/>
+      <path d="M9 42 L18 31 L29 28 L39 19 L59 16 L72 23 L80 31 L89 35 L92 42 L9 42Z" fill={common.fill}/>
+      <path d="M31 28 L42 20 L58 17 L70 24 L75 29Z" fill="#18222b"/>
+      <path d="M15 35 L29 31 L75 31 L86 35 L83 39 L16 39Z" fill={common.accent} opacity="0.28"/>
+      <path d="M68 35 L85 35 L88 38 L69 38Z" fill="#111" />
+      <rect x="18" y="39" width="16" height="2.5" rx="1" fill="#f5edb8"/>
+      <rect x="68" y="39" width="16" height="2.5" rx="1" fill="#e42f3f"/>
+      <rect x="37" y="38.2" width="28" height="2" rx="1" fill="#d4d4d4" opacity="0.7"/>
+    </svg>
   )
 }
 
