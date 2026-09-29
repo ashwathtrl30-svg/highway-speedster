@@ -744,11 +744,9 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
           {/* Car list — same card spacing/arrangement as the Bike garage */}
           <div className="flex-1 px-3 sm:px-4 py-3 sm:py-4 space-y-3">
             {CARS.map((car) => {
-              const requiredBikeId = ({ 'kanto-zip': 'blitz', 'saber-swift': 'apex', 'goliath-titan': 'chronos', 'kaiser-monarch': 'stratos', 'scuderia-fury': 'zenith' } as Record<string, string>)[car.id]
-              const isUnlocked = state.unlockedBikes.includes(requiredBikeId)
+              const isUnlocked = state.unlockedCars.includes(car.id)
               const isSelected = state.vehicleMode === 'car' && state.selectedCar.id === car.id
-              const requiredBike = BIKES.find((bike) => bike.id === requiredBikeId)
-              const progress = isUnlocked || !requiredBike ? 100 : Math.min(100, (state.highScore / requiredBike.unlockScore) * 100)
+              const progress = isUnlocked ? 100 : Math.min(100, (state.highScore / car.unlockScore) * 100)
 
               return (
                 <div
@@ -827,7 +825,7 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
 
           <div className="pb-4 pt-2 text-center">
             <span className="text-xs text-gray-500">
-              {CARS.filter((car) => state.highScore >= car.unlockScore).length} out of {CARS.length} Cars unlocked
+              {state.unlockedCars.length} out of {CARS.length} Cars unlocked
             </span>
           </div>
         </>
