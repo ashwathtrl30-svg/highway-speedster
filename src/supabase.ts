@@ -119,14 +119,21 @@ export async function fetchUserGameProgress(username: string): Promise<CloudGame
   try {
     const { data, error } = await supabase
       .from('user_analytics')
-      .select('game_progress')
+      .select('game_progress, total_coins')
       .eq('username', username.trim())
       .maybeSingle()
 
     if (error) throw error
     if (!data?.game_progress || typeof data.game_progress !== 'object') return null
 
-    return data.game_progress as CloudGameProgress
+    const progress = data.game_progress as CloudGameProgress
+    // Older saves may have the correct balance in user_analytics.total_coins
+    // even when game_progress.totalCoins was not persisted correctly.
+    const storedTotalCoins = Number(data.total_coins || 0)
+    return {
+      ...progress,
+      totalCoins: Math.max(Number(progress.totalCoins || 0), Number.isFinite(storedTotalCoins) ? storedTotalCoins : 0),
+    }
   } catch (error) {
     console.error('Error fetching game progress:', error)
     return null
@@ -153,7 +160,8 @@ export async function saveUserGameProgress(
         username: username.trim(),
         playtime_seconds: Math.max(Number(existing?.playtime_seconds || 0), Math.floor(progress.totalPlaytime)),
         high_score: Math.max(Number(existing?.high_score || 0), Math.floor(progress.highScore)),
-        total_coins: Math.max(Number(existing?.total_coins || 0), Math.floor(progress.totalCoins)),
+        // total_coins is the player's current spendable balance. Keep it in sync with game_progress.
+        total_coins: Math.max(0, Math.floor(progress.totalCoins)),
         game_progress: progress,
         last_updated: new Date().toISOString()
       }, { onConflict: 'username' })
