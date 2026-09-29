@@ -406,7 +406,7 @@ function queueCloudSave() {
   if (cloudSaveTimer) clearTimeout(cloudSaveTimer)
   cloudSaveTimer = setTimeout(() => {
     cloudSaveTimer = null
-    saveCloudProgressNow()
+    if (!cloudHydratingUser) saveCloudProgressNow()
   }, 1000)
 }
 
@@ -420,7 +420,10 @@ async function loadCloudProgress(username: string) {
   }
 
   const current = getState()
-  if (current.username.trim() !== username.trim()) return
+  if (current.username.trim() !== username.trim()) {
+    cloudHydratingUser = ''
+    return
+  }
 
   const cloudBikeHighScore = Number(cloud.bikeHighScore || 0)
   const cloudCarHighScore = Number(cloud.carHighScore || 0)
@@ -756,8 +759,8 @@ export const actions = {
 
   restoreCloudProgress(username = state.username) {
     const trimmed = username.trim()
-    if (!trimmed) return
-    void loadCloudProgress(trimmed)
+    if (!trimmed) return Promise.resolve()
+    return loadCloudProgress(trimmed)
   },
 
   syncSharedHighScore() {
