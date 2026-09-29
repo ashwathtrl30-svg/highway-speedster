@@ -6,17 +6,18 @@ const supabaseAnonKey = 'sb_publishable_Wh5xFjsVYK8kkXgVwHpWbg_Io5b85cD'
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export async function syncAnalyticsToSupabase(
+  playerId: string,
   username: string,
   playtimeSeconds: number,
   highScore: number,
   totalCoins: number
 ) {
-  if (!username.trim()) return
+  if (!playerId.trim() || !username.trim()) return
   try {
     const { data: existingUser, error: fetchError } = await supabase
       .from('user_analytics')
       .select('high_score')
-      .eq('username', username)
+      .eq('player_id', playerId)
       .maybeSingle()
 
     if (fetchError) throw fetchError
@@ -24,12 +25,13 @@ export async function syncAnalyticsToSupabase(
     const { error } = await supabase
       .from('user_analytics')
       .upsert({
+        player_id: playerId,
         username,
         playtime_seconds: Math.max(0, Math.floor(playtimeSeconds)),
         high_score: Math.max(existingUser?.high_score ?? 0, highScore),
         total_coins: totalCoins,
         last_updated: new Date().toISOString()
-      }, { onConflict: 'username' })
+      }, { onConflict: 'player_id' })
 
     if (error) throw error
   } catch (error) {
@@ -37,12 +39,13 @@ export async function syncAnalyticsToSupabase(
   }
 }
 
-export async function recordPlaytimeEvent(username: string, seconds: number) {
-  if (!username.trim() || seconds <= 0) return
+export async function recordPlaytimeEvent(playerId: string, username: string, seconds: number) {
+  if (!playerId.trim() || !username.trim() || seconds <= 0) return
   try {
     const { error } = await supabase
       .from('playtime_events')
       .insert({
+        player_id: playerId,
         username,
         seconds: Math.floor(seconds)
       })
@@ -57,7 +60,7 @@ export async function fetchAllAnalytics() {
   try {
     const [{ data: users, error: usersError }, { data: events, error: eventsError }] = await Promise.all([
       supabase.from('user_analytics').select('*').order('playtime_seconds', { ascending: false }),
-      supabase.from('playtime_events').select('username, seconds, recorded_at').order('recorded_at', { ascending: false })
+      supabase.from('playtime_events').select('player_id, username, seconds, recorded_at').order('recorded_at', { ascending: false })
     ])
 
     if (usersError) throw usersError
@@ -74,10 +77,11 @@ export async function fetchAllAnalytics() {
 }
 
 
-export async function fetchMyPlaytimeRank(username: string): Promise<{ rank: number; playtimeSeconds: number; totalPlayers: number } | null> {
-  if (!username.trim()) return null
+export async function fetchMyPlaytimeRank(playerId: string, username: string): Promise<{ rank: number; playtimeSeconds: number; totalPlayers: number } | null> {
+  if (!playerId.trim() || !username.trim()) return null
   try {
     const { data, error } = await supabase.rpc('get_my_playtime_rank', {
+      p_player_id: playerId.trim(),
       p_username: username.trim()
     })
 
@@ -114,13 +118,13 @@ export interface CloudGameProgress {
   playtimeHistory: Array<{ date: string; seconds: number }>
 }
 
-export async function fetchUserGameProgress(username: string): Promise<CloudGameProgress | null> {
-  if (!username.trim()) return null
+export async function fetchUserGameProgress(playerId: string, username: string): Promise<CloudGameProgress | null> {
+  if (!playerId.trim() || !username.trim()) return null
   try {
     const { data, error } = await supabase
       .from('user_analytics')
       .select('game_progress, total_coins')
-      .eq('username', username.trim())
+      .eq('player_id', playerId.trim())
       .maybeSingle()
 
     if (error) throw error
@@ -141,15 +145,16 @@ export async function fetchUserGameProgress(username: string): Promise<CloudGame
 }
 
 export async function saveUserGameProgress(
+  playerId: string,
   username: string,
   progress: CloudGameProgress
 ): Promise<boolean> {
-  if (!username.trim()) return false
+  if (!playerId.trim() || !username.trim()) return false
   try {
     const { data: existing, error: existingError } = await supabase
       .from('user_analytics')
       .select('high_score, playtime_seconds, total_coins')
-      .eq('username', username.trim())
+      .eq('player_id', playerId.trim())
       .maybeSingle()
 
     if (existingError) throw existingError
@@ -157,6 +162,7 @@ export async function saveUserGameProgress(
     const { error } = await supabase
       .from('user_analytics')
       .upsert({
+        player_id: playerId.trim(),
         username: username.trim(),
         playtime_seconds: Math.max(Number(existing?.playtime_seconds || 0), Math.floor(progress.totalPlaytime)),
         high_score: Math.max(Number(existing?.high_score || 0), Math.floor(progress.highScore)),
@@ -164,7 +170,7 @@ export async function saveUserGameProgress(
         total_coins: Math.max(0, Math.floor(progress.totalCoins)),
         game_progress: progress,
         last_updated: new Date().toISOString()
-      }, { onConflict: 'username' })
+      }, { onConflict: 'player_id' })
 
     if (error) throw error
     return true
@@ -174,13 +180,13 @@ export async function saveUserGameProgress(
   }
 }
 
-export async function fetchUserHighScore(username: string): Promise<number | null> {
-  if (!username.trim()) return null
+export async function fetchUserHighScore(playerId: string): Promise<number | null> {
+  if (!playerId.trim()) return null
   try {
     const { data, error } = await supabase
       .from('user_analytics')
       .select('high_score')
-      .eq('username', username)
+      .eq('player_id', playerId)
       .maybeSingle()
 
     if (error) throw error
@@ -196,13 +202,14 @@ export async function fetchHighScoreLeaderboard(): Promise<Array<{ username: str
   try {
     const { data, error } = await supabase
       .from('user_analytics')
-      .select('username, high_score, last_updated')
+      .select('player_id, username, high_score, last_updated')
       .order('high_score', { ascending: false })
       .order('username', { ascending: true })
 
     if (error) throw error
 
     return (data || []).map((user: any) => ({
+      player_id: String(user.player_id || '').trim(),
       username: String(user.username || '').trim(),
       high_score: Math.max(0, Number(user.high_score || 0)),
       last_updated: user.last_updated || null,
@@ -219,7 +226,7 @@ export async function fetchLeaderboardAnalytics() {
     const [{ data: users, error: usersError }, { data: events, error: eventsError }] = await Promise.all([
       supabase
         .from('user_analytics')
-        .select('username, playtime_seconds')
+        .select('player_id, username, playtime_seconds')
         .order('playtime_seconds', { ascending: false }),
       supabase
         .from('playtime_events')
