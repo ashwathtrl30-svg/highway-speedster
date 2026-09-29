@@ -1337,6 +1337,11 @@ function CoinSystem() {
     for (let i = coins.length - 1; i >= 0; i--) {
       const coin = coins[i]
 
+      // Stop the attraction immediately when the magnet power-up ends.
+      if (!state.magnetActive && coin.magnetized) {
+        coin.magnetized = false
+      }
+
       // Normal forward movement until the magnet grabs the coin.
       if (!coin.magnetized) {
         coin.z += (state.speed + 20) * clampedDelta * 0.5
