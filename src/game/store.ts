@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { syncAnalyticsToSupabase, recordPlaytimeEvent, fetchUserHighScore } from '../supabase'
+import { syncAnalyticsToSupabase, recordPlaytimeEvent, fetchUserHighScore, fetchUserGameProgress, saveUserGameProgress, type CloudGameProgress } from '../supabase'
 
 // Bike definitions - 3 iconic Indian bikes
 export interface Bike {
@@ -270,11 +270,12 @@ function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHig
         userPlaytime: data.userPlaytime || {},
         playtimeHistory: data.playtimeHistory || [],
         vehicleMode: data.vehicleMode === 'car' ? 'car' : 'bike',
+        selectedBikeId: typeof data.selectedBikeId === 'string' && BIKES.some((bike) => bike.id === migrate(data.selectedBikeId)) ? migrate(data.selectedBikeId) : BIKES[0].id,
         selectedCarId: typeof data.selectedCarId === 'string' && CARS.some((car) => car.id === data.selectedCarId) ? data.selectedCarId : CARS[0].id,
       }
     }
   } catch (e) { /* ignore */ }
-  return { highScore: 0, bikeHighScore: 0, carHighScore: 0, unlockedBikes: ['blitz'], unlockedCars: ['kanto-zip'], bikeSkins: { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' }, totalCoins: 0, inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }, username: '', totalPlaytime: 0, userPlaytime: {}, playtimeHistory: [], vehicleMode: 'bike', selectedCarId: CARS[0].id }
+  return { highScore: 0, bikeHighScore: 0, carHighScore: 0, unlockedBikes: ['blitz'], unlockedCars: ['kanto-zip'], bikeSkins: { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' }, totalCoins: 0, inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }, username: '', totalPlaytime: 0, userPlaytime: {}, playtimeHistory: [], vehicleMode: 'bike', selectedBikeId: BIKES[0].id, selectedCarId: CARS[0].id }
 }
 
 function saveProgress(highScore: number, unlockedBikes: string[], bikeSkins: Record<string, BikeSkin>, totalCoins: number, inventory: PowerUpInventory, username: string, totalPlaytime: number, userPlaytime: Record<string, number>, playtimeHistory: PlaytimeEntry[]) {
@@ -291,14 +292,15 @@ function saveProgress(highScore: number, unlockedBikes: string[], bikeSkins: Rec
       userPlaytime,
       playtimeHistory,
       vehicleMode: existing.vehicleMode === 'car' ? 'car' : 'bike',
-      selectedCarId: typeof existing.selectedCarId === 'string' && CARS.some((car) => car.id === existing.selectedCarId)
-        ? existing.selectedCarId
-        : CARS[0].id,
+      selectedBikeId: state.selectedBike.id,
+      selectedCarId: state.selectedCar.id,
+      selectedSkin: state.selectedSkin,
       bikeHighScore: state.bikeHighScore,
       carHighScore: state.carHighScore,
       unlockedCars: state.unlockedCars,
     }))
   } catch (e) { /* ignore */ }
+  if (username.trim()) queueCloudSave()
 }
 
 function saveVehicleSelection(vehicleMode: 'bike' | 'car', selectedVehicleId: string) {
@@ -312,6 +314,7 @@ function saveVehicleSelection(vehicleMode: 'bike' | 'car', selectedVehicleId: st
         : (saved.selectedCarId || CARS[0].id),
     }))
   } catch (e) { /* ignore */ }
+  if (state.username.trim()) queueCloudSave()
 }
 
 // Simple store using a listener pattern
@@ -363,6 +366,110 @@ let state: GameData = {
   totalPlaytime: savedProgress.totalPlaytime,
   userPlaytime: savedProgress.userPlaytime,
   playtimeHistory: savedProgress.playtimeHistory,
+}
+
+let cloudSaveTimer: ReturnType<typeof setTimeout> | null = null
+
+function buildCloudProgress(): CloudGameProgress | null {
+  const current = getState()
+  if (!current.username.trim()) return null
+
+  return {
+    highScore: current.highScore,
+    bikeHighScore: current.bikeHighScore,
+    carHighScore: current.carHighScore,
+    unlockedBikes: current.unlockedBikes,
+    unlockedCars: current.unlockedCars,
+    bikeSkins: current.bikeSkins,
+    totalCoins: current.totalCoins,
+    inventory: current.inventory,
+    vehicleMode: current.vehicleMode,
+    selectedBikeId: current.selectedBike.id,
+    selectedCarId: current.selectedCar.id,
+    selectedSkin: current.selectedSkin,
+    totalPlaytime: current.totalPlaytime,
+    userPlaytime: current.userPlaytime,
+    playtimeHistory: current.playtimeHistory,
+  }
+}
+
+function saveCloudProgressNow() {
+  const current = getState()
+  const progress = buildCloudProgress()
+  if (!progress || !current.username.trim()) return
+  void saveUserGameProgress(current.username, progress)
+}
+
+function queueCloudSave() {
+  if (cloudSaveTimer) clearTimeout(cloudSaveTimer)
+  cloudSaveTimer = setTimeout(() => {
+    cloudSaveTimer = null
+    saveCloudProgressNow()
+  }, 1000)
+}
+
+async function loadCloudProgress(username: string) {
+  const cloud = await fetchUserGameProgress(username)
+  if (!cloud) return
+
+  const current = getState()
+  if (current.username.trim() !== username.trim()) return
+
+  const cloudBikeHighScore = Number(cloud.bikeHighScore || 0)
+  const cloudCarHighScore = Number(cloud.carHighScore || 0)
+  const mergedBikeHighScore = Math.max(current.bikeHighScore, cloudBikeHighScore)
+  const mergedCarHighScore = Math.max(current.carHighScore, cloudCarHighScore)
+  const mergedHighScore = Math.max(current.highScore, Number(cloud.highScore || 0), mergedBikeHighScore, mergedCarHighScore)
+
+  const unlockedBikes = BIKES
+    .filter((bike) => bike.unlockScore <= mergedBikeHighScore)
+    .map((bike) => bike.id)
+  const unlockedCars = CARS
+    .filter((car) => car.unlockScore <= mergedCarHighScore)
+    .map((car) => car.id)
+
+  const bikeId = typeof cloud.selectedBikeId === 'string' && BIKES.some((bike) => bike.id === cloud.selectedBikeId)
+    ? cloud.selectedBikeId
+    : current.selectedBike.id
+  const carId = typeof cloud.selectedCarId === 'string' && CARS.some((car) => car.id === cloud.selectedCarId)
+    ? cloud.selectedCarId
+    : current.selectedCar.id
+  const bikeSkin = typeof cloud.selectedSkin === 'string' && BIKE_SKINS[bikeId]?.includes(cloud.selectedSkin as BikeSkin)
+    ? cloud.selectedSkin as BikeSkin
+    : (cloud.bikeSkins?.[bikeId] as BikeSkin) || current.bikeSkins[bikeId] || 'black'
+  const bike = BIKES.find((item) => item.id === bikeId) || BIKES[0]
+  const colors = SKIN_COLORS[bikeSkin]
+
+  setState({
+    highScore: mergedHighScore,
+    bikeHighScore: mergedBikeHighScore,
+    carHighScore: mergedCarHighScore,
+    unlockedBikes,
+    unlockedCars,
+    bikeSkins: { ...current.bikeSkins, ...(cloud.bikeSkins || {}) },
+    totalCoins: Math.max(current.totalCoins, Number(cloud.totalCoins || 0)),
+    inventory: { ...current.inventory, ...(cloud.inventory || {}) },
+    selectedBike: { ...bike, color: colors.color, accentColor: colors.accentColor },
+    selectedCar: CARS.find((item) => item.id === carId) || current.selectedCar,
+    selectedSkin: bikeSkin,
+    vehicleMode: cloud.vehicleMode === 'car' ? 'car' : current.vehicleMode,
+    totalPlaytime: Math.max(current.totalPlaytime, Number(cloud.totalPlaytime || 0)),
+    userPlaytime: { ...current.userPlaytime, ...(cloud.userPlaytime || {}) },
+    playtimeHistory: cloud.playtimeHistory?.length ? cloud.playtimeHistory : current.playtimeHistory,
+  })
+
+  saveProgress(
+    mergedHighScore,
+    unlockedBikes,
+    { ...current.bikeSkins, ...(cloud.bikeSkins || {}) },
+    Math.max(current.totalCoins, Number(cloud.totalCoins || 0)),
+    { ...current.inventory, ...(cloud.inventory || {}) },
+    username,
+    Math.max(current.totalPlaytime, Number(cloud.totalPlaytime || 0)),
+    { ...current.userPlaytime, ...(cloud.userPlaytime || {}) },
+    cloud.playtimeHistory?.length ? cloud.playtimeHistory : current.playtimeHistory
+  )
+  queueCloudSave()
 }
 
 const listeners: Set<Listener> = new Set()
