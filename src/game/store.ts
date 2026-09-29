@@ -155,9 +155,18 @@ function loadSavedProgress(): { highScore: number; unlockedBikes: string[]; bike
         if (id === 'hayabusa') return 'chronos'
         return id
       }
+      const highScore = data.highScore || 0
+      const savedUnlockedBikes = (data.unlockedBikes || ['blitz']).map(migrate)
+      // Repair legacy/stale unlock state: a high score must always unlock every
+      // bike whose threshold has been reached, including scores synced from the server.
+      const unlockedBikes = BIKES
+        .filter((bike) => bike.unlockScore <= highScore)
+        .map((bike) => bike.id)
+        .reduce((ids, id) => ids.includes(id) ? ids : [...ids, id], [...savedUnlockedBikes])
+
       return {
-        highScore: data.highScore || 0,
-        unlockedBikes: (data.unlockedBikes || ['blitz']).map(migrate),
+        highScore,
+        unlockedBikes,
         bikeSkins: data.bikeSkins || { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' },
         totalCoins: data.totalCoins || data.coins || 0,
         inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0, ...(data.inventory || {}) },
@@ -276,26 +285,36 @@ export const actions = {
   addScore(points: number) {
     const newScore = state.score + points
     const newHighScore = Math.max(state.highScore, newScore)
-    let newUnlock: string | null = null
-    
-    // Check bike unlocks
-    for (const bike of BIKES) {
-      if (newScore >= bike.unlockScore && !state.unlockedBikes.includes(bike.id)) {
-        const newUnlocked = [...state.unlockedBikes, bike.id]
-        setState({
-          score: newScore,
-          highScore: newHighScore,
-          unlockedBikes: newUnlocked,
-          newUnlock: bike.name,
-        })
-        saveProgress(newHighScore, newUnlocked, state.bikeSkins, state.totalCoins, state.inventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
-        return
-      }
-    }
-    
-    setState({ score: newScore, highScore: newHighScore })
-    if (newHighScore > state.highScore) {
-      saveProgress(newHighScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
+
+    // Unlock every bike whose threshold has been reached. This is intentionally
+    // based on the score, not on the order/size of individual score events, so
+    // large score jumps cannot leave higher-tier bikes incorrectly locked.
+    const newlyUnlocked = BIKES.filter(
+      (bike) => newScore >= bike.unlockScore && !state.unlockedBikes.includes(bike.id)
+    )
+    const newUnlocked = newlyUnlocked.length > 0
+      ? [...state.unlockedBikes, ...newlyUnlocked.map((bike) => bike.id)]
+      : state.unlockedBikes
+
+    setState({
+      score: newScore,
+      highScore: newHighScore,
+      unlockedBikes: newUnlocked,
+      newUnlock: newlyUnlocked[0]?.name ?? null,
+    })
+
+    if (newHighScore > state.highScore || newlyUnlocked.length > 0) {
+      saveProgress(
+        newHighScore,
+        newUnlocked,
+        state.bikeSkins,
+        state.totalCoins,
+        state.inventory,
+        state.username,
+        state.totalPlaytime,
+        state.userPlaytime,
+        state.playtimeHistory
+      )
     }
   },
 
@@ -463,12 +482,19 @@ export const actions = {
       if (current.username.trim() !== username) return
 
       const mergedHighScore = Math.max(current.highScore, serverHighScore)
+      const unlockedBikes = BIKES
+        .filter((bike) => bike.unlockScore <= mergedHighScore)
+        .map((bike) => bike.id)
+        .reduce((ids, id) => ids.includes(id) ? ids : [...ids, id], [...current.unlockedBikes])
 
-      if (mergedHighScore !== current.highScore) {
-        setState({ highScore: mergedHighScore })
+      if (mergedHighScore !== current.highScore || unlockedBikes.length !== current.unlockedBikes.length) {
+        setState({
+          highScore: mergedHighScore,
+          unlockedBikes,
+        })
         saveProgress(
           mergedHighScore,
-          current.unlockedBikes,
+          unlockedBikes,
           current.bikeSkins,
           current.totalCoins,
           current.inventory,
