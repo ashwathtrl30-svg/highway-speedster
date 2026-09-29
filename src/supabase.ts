@@ -230,7 +230,7 @@ export async function fetchLeaderboardAnalytics() {
         .order('playtime_seconds', { ascending: false }),
       supabase
         .from('playtime_events')
-        .select('username, seconds, recorded_at')
+        .select('player_id, username, seconds, recorded_at')
         .order('recorded_at', { ascending: false })
     ])
 
