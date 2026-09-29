@@ -16,7 +16,7 @@ const getSpawnConfig = (bikeId: string) => {
   switch (bikeId) {
     case 'blitz':
     case 'apex':
-      return { baseDistance: 40, reductionRate: 3 }
+      return { baseDistance: 25, reductionRate: 3.5 }
     case 'chronos':
       return { baseDistance: 50, reductionRate: 2 }
     case 'stratos':
