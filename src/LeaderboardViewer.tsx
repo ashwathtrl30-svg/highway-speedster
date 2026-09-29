@@ -67,15 +67,9 @@ export function LeaderboardViewer() {
   const [analytics, setAnalytics] = useState<{ users: any[]; events: any[] }>({ users: [], events: [] })
   const [loading, setLoading] = useState(true)
   const [playerName, setPlayerName] = useState('')
-  const [manualName, setManualName] = useState('')
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const fromUrl = (params.get('player') || '').trim()
-    const stored = getStoredUsername()
-    const initial = fromUrl || stored
-    setPlayerName(initial)
-    setManualName(initial)
+    setPlayerName(getStoredUsername())
 
     let mounted = true
 
@@ -137,15 +131,6 @@ export function LeaderboardViewer() {
     ? leaderboard.findIndex((user) => user.username.trim().toLowerCase() === normalizedPlayer)
     : -1
 
-  const applyPlayer = () => {
-    const next = manualName.trim()
-    setPlayerName(next)
-    const url = new URL(window.location.href)
-    if (next) url.searchParams.set('player', next)
-    else url.searchParams.delete('player')
-    window.history.replaceState({}, '', url.toString())
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-950 to-black text-white overflow-y-auto">
       <div className="sticky top-0 z-20 border-b border-white/10 bg-gray-950/95 backdrop-blur-xl">
@@ -153,14 +138,19 @@ export function LeaderboardViewer() {
           <div className="flex items-center justify-between gap-3">
             <div>
               <h1 className="text-lg sm:text-2xl font-black">📊 HIGHWAY SPEEDSTER</h1>
-              <p className="text-[10px] sm:text-xs text-gray-500">Live playtime leaderboard • refreshes every 10s</p>
+              <p className="text-[10px] sm:text-xs text-gray-500">Live playtime leaderboard • view-only • refreshes every 10s</p>
             </div>
-            <a
-              href="/"
-              className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs sm:text-sm font-bold text-gray-200 hover:bg-white/10"
-            >
-              🏍️ Back to Game
-            </a>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="rounded-xl border border-green-400/20 bg-green-400/10 px-3 py-2 text-[10px] sm:text-xs font-black uppercase tracking-wider text-green-300">
+                View Only
+              </span>
+              <a
+                href="/"
+                className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs sm:text-sm font-bold text-gray-200 hover:bg-white/10"
+              >
+                🏍️ Back to Game
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -202,7 +192,7 @@ export function LeaderboardViewer() {
         <div className="rounded-2xl border border-white/10 overflow-hidden bg-black/20">
           <div className="px-4 py-3 border-b border-white/10">
             <h2 className="text-base sm:text-lg font-black">🏆 Playtime Leaderboard</h2>
-            <p className="text-[10px] text-gray-500">Rank is determined only by total playtime.</p>
+            <p className="text-[10px] text-gray-500">Rank is determined only by total playtime. This screen has no edit controls.</p>
           </div>
 
           {loading ? (
@@ -253,23 +243,11 @@ export function LeaderboardViewer() {
         </div>
 
         <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-          <p className="text-xs font-bold text-gray-300 mb-2">Highlight your rank</p>
-          <div className="flex gap-2">
-            <input
-              value={manualName}
-              onChange={(e) => setManualName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && applyPlayer()}
-              placeholder="Enter your game username"
-              maxLength={50}
-              className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-yellow-400/50"
-            />
-            <button
-              onClick={applyPlayer}
-              className="rounded-xl bg-white/10 px-4 py-2 text-sm font-bold hover:bg-white/15"
-            >
-              Show me
-            </button>
-          </div>
+          <p className="text-xs font-bold text-gray-300">
+            {playerName
+              ? `Your game username is detected automatically as “${playerName}”. Your row is highlighted so you can see your current position.`
+              : 'Open the game on this device first so your game username can be highlighted automatically.'}
+          </p>
           {playerIndex >= 0 && (
             <p className="mt-2 text-[10px] text-gray-500">
               Your current rank is #{playerIndex + 1} of {leaderboard.length}.
