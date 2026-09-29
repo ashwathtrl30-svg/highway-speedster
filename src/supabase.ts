@@ -184,7 +184,9 @@ export async function fetchHighScoreLeaderboard(): Promise<Array<{ username: str
     return []
   }
 }
-\n\nexport async function fetchLeaderboardAnalytics(period: 'all'|'7d'|'30d'|'90d'|'180d'|'365d' = 'all') {
+
+
+export async function fetchLeaderboardAnalytics(period: 'all'|'7d'|'30d'|'90d'|'180d'|'365d' = 'all') {
   try {
     const { data, error } = await supabase.rpc('get_public_playtime_leaderboard', { p_period: period, p_limit: 500 })
     if (error) throw error
