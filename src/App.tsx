@@ -24,6 +24,7 @@ function App() {
         const claim = await claimPlayerForAccount(getPlayerId(), getState().username)
         if (!claim?.player_id) throw new Error('Account could not be assigned a player record')
         setPlayerId(claim.player_id)
+        if (claim.username && claim.username !== getState().username) actions.setUsername(claim.username)
         setAccountReady(true)
       } catch (error) {
         console.error('Account claim failed; existing local save remains untouched:', error)
@@ -46,7 +47,7 @@ function App() {
     }
     const timer = setTimeout(() => setLoaded(true), 1500)
     return () => clearTimeout(timer)
-  }, [authenticated])
+  }, [authenticated, accountReady])
 
   if (window.location.pathname === '/highscores') return <HighScoreAnalytics />
   if (window.location.pathname === '/leaderboard' && authReady && authenticated && accountReady) return <LeaderboardViewer />
