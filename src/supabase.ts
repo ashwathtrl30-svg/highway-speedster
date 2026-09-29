@@ -114,6 +114,28 @@ export async function fetchUserHighScore(username: string): Promise<number | nul
 }
 
 
+export async function fetchHighScoreLeaderboard(): Promise<Array<{ username: string; high_score: number; last_updated: string | null }>> {
+  try {
+    const { data, error } = await supabase
+      .from('user_analytics')
+      .select('username, high_score, last_updated')
+      .order('high_score', { ascending: false })
+      .order('username', { ascending: true })
+
+    if (error) throw error
+
+    return (data || []).map((user: any) => ({
+      username: String(user.username || '').trim(),
+      high_score: Math.max(0, Number(user.high_score || 0)),
+      last_updated: user.last_updated || null,
+    })).filter((user) => user.username)
+  } catch (error) {
+    console.error('Error fetching high score leaderboard:', error)
+    return []
+  }
+}
+
+
 export async function fetchLeaderboardAnalytics() {
   try {
     const [{ data: users, error: usersError }, { data: events, error: eventsError }] = await Promise.all([
