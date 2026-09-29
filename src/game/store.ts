@@ -224,7 +224,7 @@ export interface GameData {
 
 const STORAGE_KEY = 'highway-speedster-progress'
 
-function getPlayerId(): string {
+export function getPlayerId(): string {
   const key = 'highway-speedster-player-id'
   const existing = localStorage.getItem(key)
   if (existing) return existing
@@ -534,6 +534,13 @@ export function subscribe(listener: Listener): () => void {
 let pendingAnalyticsSeconds = 0
 
 // Actions
+export function setPlayerId(id: string) {
+  const trimmed = id.trim()
+  if (!trimmed) return
+  playerId = trimmed
+  try { localStorage.setItem('highway-speedster-player-id', trimmed) } catch {}
+}
+
 export const actions = {
   setGameState(gameState: GameState) {
     setState({ gameState })

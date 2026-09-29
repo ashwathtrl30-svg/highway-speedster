@@ -4,7 +4,7 @@ import { HighScoreAnalytics } from './HighScoreAnalytics'
 import { Analytics } from '@vercel/analytics/react'
 import { GameScene } from './game/Scene'
 import { HUD, MainMenu, PauseMenu, GameOverScreen, TouchControls, UnlockNotification, LoadingScreen } from './game/UI'
-import { actions, getState, getPlayerId } from './game/store'
+import { actions, getState, getPlayerId, setPlayerId } from './game/store'
 import { AuthScreen } from './AuthScreen'
 import { getSession, watchAuth, claimPlayerForAccount } from './supabase'
 
@@ -21,7 +21,9 @@ function App() {
       setAuthenticated(!!session)
       if (!session) { setAccountReady(false); setAuthReady(true); return }
       try {
-        await claimPlayerForAccount(getPlayerId(), getState().username)
+        const claim = await claimPlayerForAccount(getPlayerId(), getState().username)
+        if (!claim?.player_id) throw new Error('Account could not be assigned a player record')
+        setPlayerId(claim.player_id)
         setAccountReady(true)
       } catch (error) {
         console.error('Account claim failed; existing local save remains untouched:', error)
