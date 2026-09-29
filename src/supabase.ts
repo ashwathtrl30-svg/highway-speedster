@@ -189,26 +189,15 @@ export async function fetchHighScoreLeaderboard(): Promise<Array<{ username: str
 }
 
 
-export async function fetchLeaderboardAnalytics() {
+export async function fetchLeaderboardAnalytics(period: 'all'|'7d'|'30d'|'90d'|'180d'|'365d' = 'all') {
   try {
-    const [{ data: users, error: usersError }, { data: events, error: eventsError }] = await Promise.all([
-      supabase
-        .from('user_analytics')
-        .select('player_id, username, playtime_seconds')
-        .order('playtime_seconds', { ascending: false }),
-      supabase
-        .from('playtime_events')
-        .select('player_id, username, seconds, recorded_at')
-        .order('recorded_at', { ascending: false })
-    ])
-
-    if (usersError) throw usersError
-    if (eventsError) throw eventsError
-
-    return {
-      users: users || [],
-      events: events || []
-    }
+    const { data, error } = await supabase.rpc('get_public_playtime_leaderboard', { p_period: period, p_limit: 500 })
+    if (error) throw error
+    return { users: (data || []).map((u: any) => ({
+      username: String(u.username || ''),
+      playtime_seconds: Number(u.seconds || 0),
+      is_me: Boolean(u.is_me)
+    })), events: [] }
   } catch (error) {
     console.error('Error fetching leaderboard:', error)
     return { users: [], events: [] }

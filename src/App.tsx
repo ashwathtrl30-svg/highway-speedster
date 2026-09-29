@@ -12,19 +12,22 @@ function App() {
   const [loaded, setLoaded] = useState(false)
   const [authReady, setAuthReady] = useState(false)
   const [authenticated, setAuthenticated] = useState(false)
+  const [accountReady, setAccountReady] = useState(false)
 
   useEffect(() => {
     let active = true
     const finishAuth = async (session: any) => {
       if (!active) return
       setAuthenticated(!!session)
-      setAuthReady(true)
-      if (!session) return
+      if (!session) { setAccountReady(false); setAuthReady(true); return }
       try {
         await claimPlayerForAccount(getPlayerId(), getState().username)
+        setAccountReady(true)
       } catch (error) {
         console.error('Account claim failed; existing local save remains untouched:', error)
+        setAccountReady(false)
       }
+      setAuthReady(true)
     }
     getSession().then(finishAuth).catch(error => {
       console.error('Unable to initialize authentication:', error)
@@ -35,8 +38,7 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (!authenticated) return
-    actions.resetGame()
+    if (!authenticated || !accountReady) return
     if (getState().username) {
       void actions.restoreCloudProgress(getState().username).then(() => actions.syncSharedHighScore())
     }
@@ -46,6 +48,7 @@ function App() {
 
   if (!authReady) return <LoadingScreen />
   if (!authenticated) return <AuthScreen />
+  if (!accountReady) return <LoadingScreen />
 
   if (window.location.pathname === '/leaderboard') return <LeaderboardViewer />
   if (window.location.pathname === '/highscores') return <HighScoreAnalytics />
