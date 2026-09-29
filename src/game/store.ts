@@ -103,6 +103,14 @@ export const BIKES: Bike[] = [
   },
 ]
 
+export const CAR_BIKE_UNLOCKS: Record<string, string> = {
+  'kanto-zip': 'blitz',
+  'saber-swift': 'apex',
+  'goliath-titan': 'chronos',
+  'kaiser-monarch': 'stratos',
+  'scuderia-fury': 'zenith',
+}
+
 export const CARS: Car[] = [
   {
     id: 'kanto-zip',
@@ -464,7 +472,8 @@ export const actions = {
   },
 
   selectCar(car: Car) {
-    if (state.highScore < car.unlockScore) return
+    const requiredBikeId = CAR_BIKE_UNLOCKS[car.id]
+    if (!requiredBikeId || !state.unlockedBikes.includes(requiredBikeId)) return
     setState({
       selectedCar: car,
       vehicleMode: 'car',
