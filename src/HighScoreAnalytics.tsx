@@ -8,6 +8,7 @@ const FILTERS: { key: Filter; label: string }[] = [
 ]
 
 type Player = {
+  player_id: string
   username: string
   high_score: number
   last_updated: string | null
@@ -59,6 +60,7 @@ export function HighScoreAnalytics() {
   const leaderboard = useMemo(() => {
     return players
       .map((player) => ({
+        playerId: player.player_id,
         username: player.username,
         highScore: Math.max(0, Number(player.high_score || 0)),
       }))
@@ -70,9 +72,14 @@ export function HighScoreAnalytics() {
 
   const topPlayer = leaderboard[0]
   const normalizedPlayer = playerName.trim().toLowerCase()
-  const playerIndex = normalizedPlayer
-    ? leaderboard.findIndex((user) => user.username.trim().toLowerCase() === normalizedPlayer)
-    : -1
+  const playerId = (() => {
+    try { return localStorage.getItem('highway-speedster-player-id') || '' } catch { return '' }
+  })()
+  const playerIndex = playerId
+    ? leaderboard.findIndex((user) => user.playerId === playerId)
+    : normalizedPlayer
+      ? leaderboard.findIndex((user) => user.username.trim().toLowerCase() === normalizedPlayer)
+      : -1
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-950 to-black text-white overflow-y-auto">
@@ -149,7 +156,7 @@ export function HighScoreAnalytics() {
 
                 return (
                   <div
-                    key={user.username}
+                    key={user.playerId || `${user.username}-${index}`}
                     className={`flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-3 border-b border-white/5 ${
                       isYou
                         ? 'bg-yellow-500/15 border-l-4 border-l-yellow-400'
