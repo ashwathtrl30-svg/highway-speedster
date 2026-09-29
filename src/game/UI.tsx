@@ -1471,6 +1471,7 @@ export function TouchControls() {
   const touchStartXRef = useRef<number | null>(null)
   const touchStartYRef = useRef<number | null>(null)
   const lastSwipeRef = useRef(0)
+  const lastTapRef = useRef(0)
 
   useEffect(() => {
     if (state.gameState !== 'playing') return
@@ -1504,6 +1505,13 @@ export function TouchControls() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [state.gameState])
 
+  const changeLane = (direction: -1 | 1) => {
+    const now = Date.now()
+    if (now - lastTapRef.current < 120) return
+    lastTapRef.current = now
+    actions.setTargetLane(getState().targetLane + direction)
+  }
+
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     const touch = e.changedTouches[0]
     if (!touch) return
@@ -1524,8 +1532,7 @@ export function TouchControls() {
     const deltaY = touch.clientY - startY
     const now = Date.now()
 
-    // Ignore taps and mostly-vertical gestures. A deliberate horizontal swipe
-    // changes exactly one lane, keeping steering predictable.
+    // Deliberate horizontal swipe: change exactly one lane.
     const SWIPE_THRESHOLD = 45
     if (Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaX) <= Math.abs(deltaY)) return
     if (now - lastSwipeRef.current < 120) return
@@ -1537,17 +1544,53 @@ export function TouchControls() {
   if (state.gameState !== 'playing') return null
 
   return (
-    <div
-      className="absolute left-0 right-0 bottom-0 top-24 sm:top-28 z-10 sm:pointer-events-none"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      style={{ touchAction: 'none' }}
-      aria-label="Swipe left or right to steer"
-    >
-      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white/50 backdrop-blur-sm sm:hidden">
-        ← Swipe to steer →
+    <>
+      {/* Full game-area swipe surface */}
+      <div
+        className="absolute left-0 right-0 bottom-0 top-24 sm:top-28 z-10"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        style={{ touchAction: 'none' }}
+        aria-label="Swipe left or right to steer"
+      >
+        <div className="pointer-events-none absolute bottom-24 left-1/2 -translate-x-1/2 rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white/50 backdrop-blur-sm sm:hidden">
+          ← Swipe to steer →
+        </div>
       </div>
-    </div>
+
+      {/* Mobile arrow controls remain available alongside swipe steering */}
+      <div className="absolute bottom-8 left-0 right-0 flex justify-between px-6 z-20 sm:hidden">
+        <button
+          type="button"
+          aria-label="Steer left"
+          onTouchStart={(e) => {
+            e.preventDefault()
+            changeLane(-1)
+          }}
+          onClick={() => changeLane(-1)}
+          className="w-16 h-16 bg-white/20 backdrop-blur-sm border-2 border-white/40 rounded-full flex items-center justify-center active:scale-90 active:bg-white/30 transition-all shadow-lg"
+        >
+          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          aria-label="Steer right"
+          onTouchStart={(e) => {
+            e.preventDefault()
+            changeLane(1)
+          }}
+          onClick={() => changeLane(1)}
+          className="w-16 h-16 bg-white/20 backdrop-blur-sm border-2 border-white/40 rounded-full flex items-center justify-center active:scale-90 active:bg-white/30 transition-all shadow-lg"
+        >
+          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </>
   )
 }
 
