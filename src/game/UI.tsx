@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGameStore, actions, BIKES, BIKE_SKINS, getState, type Bike, type BikeSkin } from './store'
 import { fetchAllAnalytics, fetchMyPlaytimeRank } from '../supabase'
+import { HighScoreAnalytics } from '../HighScoreAnalytics'
 
 // ============== LOADING SCREEN ==============
 export function LoadingScreen() {
@@ -522,12 +523,22 @@ export function MainMenu() {
 
       {/* High score */}
       {state.highScore > 0 && (
-        <div className="relative z-10 mb-4 sm:mb-5 text-center">
-          <p className="text-gray-500 text-[10px] uppercase tracking-wider font-medium">Your Highest Score Is Only</p>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            window.location.href = '/highscores'
+          }}
+          className="relative z-10 mb-4 sm:mb-5 text-center cursor-pointer rounded-xl px-3 py-1 hover:bg-white/5 active:scale-95 transition-all"
+          aria-label="Open public high score leaderboard"
+        >
+          <p className="text-gray-500 text-[10px] uppercase tracking-wider font-medium">
+            Your Highest Score Is Only
+          </p>
           <p className="text-yellow-400 font-bold text-lg sm:text-xl tabular-nums">
             {state.highScore.toLocaleString()}
           </p>
-        </div>
+        </button>
       )}
 
       {/* Buttons */}
