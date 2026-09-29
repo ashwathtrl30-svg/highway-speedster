@@ -1,4 +1,4 @@
-name: Build and typecheck
+name: Build, typecheck, and production smoke test
 
 on:
   push:
@@ -18,3 +18,24 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
+
+  production-smoke:
+    runs-on: ubuntu-latest
+    needs: verify
+    steps:
+      - name: Wait for Vercel production deployment
+        run: |
+          set -euo pipefail
+          url="https://highway-speedster.vercel.app"
+          for i in $(seq 1 20); do
+            echo "Attempt $i/20"
+            status="$(curl -L -sS -o /tmp/site.html -w '%{http_code}' --max-time 20 "$url" || true)"
+            echo "HTTP $status"
+            if [ "$status" = "200" ] && grep -qi "HIGHWAY SPEEDSTER" /tmp/site.html; then
+              echo "Production smoke test passed."
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Production smoke test failed."
+          exit 1
