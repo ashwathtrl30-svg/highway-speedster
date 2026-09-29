@@ -112,3 +112,30 @@ export async function fetchUserHighScore(username: string): Promise<number | nul
     return null
   }
 }
+
+
+export async function fetchLeaderboardAnalytics() {
+  try {
+    const [{ data: users, error: usersError }, { data: events, error: eventsError }] = await Promise.all([
+      supabase
+        .from('user_analytics')
+        .select('username, playtime_seconds')
+        .order('playtime_seconds', { ascending: false }),
+      supabase
+        .from('playtime_events')
+        .select('username, seconds, recorded_at')
+        .order('recorded_at', { ascending: false })
+    ])
+
+    if (usersError) throw usersError
+    if (eventsError) throw eventsError
+
+    return {
+      users: users || [],
+      events: events || []
+    }
+  } catch (error) {
+    console.error('Error fetching leaderboard:', error)
+    return { users: [], events: [] }
+  }
+}
