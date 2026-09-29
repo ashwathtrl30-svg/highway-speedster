@@ -31,11 +31,11 @@ const getSpawnConfig = (vehicleId: string) => {
     case 'saber-swift':
       return { baseDistance: 55, reductionRate: 2 }
     case 'goliath-titan':
-      return { baseDistance: 60, reductionRate: 2.5 }
+      return { baseDistance: 53, reductionRate: 2.5 }
     case 'kaiser-monarch':
-      return { baseDistance: 80, reductionRate: 2.5 }
+      return { baseDistance: 73, reductionRate: 2.5 }
     case 'scuderia-fury':
-      return { baseDistance: 90, reductionRate: 3 }
+      return { baseDistance: 100, reductionRate: 3 }
     default:
       return { baseDistance: 40, reductionRate: 3 }
   }
