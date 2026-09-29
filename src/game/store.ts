@@ -103,14 +103,6 @@ export const BIKES: Bike[] = [
   },
 ]
 
-export const CAR_BIKE_UNLOCKS: Record<string, string> = {
-  'kanto-zip': 'blitz',
-  'saber-swift': 'apex',
-  'goliath-titan': 'chronos',
-  'kaiser-monarch': 'stratos',
-  'scuderia-fury': 'zenith',
-}
-
 export const CARS: Car[] = [
   {
     id: 'kanto-zip',
@@ -127,7 +119,7 @@ export const CARS: Car[] = [
   {
     id: 'saber-swift',
     name: 'Saber Swift',
-    unlockScore: 30000,
+    unlockScore: BIKES[1].unlockScore,
     maxSpeed: 150,
     acceleration: 1.1,
     handling: 0.95,
@@ -139,7 +131,7 @@ export const CARS: Car[] = [
   {
     id: 'goliath-titan',
     name: 'Goliath Titan',
-    unlockScore: 50000,
+    unlockScore: BIKES[2].unlockScore,
     maxSpeed: 200,
     acceleration: 1.2,
     handling: 0.82,
@@ -151,7 +143,7 @@ export const CARS: Car[] = [
   {
     id: 'kaiser-monarch',
     name: 'Kaiser Monarch',
-    unlockScore: 80000,
+    unlockScore: BIKES[3].unlockScore,
     maxSpeed: 250,
     acceleration: 1.55,
     handling: 0.78,
@@ -163,7 +155,7 @@ export const CARS: Car[] = [
   {
     id: 'scuderia-fury',
     name: 'Scuderia Fury',
-    unlockScore: 100000,
+    unlockScore: BIKES[4].unlockScore,
     maxSpeed: 300,
     acceleration: 1.8,
     handling: 0.72,
@@ -203,6 +195,7 @@ export interface GameData {
   vehicleMode: 'bike' | 'car'
   selectedSkin: BikeSkin
   unlockedBikes: string[]
+  unlockedCars: string[]
   bikeSkins: Record<string, BikeSkin>
   totalCoins: number
   runCoins: number
@@ -229,7 +222,7 @@ export interface GameData {
 
 const STORAGE_KEY = 'highway-speedster-progress'
 
-function loadSavedProgress(): { highScore: number; unlockedBikes: string[]; bikeSkins: Record<string, BikeSkin>; totalCoins: number; inventory: PowerUpInventory; username: string; totalPlaytime: number; userPlaytime: Record<string, number>; playtimeHistory: PlaytimeEntry[]; vehicleMode: 'bike' | 'car'; selectedCarId: string } {
+function loadSavedProgress(): { highScore: number; unlockedBikes: string[]; unlockedCars: string[]; bikeSkins: Record<string, BikeSkin>; totalCoins: number; inventory: PowerUpInventory; username: string; totalPlaytime: number; userPlaytime: Record<string, number>; playtimeHistory: PlaytimeEntry[]; vehicleMode: 'bike' | 'car'; selectedCarId: string } {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
@@ -250,9 +243,17 @@ function loadSavedProgress(): { highScore: number; unlockedBikes: string[]; bike
         .map((bike) => bike.id)
         .reduce((ids, id) => ids.includes(id) ? ids : [...ids, id], [...savedUnlockedBikes])
 
+      // Car progression is independent from bike progression, but uses the same global high score.
+      const savedUnlockedCars = Array.isArray(data.unlockedCars) ? data.unlockedCars : ['kanto-zip']
+      const unlockedCars = CARS
+        .filter((car) => car.unlockScore <= highScore)
+        .map((car) => car.id)
+        .reduce((ids, id) => ids.includes(id) ? ids : [...ids, id], [...savedUnlockedCars])
+
       return {
         highScore,
         unlockedBikes,
+        unlockedCars,
         bikeSkins: data.bikeSkins || { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' },
         totalCoins: data.totalCoins || data.coins || 0,
         inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0, ...(data.inventory || {}) },
@@ -265,7 +266,7 @@ function loadSavedProgress(): { highScore: number; unlockedBikes: string[]; bike
       }
     }
   } catch (e) { /* ignore */ }
-  return { highScore: 0, unlockedBikes: ['blitz'], bikeSkins: { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' }, totalCoins: 0, inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }, username: '', totalPlaytime: 0, userPlaytime: {}, playtimeHistory: [], vehicleMode: 'bike', selectedCarId: CARS[0].id }
+  return { highScore: 0, unlockedBikes: ['blitz'], unlockedCars: ['kanto-zip'], bikeSkins: { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' }, totalCoins: 0, inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }, username: '', totalPlaytime: 0, userPlaytime: {}, playtimeHistory: [], vehicleMode: 'bike', selectedCarId: CARS[0].id }
 }
 
 function saveProgress(highScore: number, unlockedBikes: string[], bikeSkins: Record<string, BikeSkin>, totalCoins: number, inventory: PowerUpInventory, username: string, totalPlaytime: number, userPlaytime: Record<string, number>, playtimeHistory: PlaytimeEntry[]) {
@@ -326,6 +327,7 @@ let state: GameData = {
   vehicleMode: savedProgress.vehicleMode,
   selectedSkin: initialSkin,
   unlockedBikes: savedProgress.unlockedBikes,
+  unlockedCars: savedProgress.unlockedCars,
   bikeSkins: savedProgress.bikeSkins,
   totalCoins: savedProgress.totalCoins,
   runCoins: 0,
@@ -405,6 +407,14 @@ export const actions = {
     const newScore = state.score + points
     const newHighScore = Math.max(state.highScore, newScore)
 
+    // Unlock cars from the global high score, regardless of which vehicle earned it.
+    const newlyUnlockedCars = CARS.filter(
+      (car) => newScore >= car.unlockScore && !state.unlockedCars.includes(car.id)
+    )
+    const newUnlockedCars = newlyUnlockedCars.length > 0
+      ? [...state.unlockedCars, ...newlyUnlockedCars.map((car) => car.id)]
+      : state.unlockedCars
+
     // Unlock every bike whose threshold has been reached. This is intentionally
     // based on the score, not on the order/size of individual score events, so
     // large score jumps cannot leave higher-tier bikes incorrectly locked.
@@ -419,6 +429,7 @@ export const actions = {
       score: newScore,
       highScore: newHighScore,
       unlockedBikes: newUnlocked,
+      unlockedCars: newUnlockedCars,
       newUnlock: newlyUnlocked[0]?.name ?? null,
     })
 
@@ -472,8 +483,7 @@ export const actions = {
   },
 
   selectCar(car: Car) {
-    const requiredBikeId = CAR_BIKE_UNLOCKS[car.id]
-    if (!requiredBikeId || !state.unlockedBikes.includes(requiredBikeId)) return
+    if (!state.unlockedCars.includes(car.id)) return
     setState({
       selectedCar: car,
       vehicleMode: 'car',
@@ -617,11 +627,16 @@ export const actions = {
         .filter((bike) => bike.unlockScore <= mergedHighScore)
         .map((bike) => bike.id)
         .reduce((ids, id) => ids.includes(id) ? ids : [...ids, id], [...current.unlockedBikes])
+      const unlockedCars = CARS
+        .filter((car) => car.unlockScore <= mergedHighScore)
+        .map((car) => car.id)
+        .reduce((ids, id) => ids.includes(id) ? ids : [...ids, id], [...current.unlockedCars])
 
-      if (mergedHighScore !== current.highScore || unlockedBikes.length !== current.unlockedBikes.length) {
+      if (mergedHighScore !== current.highScore || unlockedBikes.length !== current.unlockedBikes.length || unlockedCars.length !== current.unlockedCars.length) {
         setState({
           highScore: mergedHighScore,
           unlockedBikes,
+          unlockedCars,
         })
         saveProgress(
           mergedHighScore,
