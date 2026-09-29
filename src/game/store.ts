@@ -450,22 +450,43 @@ export const actions = {
 
   clearNewUnlock() { setState({ newUnlock: null }) },
 
+  syncSharedHighScore() {
+    const username = state.username.trim()
+    if (!username) return
+
+    fetchUserHighScore(username).then((serverHighScore) => {
+      if (serverHighScore === null) return
+
+      const current = getState()
+
+      // Ignore a stale response if the player changed username while it was loading.
+      if (current.username.trim() !== username) return
+
+      const mergedHighScore = Math.max(current.highScore, serverHighScore)
+
+      if (mergedHighScore !== current.highScore) {
+        setState({ highScore: mergedHighScore })
+        saveProgress(
+          mergedHighScore,
+          current.unlockedBikes,
+          current.bikeSkins,
+          current.totalCoins,
+          current.inventory,
+          current.username,
+          current.totalPlaytime,
+          current.userPlaytime,
+          current.playtimeHistory
+        )
+      }
+    })
+  },
+
   setUsername(username: string) {
     setState({ username })
     saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory, username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
 
-    // A username represents the same player across devices. Pull the shared
-    // server high score so a second device immediately inherits the best score.
-    if (username.trim()) {
-      fetchUserHighScore(username).then((serverHighScore) => {
-        if (serverHighScore === null) return
-        const mergedHighScore = Math.max(getState().highScore, serverHighScore)
-        if (mergedHighScore > getState().highScore) {
-          setState({ highScore: mergedHighScore })
-          saveProgress(mergedHighScore, getState().unlockedBikes, getState().bikeSkins, getState().totalCoins, getState().inventory, username, getState().totalPlaytime, getState().userPlaytime, getState().playtimeHistory)
-        }
-      })
-    }
+    // A username represents the same player across devices.
+    actions.syncSharedHighScore()
   },
 
   // Playtime tracking
