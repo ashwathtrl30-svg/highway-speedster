@@ -1,15 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchHighScoreLeaderboard } from './supabase'
 
-type Filter = 'yesterday' | '7d' | '30d' | '90d' | '180d' | '365d' | 'all'
+type Filter = 'all'
 
 const FILTERS: { key: Filter; label: string }[] = [
-  { key: 'yesterday', label: 'Yesterday' },
-  { key: '7d', label: 'Last 7 Days' },
-  { key: '30d', label: 'Last 30 Days' },
-  { key: '90d', label: 'Last 3 Months' },
-  { key: '180d', label: 'Last 6 Months' },
-  { key: '365d', label: 'Last 1 Year' },
   { key: 'all', label: 'Overall' },
 ]
 
@@ -17,29 +11,6 @@ type Player = {
   username: string
   high_score: number
   last_updated: string | null
-}
-
-function getWindow(filter: Filter) {
-  const now = new Date()
-
-  if (filter === 'yesterday') {
-    const start = new Date(now)
-    start.setHours(0, 0, 0, 0)
-    start.setDate(start.getDate() - 1)
-    const end = new Date(start)
-    end.setDate(end.getDate() + 1)
-    return { start, end }
-  }
-
-  if (filter === 'all') return { start: null, end: null }
-
-  const days =
-    filter === '7d' ? 7 :
-    filter === '30d' ? 30 :
-    filter === '90d' ? 90 :
-    filter === '180d' ? 180 : 365
-
-  return { start: new Date(now.getTime() - days * 86400000), end: null }
 }
 
 function getStoredUsername() {
@@ -58,10 +29,11 @@ function formatScore(score: number) {
 }
 
 export function HighScoreAnalytics() {
-  const [filter, setFilter] = useState<Filter>('all')
   const [players, setPlayers] = useState<Player[]>([])
   const [loading, setLoading] = useState(true)
   const [playerName, setPlayerName] = useState('')
+
+  const filter: Filter = 'all'
 
   useEffect(() => {
     setPlayerName(getStoredUsername())
@@ -85,15 +57,7 @@ export function HighScoreAnalytics() {
   }, [])
 
   const leaderboard = useMemo(() => {
-    const { start, end } = getWindow(filter)
-
     return players
-      .filter((player) => {
-        if (!start && !end) return true
-        if (!player.last_updated) return false
-        const updatedAt = new Date(player.last_updated)
-        return updatedAt >= start! && (!end || updatedAt < end)
-      })
       .map((player) => ({
         username: player.username,
         highScore: Math.max(0, Number(player.high_score || 0)),
@@ -102,7 +66,7 @@ export function HighScoreAnalytics() {
         if (b.highScore !== a.highScore) return b.highScore - a.highScore
         return a.username.localeCompare(b.username)
       })
-  }, [players, filter])
+  }, [players])
 
   const topPlayer = leaderboard[0]
   const normalizedPlayer = playerName.trim().toLowerCase()
@@ -157,12 +121,7 @@ export function HighScoreAnalytics() {
             {FILTERS.map((item) => (
               <button
                 key={item.key}
-                onClick={() => setFilter(item.key)}
-                className={`shrink-0 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold transition-all ${
-                  filter === item.key
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
-                    : 'bg-white/10 text-gray-400 hover:bg-white/15'
-                }`}
+                className="shrink-0 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold transition-all bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
               >
                 {item.label}
               </button>
@@ -213,9 +172,7 @@ export function HighScoreAnalytics() {
                           </span>
                         )}
                       </div>
-                      <p className="text-[10px] text-gray-500">
-                        High score in {FILTERS.find((f) => f.key === filter)?.label}
-                      </p>
+                      <p className="text-[10px] text-gray-500">High score in Overall</p>
                     </div>
                     <div className="shrink-0 text-right font-black text-yellow-300 text-sm sm:text-base tabular-nums">
                       {formatScore(user.highScore)}
@@ -236,11 +193,6 @@ export function HighScoreAnalytics() {
           {playerIndex >= 0 && (
             <p className="mt-2 text-[10px] text-gray-500">
               Your current rank is #{playerIndex + 1} of {leaderboard.length}.
-            </p>
-          )}
-          {filter !== 'all' && (
-            <p className="mt-2 text-[10px] text-gray-500">
-              Time filters use when each player record was last updated; Overall shows every recorded player.
             </p>
           )}
         </div>
