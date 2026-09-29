@@ -246,3 +246,12 @@ export async function fetchLeaderboardAnalytics() {
     return { users: [], events: [] }
   }
 }
+
+export async function getSession() {
+  const { data, error } = await supabase.auth.getSession(); if (error) throw error; return data.session
+}
+export async function loginWithGoogle() { return supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } }) }
+export async function loginWithApple() { return supabase.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo: window.location.origin } }) }
+export async function sendEmailLogin(email: string) { return supabase.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: window.location.origin } }) }
+export async function claimPlayerForAccount(playerId: string, username: string) { const { data, error } = await supabase.rpc('get_or_claim_player', { p_local_player_id: playerId, p_username: username }); if (error) throw error; return data }
+export function watchAuth(callback: (session: any) => void) { return supabase.auth.onAuthStateChange((_event, session) => callback(session)) }

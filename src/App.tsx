@@ -3,57 +3,58 @@ import { LeaderboardViewer } from './LeaderboardViewer'
 import { HighScoreAnalytics } from './HighScoreAnalytics'
 import { Analytics } from '@vercel/analytics/react'
 import { GameScene } from './game/Scene'
-import {
-  HUD,
-  MainMenu,
-  PauseMenu,
-  GameOverScreen,
-  TouchControls,
-  UnlockNotification,
-  LoadingScreen,
-} from './game/UI'
-import { actions, getState } from './game/store'
+import { HUD, MainMenu, PauseMenu, GameOverScreen, TouchControls, UnlockNotification, LoadingScreen } from './game/UI'
+import { actions, getState, getPlayerId } from './game/store'
+import { AuthScreen } from './AuthScreen'
+import { getSession, watchAuth, claimPlayerForAccount } from './supabase'
 
 function App() {
   const [loaded, setLoaded] = useState(false)
-
-  if (window.location.pathname === '/leaderboard') {
-    return <LeaderboardViewer />
-  }
-
-  if (window.location.pathname === '/highscores') {
-    return <HighScoreAnalytics />
-  }
+  const [authReady, setAuthReady] = useState(false)
+  const [authenticated, setAuthenticated] = useState(false)
 
   useEffect(() => {
-    // Load saved progress on mount
+    let active = true
+    const finishAuth = async (session: any) => {
+      if (!active) return
+      setAuthenticated(!!session)
+      setAuthReady(true)
+      if (!session) return
+      try {
+        await claimPlayerForAccount(getPlayerId(), getState().username)
+      } catch (error) {
+        console.error('Account claim failed; existing local save remains untouched:', error)
+      }
+    }
+    getSession().then(finishAuth).catch(error => {
+      console.error('Unable to initialize authentication:', error)
+      if (active) setAuthReady(true)
+    })
+    const { data } = watchAuth(finishAuth)
+    return () => { active = false; data.subscription.unsubscribe() }
+  }, [])
+
+  useEffect(() => {
+    if (!authenticated) return
     actions.resetGame()
-    // Reconcile the local high score with the shared username record every time
-    // the game is opened, so another device cannot show a stale lower score.
     if (getState().username) {
       void actions.restoreCloudProgress(getState().username).then(() => actions.syncSharedHighScore())
     }
-    // Simulate loading time for 3D assets
     const timer = setTimeout(() => setLoaded(true), 1500)
     return () => clearTimeout(timer)
-  }, [])
+  }, [authenticated])
+
+  if (!authReady) return <LoadingScreen />
+  if (!authenticated) return <AuthScreen />
+
+  if (window.location.pathname === '/leaderboard') return <LeaderboardViewer />
+  if (window.location.pathname === '/highscores') return <HighScoreAnalytics />
 
   return (
     <div className="w-full h-full relative overflow-hidden bg-black">
-      {/* 3D Scene - always rendered */}
-      <div className="absolute inset-0">
-        <GameScene />
-      </div>
-
-      {/* UI Overlays */}
+      <div className="absolute inset-0"><GameScene /></div>
       {!loaded && <LoadingScreen />}
-      <MainMenu />
-      <HUD />
-      <PauseMenu />
-      <GameOverScreen />
-      <TouchControls />
-      <UnlockNotification />
-      <Analytics />
+      <MainMenu /><HUD /><PauseMenu /><GameOverScreen /><TouchControls /><UnlockNotification /><Analytics />
     </div>
   )
 }
