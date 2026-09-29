@@ -119,7 +119,7 @@ export const CARS: Car[] = [
   {
     id: 'saber-swift',
     name: 'Saber Swift',
-    unlockScore: 20000,
+    unlockScore: 30000,
     maxSpeed: 150,
     acceleration: 1.1,
     handling: 0.95,
@@ -131,7 +131,7 @@ export const CARS: Car[] = [
   {
     id: 'goliath-titan',
     name: 'Goliath Titan',
-    unlockScore: 30000,
+    unlockScore: 50000,
     maxSpeed: 200,
     acceleration: 1.2,
     handling: 0.82,
@@ -143,7 +143,7 @@ export const CARS: Car[] = [
   {
     id: 'kaiser-monarch',
     name: 'Kaiser Monarch',
-    unlockScore: 40000,
+    unlockScore: 80000,
     maxSpeed: 250,
     acceleration: 1.55,
     handling: 0.78,
@@ -155,7 +155,7 @@ export const CARS: Car[] = [
   {
     id: 'scuderia-fury',
     name: 'Scuderia Fury',
-    unlockScore: 50000,
+    unlockScore: 100000,
     maxSpeed: 300,
     acceleration: 1.8,
     handling: 0.72,
