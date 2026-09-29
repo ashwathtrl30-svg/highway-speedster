@@ -224,6 +224,17 @@ export interface GameData {
 
 const STORAGE_KEY = 'highway-speedster-progress'
 
+function getPlayerId(): string {
+  const key = 'highway-speedster-player-id'
+  const existing = localStorage.getItem(key)
+  if (existing) return existing
+  const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  localStorage.setItem(key, id)
+  return id
+}
+
 function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHighScore: number; unlockedBikes: string[]; unlockedCars: string[]; bikeSkins: Record<string, BikeSkin>; totalCoins: number; inventory: PowerUpInventory; username: string; totalPlaytime: number; userPlaytime: Record<string, number>; playtimeHistory: PlaytimeEntry[]; vehicleMode: 'bike' | 'car'; selectedCarId: string } {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
@@ -369,6 +380,8 @@ let state: GameData = {
   playtimeHistory: savedProgress.playtimeHistory,
 }
 
+const playerId = getPlayerId()
+
 let cloudSaveTimer: ReturnType<typeof setTimeout> | null = null
 let cloudHydratingUser = ''
 
@@ -399,7 +412,7 @@ function saveCloudProgressNow() {
   const current = getState()
   const progress = buildCloudProgress()
   if (!progress || !current.username.trim()) return
-  void saveUserGameProgress(current.username, progress)
+  void saveUserGameProgress(playerId, current.username, progress)
 }
 
 function queueCloudSave() {
@@ -413,7 +426,7 @@ function queueCloudSave() {
 
 async function loadCloudProgress(username: string) {
   cloudHydratingUser = username.trim()
-  const cloud = await fetchUserGameProgress(username)
+  const cloud = await fetchUserGameProgress(playerId, username)
   if (!cloud) {
     cloudHydratingUser = ''
     queueCloudSave()
@@ -536,9 +549,10 @@ export const actions = {
         if (pendingAnalyticsSeconds > 0) {
           const remainingSeconds = pendingAnalyticsSeconds
           pendingAnalyticsSeconds = 0
-          recordPlaytimeEvent(state.username, remainingSeconds)
+          recordPlaytimeEvent(playerId, state.username, remainingSeconds)
         }
         syncAnalyticsToSupabase(
+          playerId,
           state.username,
           state.totalPlaytime,
           state.highScore,
@@ -781,7 +795,7 @@ export const actions = {
     const username = state.username.trim()
     if (!username) return
 
-    fetchUserHighScore(username).then((serverHighScore) => {
+    fetchUserHighScore(playerId).then((serverHighScore) => {
       if (serverHighScore === null) return
       const current = getState()
 
@@ -850,7 +864,7 @@ export const actions = {
       if (pendingAnalyticsSeconds >= 30) {
         const eventSeconds = pendingAnalyticsSeconds
         pendingAnalyticsSeconds = 0
-        recordPlaytimeEvent(state.username, eventSeconds)
+        recordPlaytimeEvent(playerId, state.username, eventSeconds)
       }
     }
   },
