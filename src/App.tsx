@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { LeaderboardViewer } from './LeaderboardViewer'
+import { HighScoreAnalytics } from './HighScoreAnalytics'
 import { Analytics } from '@vercel/analytics/react'
 import { GameScene } from './game/Scene'
 import {
@@ -18,6 +19,10 @@ function App() {
 
   if (window.location.pathname === '/leaderboard') {
     return <LeaderboardViewer />
+  }
+
+  if (window.location.pathname === '/highscores') {
+    return <HighScoreAnalytics />
   }
 
   useEffect(() => {
