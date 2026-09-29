@@ -476,7 +476,7 @@ export const actions = {
         state.playtimeHistory
       )
     }
-  }
+  },
 
   setDistance(d: number) { setState({ distance: d }) },
   setSpeed(s: number) { setState({ speed: s }) },
@@ -490,7 +490,7 @@ export const actions = {
       combo: newCombo,
       comboTimer: 2.0,
     })
-  }
+  },
 
   resetCombo() { setState({ combo: 0, comboTimer: 0 }) },
 
