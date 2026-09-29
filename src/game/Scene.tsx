@@ -1747,7 +1747,7 @@ function GameCamera() {
     
     // Chase camera that follows player slightly
     const targetPos = new THREE.Vector3(
-      playerX * 0.4,
+      playerX,
       3.2 + state.speed * 0.004,
       PLAYER_Z + 6.5 + state.speed * 0.008
     )
