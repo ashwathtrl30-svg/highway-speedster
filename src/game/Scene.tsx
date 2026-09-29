@@ -251,7 +251,7 @@ function RoadsideBush({ position }: { position: [number, number, number] }) {
 // ============== MOTORCYCLE ==============
 function ShieldBubble({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
   const bubbleRef = useRef<THREE.Group>(null)
-  const radius = vehicleMode === 'car' ? 2.2 : 1.45
+  const radius = vehicleMode === 'car' ? 1.85 : 1.2
 
   useFrame((_, delta) => {
     if (!bubbleRef.current) return
