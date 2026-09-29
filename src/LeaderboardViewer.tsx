@@ -52,7 +52,7 @@ function getStoredUsername() {
 }
 
 export function LeaderboardViewer() {
-  const [filter, setFilter] = useState<Filter>('all')
+  const filter: Filter = 'all'
   const [analytics, setAnalytics] = useState<{ users: any[]; events: any[] }>({ users: [], events: [] })
   const [loading, setLoading] = useState(true)
   const [playerName, setPlayerName] = useState('')
@@ -95,7 +95,6 @@ export function LeaderboardViewer() {
       overallByUser[playerId] = Math.max(overallByUser[playerId] || 0, Number(seconds || 0))
     })
 
-    const { start, end } = getWindow(filter)
     const windowContainsEntireGameLifetime =
       filter === 'all' || (start !== null && start <= GAME_LAUNCH_AT)
 
@@ -168,9 +167,7 @@ export function LeaderboardViewer() {
             {FILTERS.map((item) => (
               <button
                 key={item.key}
-                type="button"
-                onClick={() => setFilter(item.key)}
-                className={``shrink-0 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold transition-all ${
+                className={`shrink-0 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold transition-all ${
                   filter === item.key
                     ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
                     : 'bg-white/10 text-gray-400 hover:bg-white/15'

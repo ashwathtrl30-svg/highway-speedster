@@ -25,30 +25,15 @@ export function AuthScreen() {
           <h1 className="text-3xl font-black text-white">HIGHWAY SPEEDSTER</h1>
           <p className="mt-2 text-sm text-gray-400">Sign in to protect your progress and play across devices.</p>
         </div>
-
         <div className="mt-7 space-y-3">
-          <button type="button" disabled={busy} onClick={() => void run(loginWithGoogle)} className="w-full rounded-xl bg-white px-4 py-3 font-bold text-black disabled:opacity-50">
-            Continue with Google
-          </button>
-          <button type="button" disabled={busy} onClick={() => void run(loginWithApple)} className="w-full rounded-xl bg-white px-4 py-3 font-bold text-black disabled:opacity-50">
-            Continue with Apple
-          </button>
+          <button type="button" disabled={busy} onClick={() => void run(loginWithGoogle)} className="w-full rounded-xl bg-white px-4 py-3 font-bold text-black disabled:opacity-50">Continue with Google</button>
+          <button type="button" disabled={busy} onClick={() => void run(loginWithApple)} className="w-full rounded-xl bg-white px-4 py-3 font-bold text-black disabled:opacity-50">Continue with Apple</button>
         </div>
-
-        <div className="my-5 flex items-center gap-3 text-xs text-gray-500">
-          <span className="h-px flex-1 bg-white/10" /><span>OR EMAIL</span><span className="h-px flex-1 bg-white/10" />
-        </div>
-
+        <div className="my-5 flex items-center gap-3 text-xs text-gray-500"><span className="h-px flex-1 bg-white/10" /><span>OR EMAIL</span><span className="h-px flex-1 bg-white/10" /></div>
         <form onSubmit={(event) => { event.preventDefault(); if (email.trim()) void run(() => sendEmailLogin(email)) }} className="space-y-3">
-          <input
-            type="email" required autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)}
-            placeholder="you@example.com" className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none"
-          />
-          <button type="submit" disabled={busy || !email.trim()} className="w-full rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 px-4 py-3 font-black text-white disabled:opacity-50">
-            Email me a secure sign-in link
-          </button>
+          <input type="email" required autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none" />
+          <button type="submit" disabled={busy || !email.trim()} className="w-full rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 px-4 py-3 font-black text-white disabled:opacity-50">Email me a secure sign-in link</button>
         </form>
-
         {message && <p role="status" className="mt-4 text-center text-xs text-gray-400">{message}</p>}
         <p className="mt-5 text-center text-[10px] text-gray-600">Authentication credentials are handled by Supabase Auth; the game does not store provider passwords.</p>
       </section>

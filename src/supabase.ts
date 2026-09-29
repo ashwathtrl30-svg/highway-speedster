@@ -119,8 +119,6 @@ export async function saveUserGameProgress(
 ): Promise<boolean> {
   if (!playerId.trim() || !username.trim()) return false
   try {
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData.user) return false
     const { data: existing, error: existingError } = await supabase
       .from('user_analytics')
       .select('high_score, playtime_seconds, total_coins')
@@ -133,7 +131,6 @@ export async function saveUserGameProgress(
       .from('user_analytics')
       .upsert({
         player_id: playerId.trim(),
-        auth_user_id: authData.user.id,
         username: username.trim(),
         playtime_seconds: Math.max(Number(existing?.playtime_seconds || 0), Math.floor(progress.totalPlaytime)),
         high_score: Math.max(Number(existing?.high_score || 0), Math.floor(progress.highScore)),

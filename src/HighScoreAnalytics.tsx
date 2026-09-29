@@ -8,8 +8,10 @@ const FILTERS: { key: Filter; label: string }[] = [
 ]
 
 type Player = {
+  player_id: string
   username: string
   high_score: number
+  last_updated: string | null
 }
 
 function getStoredUsername() {
@@ -58,7 +60,7 @@ export function HighScoreAnalytics() {
   const leaderboard = useMemo(() => {
     return players
       .map((player) => ({
-        isMe: Boolean(player.is_me),
+        playerId: player.player_id,
         username: player.username,
         highScore: Math.max(0, Number(player.high_score || 0)),
       }))
@@ -70,10 +72,14 @@ export function HighScoreAnalytics() {
 
   const topPlayer = leaderboard[0]
   const normalizedPlayer = playerName.trim().toLowerCase()
-  const playerIndex = leaderboard.findIndex((user: any) => user.isMe)
-  const fallbackPlayerIndex = playerIndex >= 0 ? playerIndex : normalizedPlayer
-    ? leaderboard.findIndex((user) => user.username.trim().toLowerCase() === normalizedPlayer)
-    : -1
+  const playerId = (() => {
+    try { return localStorage.getItem('highway-speedster-player-id') || '' } catch { return '' }
+  })()
+  const playerIndex = playerId
+    ? leaderboard.findIndex((user) => user.playerId === playerId)
+    : normalizedPlayer
+      ? leaderboard.findIndex((user) => user.username.trim().toLowerCase() === normalizedPlayer)
+      : -1
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-950 to-black text-white overflow-y-auto">
@@ -145,7 +151,7 @@ export function HighScoreAnalytics() {
           ) : (
             <div>
               {leaderboard.map((user, index) => {
-                const isYou = (playerIndex >= 0 ? playerIndex : fallbackPlayerIndex) === index
+                const isYou = playerIndex === index
                 const rank = index + 1
 
                 return (
