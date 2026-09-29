@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { syncAnalyticsToSupabase, recordPlaytimeEvent } from '../supabase'
+import { syncAnalyticsToSupabase, recordPlaytimeEvent, fetchUserHighScore } from '../supabase'
 
 // Bike definitions - 3 iconic Indian bikes
 export interface Bike {
@@ -453,6 +453,19 @@ export const actions = {
   setUsername(username: string) {
     setState({ username })
     saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory, username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
+
+    // A username represents the same player across devices. Pull the shared
+    // server high score so a second device immediately inherits the best score.
+    if (username.trim()) {
+      fetchUserHighScore(username).then((serverHighScore) => {
+        if (serverHighScore === null) return
+        const mergedHighScore = Math.max(getState().highScore, serverHighScore)
+        if (mergedHighScore > getState().highScore) {
+          setState({ highScore: mergedHighScore })
+          saveProgress(mergedHighScore, getState().unlockedBikes, getState().bikeSkins, getState().totalCoins, getState().inventory, username, getState().totalPlaytime, getState().userPlaytime, getState().playtimeHistory)
+        }
+      })
+    }
   },
 
   // Playtime tracking
