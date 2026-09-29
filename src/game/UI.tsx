@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGameStore, actions, BIKES, BIKE_SKINS, getState, type Bike, type BikeSkin } from './store'
-import { fetchAllAnalytics } from '../supabase'
+import { fetchAllAnalytics, fetchMyPlaytimeRank } from '../supabase'
 
 // ============== LOADING SCREEN ==============
 export function LoadingScreen() {
@@ -375,6 +375,38 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
 }
 
 // ============== MAIN MENU ==============
+function PlaytimeRankCard({ username }: { username: string }) {
+  const [rank, setRank] = useState<{ rank: number; playtimeSeconds: number; totalPlayers: number } | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    if (!username.trim()) return
+
+    fetchMyPlaytimeRank(username).then((result) => {
+      if (!cancelled) setRank(result)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [username])
+
+  if (!rank) return null
+
+  const hours = Math.floor(rank.playtimeSeconds / 3600)
+  const minutes = Math.floor((rank.playtimeSeconds % 3600) / 60)
+  const seconds = rank.playtimeSeconds % 60
+  const time = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m ${seconds}s`
+
+  return (
+    <div className="relative z-10 mb-4 rounded-2xl border border-yellow-400/30 bg-black/40 px-5 py-3 text-center backdrop-blur-sm">
+      <p className="text-xs font-semibold uppercase tracking-wider text-yellow-300">Your Playtime Rank</p>
+      <p className="text-2xl font-black text-white">#{rank.rank}</p>
+      <p className="text-xs text-white/60">of {rank.totalPlayers} players · {time}</p>
+    </div>
+  )
+}
+
 export function MainMenu() {
   const state = useGameStore()
   const [showBikes, setShowBikes] = useState(false)
@@ -453,6 +485,8 @@ export function MainMenu() {
         <div className="absolute left-[45%] top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white/50 to-transparent" style={{ animationDelay: '0.5s' }} />
         <div className="absolute left-[55%] top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white/50 to-transparent" style={{ animationDelay: '1s' }} />
       </div>
+
+      {state.username && <PlaytimeRankCard username={state.username} />}
 
       {/* Username Display */}
       {state.username && (
