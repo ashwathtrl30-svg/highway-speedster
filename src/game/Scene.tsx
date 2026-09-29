@@ -21,8 +21,9 @@ const getSpawnConfig = (vehicleId: string) => {
     case 'chronos':
       return { baseDistance: 50, reductionRate: 2 }
     case 'stratos':
-    case 'zenith':
       return { baseDistance: 60, reductionRate: 2.5 }
+    case 'zenith':
+      return { baseDistance: 70, reductionRate: 2.5 }
 
     // Cars
     case 'kanto-zip':
@@ -32,9 +33,9 @@ const getSpawnConfig = (vehicleId: string) => {
     case 'goliath-titan':
       return { baseDistance: 60, reductionRate: 2.5 }
     case 'kaiser-monarch':
-      return { baseDistance: 65, reductionRate: 2.5 }
+      return { baseDistance: 80, reductionRate: 2.5 }
     case 'scuderia-fury':
-      return { baseDistance: 75, reductionRate: 3 }
+      return { baseDistance: 90, reductionRate: 3 }
     default:
       return { baseDistance: 40, reductionRate: 3 }
   }
@@ -250,7 +251,7 @@ function RoadsideBush({ position }: { position: [number, number, number] }) {
 // ============== MOTORCYCLE ==============
 function ShieldBubble({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
   const bubbleRef = useRef<THREE.Group>(null)
-  const radius = vehicleMode === 'car' ? 2.8 : 1.75
+  const radius = vehicleMode === 'car' ? 2.2 : 1.45
 
   useFrame((_, delta) => {
     if (!bubbleRef.current) return
