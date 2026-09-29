@@ -237,6 +237,15 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
   }
 
   const { start, end } = getStartDate(timeFilter)
+
+  // The repository/game was created on September 25, 2026. Until a time-window
+  // moves past that date, every duration filter contains the game's full lifetime.
+  // Use the preserved cumulative totals for those windows so they cannot be lower
+  // than Overall simply because the event log was introduced later.
+  const GAME_LAUNCH_AT = new Date('2026-09-25T17:19:37Z')
+  const windowContainsEntireGameLifetime =
+    timeFilter === 'all' || (start !== null && start <= GAME_LAUNCH_AT)
+
   const filteredEvents = analytics.events.filter((event: any) => {
     const date = new Date(event.recorded_at)
     return (!start || date >= start) && (!end || date < end)
@@ -265,7 +274,7 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
     overallByUser[username] = Math.max(overallByUser[username] || 0, Number(seconds || 0))
   })
 
-  const leaderboard = Object.entries(timeFilter === 'all' ? overallByUser : periodByUser)
+  const leaderboard = Object.entries(windowContainsEntireGameLifetime ? overallByUser : periodByUser)
     .map(([username, seconds]) => ({ username, seconds }))
     .sort((a, b) => b.seconds - a.seconds)
 
