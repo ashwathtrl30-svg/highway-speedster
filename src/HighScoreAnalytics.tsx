@@ -10,6 +10,7 @@ const FILTERS: { key: Filter; label: string }[] = [
 type Player = {
   username: string
   high_score: number
+  is_me?: boolean
 }
 
 function getStoredUsername() {
