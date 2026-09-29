@@ -10,7 +10,7 @@ import {
   UnlockNotification,
   LoadingScreen,
 } from './game/UI'
-import { actions } from './game/store'
+import { actions, getState } from './game/store'
 
 function App() {
   const [loaded, setLoaded] = useState(false)
@@ -18,6 +18,11 @@ function App() {
   useEffect(() => {
     // Load saved progress on mount
     actions.resetGame()
+    // Reconcile the local high score with the shared username record every time
+    // the game is opened, so another device cannot show a stale lower score.
+    if (getState().username) {
+      actions.syncSharedHighScore()
+    }
     // Simulate loading time for 3D assets
     const timer = setTimeout(() => setLoaded(true), 1500)
     return () => clearTimeout(timer)
