@@ -784,7 +784,6 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
                               Top Speed: <span className="text-white font-semibold">{car.maxSpeed} kmph</span>
                             </p>
                           </div>
-                          <p className="text-[9px] sm:text-[10px] text-gray-500 mt-0.5 truncate">Inspired by {car.inspiration}</p>
                         </>
                       )}
 
@@ -1763,7 +1762,7 @@ export function UnlockNotification() {
       const timer = setTimeout(() => {
         setVisible(false)
         actions.clearNewUnlock()
-      }, 3000)
+      }, 4000)
       return () => clearTimeout(timer)
     }
   }, [state.newUnlock])
@@ -1773,7 +1772,7 @@ export function UnlockNotification() {
   return (
     <div className="absolute top-1/4 left-1/2 -translate-x-1/2 z-[60]">
       <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl sm:rounded-2xl px-5 py-3 sm:px-6 sm:py-4 shadow-2xl shadow-orange-500/50 text-center border border-yellow-400/30">
-        <p className="text-white/80 text-[10px] sm:text-xs uppercase tracking-wider font-medium">🔓 New Bike Unlocked!</p>
+        <p className="text-white/80 text-[10px] sm:text-xs uppercase tracking-wider font-medium">🔓 New Vehicle Unlocked!</p>
         <p className="text-white font-black text-lg sm:text-2xl mt-0.5">{bikeName}</p>
         <p className="text-white/60 text-[9px] sm:text-[10px] mt-0.5">Check the Garage</p>
       </div>
