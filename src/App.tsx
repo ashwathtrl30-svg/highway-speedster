@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { LeaderboardViewer } from './LeaderboardViewer'
 import { Analytics } from '@vercel/analytics/react'
 import { GameScene } from './game/Scene'
 import {
@@ -14,6 +15,10 @@ import { actions, getState } from './game/store'
 
 function App() {
   const [loaded, setLoaded] = useState(false)
+
+  if (window.location.pathname === '/leaderboard') {
+    return <LeaderboardViewer />
+  }
 
   useEffect(() => {
     // Load saved progress on mount
