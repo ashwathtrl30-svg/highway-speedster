@@ -96,6 +96,76 @@ export async function fetchMyPlaytimeRank(username: string): Promise<{ rank: num
   }
 }
 
+export interface CloudGameProgress {
+  highScore: number
+  bikeHighScore: number
+  carHighScore: number
+  unlockedBikes: string[]
+  unlockedCars: string[]
+  bikeSkins: Record<string, string>
+  totalCoins: number
+  inventory: Record<string, number>
+  vehicleMode: 'bike' | 'car'
+  selectedBikeId: string
+  selectedCarId: string
+  selectedSkin: string
+  totalPlaytime: number
+  userPlaytime: Record<string, number>
+  playtimeHistory: Array<{ date: string; seconds: number }>
+}
+
+export async function fetchUserGameProgress(username: string): Promise<CloudGameProgress | null> {
+  if (!username.trim()) return null
+  try {
+    const { data, error } = await supabase
+      .from('user_analytics')
+      .select('game_progress')
+      .eq('username', username.trim())
+      .maybeSingle()
+
+    if (error) throw error
+    if (!data?.game_progress || typeof data.game_progress !== 'object') return null
+
+    return data.game_progress as CloudGameProgress
+  } catch (error) {
+    console.error('Error fetching game progress:', error)
+    return null
+  }
+}
+
+export async function saveUserGameProgress(
+  username: string,
+  progress: CloudGameProgress
+): Promise<boolean> {
+  if (!username.trim()) return false
+  try {
+    const { data: existing, error: existingError } = await supabase
+      .from('user_analytics')
+      .select('high_score, playtime_seconds, total_coins')
+      .eq('username', username.trim())
+      .maybeSingle()
+
+    if (existingError) throw existingError
+
+    const { error } = await supabase
+      .from('user_analytics')
+      .upsert({
+        username: username.trim(),
+        playtime_seconds: Math.max(Number(existing?.playtime_seconds || 0), Math.floor(progress.totalPlaytime)),
+        high_score: Math.max(Number(existing?.high_score || 0), Math.floor(progress.highScore)),
+        total_coins: Math.max(Number(existing?.total_coins || 0), Math.floor(progress.totalCoins)),
+        game_progress: progress,
+        last_updated: new Date().toISOString()
+      }, { onConflict: 'username' })
+
+    if (error) throw error
+    return true
+  } catch (error) {
+    console.error('Error saving game progress:', error)
+    return false
+  }
+}
+
 export async function fetchUserHighScore(username: string): Promise<number | null> {
   if (!username.trim()) return null
   try {
