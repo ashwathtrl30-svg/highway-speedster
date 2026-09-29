@@ -1,7 +1,7 @@
 import { useRef, useMemo, useCallback, useEffect } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { getState, actions, useGameStore, type Bike } from './store'
+import { getState, actions, useGameStore, type Bike, type Car } from './store'
 
 // Constants
 const LANE_WIDTH = 3.5
@@ -12,8 +12,9 @@ const VISIBLE_DISTANCE = 400
 const PLAYER_Z = 5
 
 // Bike-specific spawn configurations
-const getSpawnConfig = (bikeId: string) => {
-  switch (bikeId) {
+const getSpawnConfig = (vehicleId: string) => {
+  switch (vehicleId) {
+    // Bikes
     case 'blitz':
     case 'apex':
       return { baseDistance: 25, reductionRate: 3.5 }
@@ -22,6 +23,18 @@ const getSpawnConfig = (bikeId: string) => {
     case 'stratos':
     case 'zenith':
       return { baseDistance: 60, reductionRate: 2.5 }
+
+    // Cars
+    case 'kanto-zip':
+      return { baseDistance: 25, reductionRate: 3.5 }
+    case 'saber-swift':
+      return { baseDistance: 55, reductionRate: 2 }
+    case 'goliath-titan':
+      return { baseDistance: 60, reductionRate: 2.5 }
+    case 'kaiser-monarch':
+      return { baseDistance: 65, reductionRate: 2.5 }
+    case 'scuderia-fury':
+      return { baseDistance: 75, reductionRate: 3 }
     default:
       return { baseDistance: 40, reductionRate: 3 }
   }
@@ -33,7 +46,7 @@ interface TrafficVehicle {
   lane: number
   z: number
   speed: number
-  type: 'car' | 'truck' | 'auto' | 'bus'
+  type: 'car' | 'truck' | 'auto' | 'bus' | 'bike' | 'scooter'
   color: string
   passed: boolean
 }
@@ -235,7 +248,7 @@ function RoadsideBush({ position }: { position: [number, number, number] }) {
 }
 
 // ============== MOTORCYCLE ==============
-function Motorcycle({ bike }: { bike: Bike }) {
+function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
   const meshRef = useRef<THREE.Group>(null)
   const currentXRef = useRef(0)
   const tiltRef = useRef(0)
@@ -269,27 +282,31 @@ function Motorcycle({ bike }: { bike: Bike }) {
     }
   })
 
-  // Render different bike models based on bike type
   const renderBikeModel = () => {
     switch (bike.id) {
-      case 'blitz':
-        return <BlitzBike bike={bike} />
-      case 'apex':
-        return <ApexBike bike={bike} />
-      case 'chronos':
-        return <ChronosBike bike={bike} />
-      case 'stratos':
-        return <StratosBike bike={bike} />
-      case 'zenith':
-        return <ZenithBike bike={bike} />
-      default:
-        return <BlitzBike bike={bike} />
+      case 'blitz': return <BlitzBike bike={bike} />
+      case 'apex': return <ApexBike bike={bike} />
+      case 'chronos': return <ChronosBike bike={bike} />
+      case 'stratos': return <StratosBike bike={bike} />
+      case 'zenith': return <ZenithBike bike={bike} />
+      default: return <BlitzBike bike={bike} />
+    }
+  }
+
+  const renderCarModel = () => {
+    switch (car.id) {
+      case 'kanto-zip': return <KantoZipCar car={car} />
+      case 'saber-swift': return <SaberSwiftCar car={car} />
+      case 'goliath-titan': return <GoliathTitanCar car={car} />
+      case 'kaiser-monarch': return <KaiserMonarchCar car={car} />
+      case 'scuderia-fury': return <ScuderiaFuryCar car={car} />
+      default: return <KantoZipCar car={car} />
     }
   }
 
   return (
     <group ref={meshRef} position={[0, 0, PLAYER_Z]}>
-      {renderBikeModel()}
+      {getState().vehicleMode === 'car' ? renderCarModel() : renderBikeModel()}
     </group>
   )
 }
@@ -975,6 +992,166 @@ function ZenithBike({ bike }: { bike: Bike }) {
   )
 }
 
+// ============== CARS ==============
+// Stylized, logo-free models inspired by the requested real-world proportions.
+
+function CarBase({ car, shape = 'sedan' }: { car: Car; shape?: 'hatch' | 'sedan' | 'suv' | 'gt' | 'exotic' }) {
+  const dimensions = {
+    hatch: [1.55, 1.0, 3.2],
+    sedan: [1.65, 1.0, 4.2],
+    suv: [1.9, 1.35, 4.6],
+    gt: [1.85, 1.05, 4.7],
+    exotic: [1.9, 0.9, 4.4],
+  } as const
+  const [w, h, l] = dimensions[shape]
+  const wheelZ = l * 0.34
+
+  return (
+    <>
+      <mesh position={[0, h * 0.34, 0]}>
+        <boxGeometry args={[w, h * 0.48, l]} />
+        <meshStandardMaterial color={car.color} metalness={0.65} roughness={0.28} />
+      </mesh>
+      <mesh position={[0, h * 0.66, -l * 0.04]}>
+        <boxGeometry args={[w * 0.78, h * 0.42, l * 0.48]} />
+        <meshStandardMaterial color={car.accentColor} metalness={0.35} roughness={0.3} />
+      </mesh>
+      <mesh position={[0, h * 0.68, -l * 0.06]}>
+        <boxGeometry args={[w * 0.64, h * 0.25, l * 0.42]} />
+        <meshStandardMaterial color="#17212b" metalness={0.55} roughness={0.18} transparent opacity={0.9} />
+      </mesh>
+      <mesh position={[0, h * 0.29, -l * 0.48]}>
+        <boxGeometry args={[w * 0.82, h * 0.13, 0.08]} />
+        <meshStandardMaterial color="#252525" metalness={0.5} roughness={0.25} />
+      </mesh>
+      {[-1, 1].map((side) => (
+        <group key={side}>
+          <mesh position={[side * w * 0.52, h * 0.24, -wheelZ]} rotation={[0, Math.PI / 2, 0]}>
+            <cylinderGeometry args={[0.27, 0.27, 0.16, 12]} />
+            <meshStandardMaterial color="#111111" roughness={0.85} />
+          </mesh>
+          <mesh position={[side * w * 0.52, h * 0.24, wheelZ]} rotation={[0, Math.PI / 2, 0]}>
+            <cylinderGeometry args={[0.27, 0.27, 0.16, 12]} />
+            <meshStandardMaterial color="#111111" roughness={0.85} />
+          </mesh>
+        </group>
+      ))}
+      <mesh position={[-w * 0.3, h * 0.36, -l / 2 - 0.01]}>
+        <boxGeometry args={[w * 0.2, h * 0.12, 0.05]} />
+        <meshStandardMaterial color="#ffffdc" emissive="#fff6b0" emissiveIntensity={1.2} />
+      </mesh>
+      <mesh position={[w * 0.3, h * 0.36, -l / 2 - 0.01]}>
+        <boxGeometry args={[w * 0.2, h * 0.12, 0.05]} />
+        <meshStandardMaterial color="#ffffdc" emissive="#fff6b0" emissiveIntensity={1.2} />
+      </mesh>
+      <mesh position={[-w * 0.3, h * 0.36, l / 2 + 0.01]}>
+        <boxGeometry args={[w * 0.18, h * 0.1, 0.05]} />
+        <meshStandardMaterial color="#ef3340" emissive="#ef3340" emissiveIntensity={0.7} />
+      </mesh>
+      <mesh position={[w * 0.3, h * 0.36, l / 2 + 0.01]}>
+        <boxGeometry args={[w * 0.18, h * 0.1, 0.05]} />
+        <meshStandardMaterial color="#ef3340" emissive="#ef3340" emissiveIntensity={0.7} />
+      </mesh>
+    </>
+  )
+}
+
+function KantoZipCar({ car }: { car: Car }) {
+  return (
+    <group scale={0.95}>
+      <CarBase car={car} shape="hatch" />
+      <mesh position={[0, 0.76, -0.42]}>
+        <boxGeometry args={[1.22, 0.12, 0.7]} />
+        <meshStandardMaterial color={car.accentColor} metalness={0.55} roughness={0.3} />
+      </mesh>
+      <mesh position={[0, 0.88, 0.58]}>
+        <boxGeometry args={[1.18, 0.08, 0.45]} />
+        <meshStandardMaterial color="#252525" roughness={0.85} />
+      </mesh>
+    </group>
+  )
+}
+
+function SaberSwiftCar({ car }: { car: Car }) {
+  return (
+    <group>
+      <CarBase car={car} shape="sedan" />
+      <mesh position={[0, 0.82, 0.65]}>
+        <boxGeometry args={[1.42, 0.12, 0.7]} />
+        <meshStandardMaterial color={car.color} metalness={0.65} roughness={0.25} />
+      </mesh>
+      <mesh position={[0, 0.55, -2.0]}>
+        <boxGeometry args={[1.15, 0.1, 0.1]} />
+        <meshStandardMaterial color={car.accentColor} metalness={0.85} roughness={0.2} />
+      </mesh>
+    </group>
+  )
+}
+
+function GoliathTitanCar({ car }: { car: Car }) {
+  return (
+    <group scale={1.08}>
+      <CarBase car={car} shape="suv" />
+      <mesh position={[0, 0.98, 0.05]}>
+        <boxGeometry args={[1.55, 0.3, 2.55]} />
+        <meshStandardMaterial color={car.color} metalness={0.45} roughness={0.42} />
+      </mesh>
+      <mesh position={[0, 0.99, -0.55]}>
+        <boxGeometry args={[1.38, 0.22, 0.9]} />
+        <meshStandardMaterial color="#18222a" metalness={0.5} roughness={0.2} />
+      </mesh>
+      <mesh position={[0, 0.35, 2.15]}>
+        <boxGeometry args={[1.55, 0.22, 0.18]} />
+        <meshStandardMaterial color="#30353a" metalness={0.8} roughness={0.3} />
+      </mesh>
+    </group>
+  )
+}
+
+function KaiserMonarchCar({ car }: { car: Car }) {
+  return (
+    <group>
+      <CarBase car={car} shape="gt" />
+      <mesh position={[0, 0.81, 0.42]}>
+        <boxGeometry args={[1.48, 0.16, 1.0]} />
+        <meshStandardMaterial color={car.color} metalness={0.7} roughness={0.2} />
+      </mesh>
+      <mesh position={[0, 0.88, -0.35]}>
+        <boxGeometry args={[1.3, 0.12, 0.9]} />
+        <meshStandardMaterial color="#111a23" metalness={0.55} roughness={0.18} />
+      </mesh>
+      <mesh position={[0, 0.3, -2.2]}>
+        <boxGeometry args={[1.48, 0.16, 0.12]} />
+        <meshStandardMaterial color="#c8ccd1" metalness={0.9} roughness={0.16} />
+      </mesh>
+    </group>
+  )
+}
+
+function ScuderiaFuryCar({ car }: { car: Car }) {
+  return (
+    <group scale={1.02}>
+      <CarBase car={car} shape="exotic" />
+      <mesh position={[0, 0.7, -0.15]}>
+        <boxGeometry args={[1.48, 0.16, 2.25]} />
+        <meshStandardMaterial color={car.color} metalness={0.72} roughness={0.2} />
+      </mesh>
+      <mesh position={[0, 0.83, -0.55]}>
+        <boxGeometry args={[1.25, 0.12, 1.05]} />
+        <meshStandardMaterial color="#101820" metalness={0.65} roughness={0.16} />
+      </mesh>
+      <mesh position={[0, 0.35, 2.08]}>
+        <boxGeometry args={[1.4, 0.08, 0.2]} />
+        <meshStandardMaterial color="#1a1a1a" metalness={0.8} roughness={0.2} />
+      </mesh>
+      <mesh position={[0, 0.45, 2.25]}>
+        <boxGeometry args={[1.15, 0.08, 0.1]} />
+        <meshStandardMaterial color="#111111" metalness={0.9} roughness={0.15} />
+      </mesh>
+    </group>
+  )
+}
+
 // ============== TRAFFIC ==============
 function TrafficSystem() {
   const vehiclesRef = useRef<TrafficVehicle[]>([])
@@ -995,6 +1172,8 @@ function TrafficSystem() {
       case 'truck': return [1.8, 2.0, 5.0]
       case 'bus': return [2.0, 2.3, 6.5]
       case 'auto': return [1.0, 1.3, 1.6]
+      case 'bike': return [0.95, 1.1, 2.0]
+      case 'scooter': return [0.85, 1.15, 1.8]
       default: return [1.4, 1.1, 3.2]
     }
   }, [])
@@ -1028,8 +1207,9 @@ function TrafficSystem() {
       actions.addPlaytime(secondsToAdd)
     }
 
-    // Get bike-specific spawn configuration
-    const spawnConfig = getSpawnConfig(state.selectedBike.id)
+    // Vehicle-specific spawn configuration
+    const activeVehicleId = state.vehicleMode === 'car' ? state.selectedCar.id : state.selectedBike.id
+    const spawnConfig = getSpawnConfig(activeVehicleId)
 
     // Calculate spawn distance based on bike type
     const spawnDistance = Math.max(30, spawnConfig.baseDistance - (survivalTimeRef.current / 20) * spawnConfig.reductionRate)
@@ -1049,7 +1229,10 @@ function TrafficSystem() {
       )
       
       if (!tooClose) {
-        const types: Array<'car' | 'truck' | 'auto' | 'bus'> = ['car', 'car', 'car', 'car', 'truck', 'auto', 'bus']
+        // Cars never face another car as traffic. Cars get two-wheeled traffic plus public/commercial vehicles.
+        const types: TrafficVehicle['type'][] = state.vehicleMode === 'car'
+          ? ['bike', 'bike', 'bike', 'scooter', 'scooter', 'auto', 'bus', 'truck']
+          : ['car', 'car', 'car', 'car', 'truck', 'auto', 'bus']
         const type = types[Math.floor(Math.random() * types.length)]
         const color = vehicleColors[Math.floor(Math.random() * vehicleColors.length)]
         const vehicleSpeed = 25 + Math.random() * 35
@@ -1116,8 +1299,9 @@ function TrafficSystem() {
     actions.setDistance(state.distance + speed * clampedDelta * 0.08)
     
     // Gradually increase speed from 0 to maxSpeed (reaches max in ~15-20 seconds)
-    const speedIncrease = state.selectedBike.acceleration * 8 * clampedDelta
-    const newSpeed = Math.min(state.selectedBike.maxSpeed, state.speed + speedIncrease)
+    const activeVehicle = state.vehicleMode === 'car' ? state.selectedCar : state.selectedBike
+    const speedIncrease = activeVehicle.acceleration * 8 * clampedDelta
+    const newSpeed = Math.min(activeVehicle.maxSpeed, state.speed + speedIncrease)
     actions.setSpeed(newSpeed)
 
     // Combo timer
@@ -1203,6 +1387,31 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
     const roof = new THREE.Mesh(roofGeo, roofMat)
     roof.position.y = h * 0.7
     group.add(roof)
+  } else if (type === 'bike') {
+    const frameGeo = new THREE.BoxGeometry(w * 0.28, h * 0.22, l * 0.55)
+    const frameMat = new THREE.MeshStandardMaterial({ color, metalness: 0.65, roughness: 0.3 })
+    const frame = new THREE.Mesh(frameGeo, frameMat)
+    frame.position.y = h * 0.42
+    group.add(frame)
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(w * 0.38, h * 0.08, l * 0.24), new THREE.MeshStandardMaterial({ color: '#111111', roughness: 0.9 }))
+    seat.position.set(0, h * 0.72, l * 0.12)
+    group.add(seat)
+    const fork = new THREE.Mesh(new THREE.BoxGeometry(0.07, h * 0.6, 0.07), new THREE.MeshStandardMaterial({ color: '#777777', metalness: 0.8 }))
+    fork.position.set(0, h * 0.48, -l * 0.35)
+    group.add(fork)
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(w * 0.7, 0.05, 0.05), new THREE.MeshStandardMaterial({ color: '#555555', metalness: 0.8 }))
+    handle.position.set(0, h * 0.82, -l * 0.34)
+    group.add(handle)
+  } else if (type === 'scooter') {
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(w * 0.55, h * 0.14, l * 0.5), new THREE.MeshStandardMaterial({ color, metalness: 0.5, roughness: 0.4 }))
+    deck.position.y = h * 0.38
+    group.add(deck)
+    const legShield = new THREE.Mesh(new THREE.BoxGeometry(w * 0.65, h * 0.52, l * 0.25), new THREE.MeshStandardMaterial({ color, metalness: 0.45, roughness: 0.35 }))
+    legShield.position.set(0, h * 0.62, -l * 0.08)
+    group.add(legShield)
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(w * 0.72, 0.05, 0.05), new THREE.MeshStandardMaterial({ color: '#555555', metalness: 0.8 }))
+    handle.position.set(0, h * 0.9, -l * 0.28)
+    group.add(handle)
   } else if (type === 'truck') {
     // Cabin
     const cabinGeo = new THREE.BoxGeometry(w * 0.88, h * 0.5, l * 0.22)
@@ -1237,13 +1446,15 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
   const wheelGeo = new THREE.CylinderGeometry(0.22, 0.22, 0.12, 8)
   const wheelMat = new THREE.MeshStandardMaterial({ color: '#111111', roughness: 0.9 })
   
-  const wheelZ = type === 'bus' || type === 'truck' ? l * 0.35 : l * 0.3
-  const wheelPositions = [
-    [-w / 2 - 0.04, 0.22, -wheelZ],
-    [w / 2 + 0.04, 0.22, -wheelZ],
-    [-w / 2 - 0.04, 0.22, wheelZ],
-    [w / 2 + 0.04, 0.22, wheelZ],
-  ]
+  const wheelZ = type === 'bus' || type === 'truck' ? l * 0.35 : type === 'bike' || type === 'scooter' ? l * 0.38 : l * 0.3
+  const wheelPositions = (type === 'bike' || type === 'scooter')
+    ? [[0, 0.22, -wheelZ], [0, 0.22, wheelZ]]
+    : [
+        [-w / 2 - 0.04, 0.22, -wheelZ],
+        [w / 2 + 0.04, 0.22, -wheelZ],
+        [-w / 2 - 0.04, 0.22, wheelZ],
+        [w / 2 + 0.04, 0.22, wheelZ],
+      ]
 
   if (type === 'truck' || type === 'bus') {
     // Extra rear wheels
@@ -1890,6 +2101,7 @@ function SpeedLines() {
 // ============== MAIN SCENE ==============
 export function GameScene() {
   const selectedBike = useGameStore((s) => s.selectedBike)
+  const selectedCar = useGameStore((s) => s.selectedCar)
 
   return (
     <Canvas
@@ -1899,7 +2111,7 @@ export function GameScene() {
     >
       <Environment />
       <Highway />
-      <Motorcycle bike={selectedBike} />
+      <Motorcycle bike={selectedBike} car={selectedCar} />
       <TrafficSystem />
       <CoinSystem />
       <PowerUpSystem />
