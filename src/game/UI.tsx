@@ -95,84 +95,177 @@ export function UsernameInput() {
 // ============== HUD ==============
 export function HUD() {
   const state = useGameStore()
-  
+  const previousCoinsRef = useRef(state.runCoins)
+  const [coinBump, setCoinBump] = useState(false)
+
+  useEffect(() => {
+    if (state.runCoins > previousCoinsRef.current) {
+      setCoinBump(true)
+      const timer = window.setTimeout(() => setCoinBump(false), 180)
+      previousCoinsRef.current = state.runCoins
+      return () => window.clearTimeout(timer)
+    }
+    previousCoinsRef.current = state.runCoins
+  }, [state.runCoins])
+
   if (state.gameState !== 'playing') return null
 
+  const magnetSeconds = state.magnetActive
+    ? state.magnetTimer
+    : state.magnet2xActive
+    ? state.magnet2xTimer
+    : 0
+
+  const magnetMax = 10
+  const magnetProgress = Math.max(0, Math.min(1, magnetSeconds / magnetMax))
+
   return (
-    <div className="absolute inset-0 pointer-events-none select-none z-20">
-      {/* Top bar */}
-      <div className="absolute top-0 left-0 right-0 flex justify-between items-start p-2.5 sm:p-4 pointer-events-auto">
-        {/* Score & Coins */}
-        <div className="flex flex-col gap-1.5">
-          <div className="bg-black/70 backdrop-blur-sm rounded-xl px-2.5 py-1.5 sm:px-4 sm:py-2.5 border border-white/5">
-            <div className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wider font-medium">Score</div>
-            <div className="text-base sm:text-2xl font-bold text-white tabular-nums leading-tight">
-              {state.score.toLocaleString()}
-            </div>
+    <div
+      className="absolute inset-0 pointer-events-none select-none z-20 text-white"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
+    >
+      <style>{`
+        @keyframes hsHudCoinBump {
+          0% { transform: scale(1); }
+          45% { transform: scale(1.12); }
+          100% { transform: scale(1); }
+        }
+        @keyframes hsHudPulse {
+          0%,100% { opacity: .72; }
+          50% { opacity: 1; }
+        }
+      `}</style>
+
+      {/* Top-left: score first, then coins. Panels match garage/menu surfaces. */}
+      <div className="absolute left-2.5 sm:left-4 top-2.5 sm:top-4 flex flex-col gap-2">
+        <div className="rounded-2xl border border-white/10 bg-[#080a0d]/78 px-3 py-2.5 sm:px-4 sm:py-3 backdrop-blur-xl shadow-xl shadow-black/20">
+          <div className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em] text-white/45">
+            Score
           </div>
-          <div className="bg-black/70 backdrop-blur-sm rounded-xl px-2.5 py-1 sm:px-3 sm:py-1.5 border border-yellow-500/20 flex items-center gap-1.5">
-            <span className="text-sm sm:text-base">🪙</span>
-            <span className="text-sm sm:text-lg font-bold text-yellow-400 tabular-nums">{state.runCoins}</span>
+          <div className="mt-0.5 text-xl sm:text-3xl font-black tabular-nums leading-none text-white">
+            {state.score.toLocaleString()}
           </div>
         </div>
 
-        {/* Speed gauge & Pause */}
-        <div className="flex flex-col gap-1.5 items-end">
-          <div className="bg-black/70 backdrop-blur-sm rounded-xl px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-right border border-white/5">
-            <div className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wider font-medium">Speed</div>
-            <div className="text-base sm:text-2xl font-bold tabular-nums leading-tight">
-              <span className="text-white">{Math.floor(state.speed)}</span>
-              <span className="text-[10px] sm:text-xs text-gray-500 ml-0.5">km/h</span>
-            </div>
-          </div>
-          <button
-            onClick={() => actions.setGameState('paused')}
-            className="pointer-events-auto bg-black/70 backdrop-blur-sm rounded-xl px-3 py-1.5 sm:px-4 sm:py-2 border border-white/10 active:scale-95 transition-all"
-          >
-            <span className="text-white text-sm sm:text-base font-bold">⏸ PAUSE</span>
-          </button>
+        <div
+          className={`inline-flex w-fit items-center gap-2 rounded-xl border border-amber-300/15 bg-[#080a0d]/78 px-3 py-1.5 sm:px-3.5 backdrop-blur-xl transition-transform ${
+            coinBump ? 'shadow-lg shadow-amber-400/15' : ''
+          }`}
+          style={coinBump ? { animation: 'hsHudCoinBump 180ms ease-out' } : undefined}
+        >
+          <svg className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.8" className="text-amber-300" />
+            <path d="M12 7.5v9M9.3 9.2h4.1a1.8 1.8 0 0 1 0 3.6H10.6a1.8 1.8 0 0 0 0 3.6H15" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" className="text-amber-100" />
+          </svg>
+          <span className="text-sm sm:text-base font-black tabular-nums text-amber-200">
+            {state.runCoins.toLocaleString()}
+          </span>
         </div>
       </div>
 
-      {/* Combo indicator */}
+      {/* Top-right: speed and pause remain easy to reach. */}
+      <div className="absolute right-2.5 sm:right-4 top-2.5 sm:top-4 flex flex-col items-end gap-2">
+        <div className="rounded-2xl border border-white/10 bg-[#080a0d]/78 px-3 py-2.5 sm:px-4 sm:py-3 text-right backdrop-blur-xl shadow-xl shadow-black/20">
+          <div className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em] text-white/45">
+            Speed
+          </div>
+          <div className="mt-0.5 text-xl sm:text-3xl font-black tabular-nums leading-none">
+            <span className="text-white">{Math.floor(state.speed)}</span>
+            <span className="ml-1 text-[10px] sm:text-xs font-bold text-white/45">km/h</span>
+          </div>
+        </div>
+
+        <button
+          onClick={() => actions.setGameState('paused')}
+          className="pointer-events-auto inline-flex items-center gap-2 rounded-xl border border-white/12 bg-[#080a0d]/80 px-3 py-2 sm:px-3.5 sm:py-2.5 backdrop-blur-xl shadow-lg transition-all hover:bg-white/[0.09] active:scale-95"
+          aria-label="Pause game"
+        >
+          <svg className="h-4 w-4 sm:h-4.5 sm:w-4.5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="7" y="6" width="3" height="12" rx="1" fill="currentColor" />
+            <rect x="14" y="6" width="3" height="12" rx="1" fill="currentColor" />
+          </svg>
+          <span className="text-[10px] sm:text-xs font-black tracking-wide">PAUSE</span>
+        </button>
+      </div>
+
+      {/* Combo */}
       {state.combo > 0 && (
-        <div className="absolute top-14 sm:top-20 left-1/2 -translate-x-1/2">
-          <div className="bg-gradient-to-r from-yellow-500/90 to-orange-500/90 backdrop-blur-sm rounded-full px-3 py-1 sm:px-5 sm:py-1.5 shadow-lg shadow-orange-500/40 border border-yellow-400/30">
-            <span className="text-white font-bold text-xs sm:text-base">
-              🔥 NEAR MISS ×{state.combo}
+        <div className="absolute left-1/2 top-[11.5%] -translate-x-1/2">
+          <div className="rounded-full border border-amber-300/25 bg-[#111318]/82 px-3 py-1.5 sm:px-4 backdrop-blur-xl shadow-lg shadow-orange-500/15">
+            <span className="text-[10px] sm:text-xs font-black tracking-wide text-amber-200">
+              <svg className="mr-1 inline h-3.5 w-3.5 align-[-2px]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M13 2 6.5 12h4L9 22l8.5-12h-4L13 2Z" fill="currentColor" />
+              </svg>
+              NEAR MISS ×{state.combo}
             </span>
           </div>
         </div>
       )}
 
-      {/* Active Power-ups */}
-      <div className="absolute top-28 sm:top-36 left-1/2 -translate-x-1/2 flex gap-2">
-        {state.magnetActive && (
-          <div className="bg-blue-500/90 backdrop-blur-sm rounded-full px-3 py-1 shadow-lg shadow-blue-500/40 border border-blue-400/30 animate-pulse">
-            <span className="text-white font-bold text-xs sm:text-sm">
-              🧲 {Math.ceil(state.magnetTimer)}s
-            </span>
+      {/* Active power-ups: real timing values only. Shield has no remaining timer in store. */}
+      <div className="absolute left-1/2 top-[18%] -translate-x-1/2 flex max-w-[calc(100%-120px)] flex-wrap justify-center gap-2">
+        {(state.magnetActive || state.magnet2xActive) && (
+          <div className="min-w-[116px] rounded-2xl border border-cyan-300/20 bg-[#071117]/84 px-2.5 py-2 backdrop-blur-xl shadow-lg shadow-cyan-500/10">
+            <div className="flex items-center gap-2">
+              <svg className="h-4 w-4 shrink-0 text-cyan-200" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M7 4v6a5 5 0 0 0 10 0V4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                <path d="M5 4h4M15 4h4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+              </svg>
+              <div className="min-w-0 flex-1">
+                <div className="text-[9px] font-black uppercase tracking-[0.16em] text-cyan-100/55">
+                  {state.magnet2xActive ? '2× Magnet' : 'Magnet'}
+                </div>
+                <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-cyan-300 to-amber-200 transition-[width] duration-100"
+                    style={{ width: `${magnetProgress * 100}%` }}
+                  />
+                </div>
+              </div>
+              <span className="text-xs font-black tabular-nums text-cyan-100">
+                {Math.ceil(magnetSeconds)}s
+              </span>
+            </div>
           </div>
         )}
-        {state.magnet2xActive && (
-          <div className="bg-cyan-500/90 backdrop-blur-sm rounded-full px-3 py-1 shadow-lg shadow-cyan-500/40 border border-cyan-400/30 animate-pulse">
-            <span className="text-white font-bold text-xs sm:text-sm">
-              🧲 2× {Math.ceil(state.magnet2xTimer)}s
-            </span>
-          </div>
-        )}
+
         {state.multiplierActive && (
-          <div className="bg-yellow-500/90 backdrop-blur-sm rounded-full px-3 py-1 shadow-lg shadow-yellow-500/40 border border-yellow-400/30 animate-pulse">
-            <span className="text-white font-bold text-xs sm:text-sm">
-              ⭐ {state.multiplier4x ? '4' : '2'}× {Math.ceil(state.multiplierTimer)}s
-            </span>
+          <div className="rounded-2xl border border-amber-300/20 bg-[#151006]/84 px-2.5 py-2 backdrop-blur-xl shadow-lg shadow-amber-500/10">
+            <div className="flex items-center gap-2">
+              <svg className="h-4 w-4 shrink-0 text-amber-200" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="m12 3 2.8 5.4 5.9.9-4.3 4.2 1 5.9-5.4-2.8-5.4 2.8 1-5.9-4.3-4.2 5.9-.9L12 3Z" fill="currentColor" />
+              </svg>
+              <span className="text-[10px] sm:text-xs font-black text-amber-100">
+                {state.multiplier4x ? '4×' : '2×'}
+              </span>
+              <span className="text-xs font-black tabular-nums text-white">
+                {Math.ceil(state.multiplierTimer)}s
+              </span>
+            </div>
           </div>
         )}
+
         {state.shieldActive && (
-          <div className="bg-green-500/90 backdrop-blur-sm rounded-full px-3 py-1 shadow-lg shadow-green-500/40 border border-green-400/30">
-            <span className="text-white font-bold text-xs sm:text-sm">
-              🛡️ {state.shieldCount} {state.shieldCount === 1 ? 'Shield' : 'Shields'}
-            </span>
+          <div className="rounded-2xl border border-emerald-300/20 bg-[#07120d]/84 px-2.5 py-2 backdrop-blur-xl shadow-lg shadow-emerald-500/10">
+            <div className="flex items-center gap-2">
+              <svg className="h-4 w-4 shrink-0 text-emerald-200" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 3 19 6v5.3c0 4.2-2.8 7.9-7 9.2-4.2-1.3-7-5-7-9.2V6l7-3Z" fill="currentColor" fillOpacity=".14" stroke="currentColor" strokeWidth="1.8" />
+                <path d="m8.7 12.2 2.1 2.1 4.7-4.7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <div>
+                <div className="text-[9px] font-black uppercase tracking-[0.16em] text-emerald-100/55">
+                  Shield
+                </div>
+                <div className="text-xs font-black text-emerald-100">
+                  {state.shieldCount} {state.shieldCount === 1 ? 'charge' : 'charges'}
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -180,7 +273,6 @@ export function HUD() {
   )
 }
 
-// ============== STATS SCREEN ==============
 function StatsScreen({ onBack }: { onBack: () => void }) {
   const state = useGameStore()
   type Filter = '7d' | '30d' | '90d' | '180d' | '365d' | 'all'
