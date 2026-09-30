@@ -259,10 +259,10 @@ function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHig
       const unlockedBikes = BIKES
         .filter((bike) => bike.unlockScore <= bikeHighScore)
         .map((bike) => bike.id)
-        .reduce((ids, id) => ids.includes(id) ? ids : [...ids, id], [...savedUnlockedBikes])
+        .reduce((ids, id) => ids.includes(id) ? ids : [...ids, id], ['blitz', ...savedUnlockedBikes])
 
-      // Car unlocks are calculated only from scores earned in car runs.
-      // This intentionally ignores the previous global-score car unlock bug.
+      // Every profile always owns the starter car.
+      // Car progression is calculated only from the car high score.
       const unlockedCars = CARS
         .filter((car) => car.unlockScore <= carHighScore)
         .map((car) => car.id)
@@ -462,9 +462,11 @@ async function loadCloudProgress(username: string) {
   const unlockedBikes = BIKES
     .filter((bike) => bike.unlockScore <= mergedBikeHighScore)
     .map((bike) => bike.id)
+    .reduce((ids, id) => ids.includes(id) ? ids : [...ids, id], ['blitz'])
   const unlockedCars = CARS
     .filter((car) => car.unlockScore <= mergedCarHighScore)
     .map((car) => car.id)
+    .reduce((ids, id) => ids.includes(id) ? ids : [...ids, id], ['kanto-zip'])
 
   const bikeId = typeof cloud.selectedBikeId === 'string' && BIKES.some((bike) => bike.id === cloud.selectedBikeId)
     ? cloud.selectedBikeId
@@ -666,10 +668,18 @@ export const actions = {
   },
 
   selectCar(car: Car) {
-    if (!state.unlockedCars.includes(car.id)) return
+    // The starter car is always selectable; later cars require car-specific progress.
+    const isStarterCar = car.id === CARS[0].id
+    if (!isStarterCar && !state.unlockedCars.includes(car.id)) return
+
+    const unlockedCars = state.unlockedCars.includes(car.id)
+      ? state.unlockedCars
+      : [...state.unlockedCars, car.id]
+
     setState({
       selectedCar: car,
       vehicleMode: 'car',
+      unlockedCars,
     })
     saveVehicleSelection('car', car.id)
   },
