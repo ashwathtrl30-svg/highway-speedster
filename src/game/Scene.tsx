@@ -543,14 +543,14 @@ function LightingRig() {
       <hemisphereLight
         color="#b9d9ec"
         groundColor="#53664a"
-        intensity={0.72}
+        intensity={0.78}
       />
-      <ambientLight intensity={0.14} color="#e9e2d5" />
+      <ambientLight intensity={0.16} color="#e9e2d5" />
       <directionalLight
         ref={keyRef}
         position={[18, 28, PLAYER_Z + 18]}
         color="#ffd9ad"
-        intensity={1.65}
+        intensity={1.55}
         castShadow
         shadow-mapSize-width={512}
         shadow-mapSize-height={512}
@@ -4830,6 +4830,173 @@ function TerrainMound({ position, scale }: {
   )
 }
 
+function AtmosphereSky() {
+  const { camera } = useThree()
+
+  const uniforms = useMemo(
+    () => ({
+      topColor: { value: new THREE.Color('#5a9fc9') },
+      horizonColor: { value: new THREE.Color('#c9e1ec') },
+      lowerHorizonColor: { value: new THREE.Color('#b9c8d0') },
+      sunColor: { value: new THREE.Color('#fff5d6') },
+      sunDirection: { value: new THREE.Vector3(0.12, 0.72, -0.68).normalize() },
+    }),
+    []
+  )
+
+  const material = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        uniforms,
+        vertexShader: `
+          varying vec3 vLocalPosition;
+          void main() {
+            vLocalPosition = position;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 topColor;
+          uniform vec3 horizonColor;
+          uniform vec3 lowerHorizonColor;
+          uniform vec3 sunColor;
+          uniform vec3 sunDirection;
+          varying vec3 vLocalPosition;
+
+          void main() {
+            vec3 direction = normalize(vLocalPosition);
+            float height = clamp(direction.y, -0.18, 0.9);
+            float upper = smoothstep(0.02, 0.72, height);
+            vec3 sky = mix(horizonColor, topColor, upper);
+
+            float lower = smoothstep(-0.18, 0.04, height);
+            sky = mix(lowerHorizonColor, sky, lower);
+
+            float sunAmount = pow(max(dot(direction, normalize(sunDirection)), 0.0), 18.0);
+            float glowAmount = pow(max(dot(direction, normalize(sunDirection)), 0.0), 4.0) * 0.12;
+
+            vec3 color = sky + sunColor * (sunAmount * 0.17 + glowAmount);
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `,
+        side: THREE.BackSide,
+        depthWrite: false,
+        depthTest: false,
+        toneMapped: false,
+      }),
+    [uniforms]
+  )
+
+  useFrame(() => {
+    // Keep the dome centered on the camera so the sky is infinitely distant.
+    material.uniforms.sunDirection.value.set(0.12, 0.72, -0.68).normalize()
+    material.needsUpdate = false
+  })
+
+  useEffect(() => {
+    return () => material.dispose()
+  }, [material])
+
+  return (
+    <mesh position={[camera.position.x, 0, camera.position.z]} renderOrder={-10}>
+      <sphereGeometry args={[450, 24, 16]} />
+      <primitive object={material} attach="material" />
+    </mesh>
+  )
+}
+
+let atmosphereCloudTexture: THREE.CanvasTexture | null = null
+
+function getAtmosphereCloudTexture() {
+  if (atmosphereCloudTexture) return atmosphereCloudTexture
+
+  const canvas = document.createElement('canvas')
+  canvas.width = 256
+  canvas.height = 96
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Unable to create atmosphere cloud texture')
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  const glow = ctx.createRadialGradient(128, 48, 8, 128, 48, 122)
+  glow.addColorStop(0, 'rgba(255,255,255,0.78)')
+  glow.addColorStop(0.42, 'rgba(255,255,255,0.34)')
+  glow.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = glow
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  atmosphereCloudTexture = new THREE.CanvasTexture(canvas)
+  atmosphereCloudTexture.colorSpace = THREE.SRGBColorSpace
+  atmosphereCloudTexture.minFilter = THREE.LinearFilter
+  atmosphereCloudTexture.magFilter = THREE.LinearFilter
+  atmosphereCloudTexture.needsUpdate = true
+  return atmosphereCloudTexture
+}
+
+function AtmosphereClouds() {
+  const texture = useMemo(() => getAtmosphereCloudTexture(), [])
+
+  const clouds = useMemo(
+    () => [
+      { position: [-105, 44, -175] as [number, number, number], scale: [38, 10, 1] as [number, number, number], opacity: 0.15 },
+      { position: [82, 50, -215] as [number, number, number], scale: [44, 11, 1] as [number, number, number], opacity: 0.13 },
+      { position: [-22, 57, -305] as [number, number, number], scale: [54, 13, 1] as [number, number, number], opacity: 0.11 },
+      { position: [125, 40, -335] as [number, number, number], scale: [34, 9, 1] as [number, number, number], opacity: 0.10 },
+    ],
+    []
+  )
+
+  useEffect(() => {
+    return () => {
+      if (atmosphereCloudTexture === texture) {
+        atmosphereCloudTexture = null
+        texture.dispose()
+      }
+    }
+  }, [texture])
+
+  return (
+    <group renderOrder={-5}>
+      {clouds.map((cloud, i) => (
+        <sprite key={i} position={cloud.position} scale={cloud.scale}>
+          <spriteMaterial
+            map={texture}
+            transparent
+            opacity={cloud.opacity}
+            depthWrite={false}
+            depthTest={false}
+          />
+        </sprite>
+      ))}
+    </group>
+  )
+}
+
+function DistantDepthLayers() {
+  const layers = useMemo(
+    () => [
+      { z: -245, x: -66, y: 6, scale: [72, 18, 32] as [number, number, number], color: '#718b91' },
+      { z: -305, x: 68, y: 8, scale: [92, 23, 40] as [number, number, number], color: '#7d969b' },
+      { z: -370, x: -18, y: 10, scale: [124, 28, 52] as [number, number, number], color: '#8da4a9' },
+    ],
+    []
+  )
+
+  return (
+    <group>
+      {layers.map((layer, i) => (
+        <mesh key={i} position={[layer.x, layer.y, layer.z]} scale={layer.scale}>
+          <sphereGeometry args={[1, 12, 6]} />
+          <meshStandardMaterial
+            color={layer.color}
+            roughness={1}
+            metalness={0}
+          />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
 function Environment() {
   const roadsideBuildings = useMemo(
     () => [
@@ -4864,21 +5031,20 @@ function Environment() {
 
   return (
     <>
-      {/* Sky dome */}
-      <mesh>
-        <sphereGeometry args={[450, 16, 16]} />
-        <meshBasicMaterial color="#6bb3d9" side={THREE.BackSide} />
+      <AtmosphereSky />
+      <AtmosphereClouds />
+
+      {/* Sun: bright enough to define the sky without washing out road/vehicle contrast. */}
+      <mesh position={[40, 70, -250]}>
+        <sphereGeometry args={[16, 16, 16]} />
+        <meshBasicMaterial color="#fff4cf" />
+      </mesh>
+      <mesh position={[40, 70, -250]}>
+        <sphereGeometry args={[31, 16, 16]} />
+        <meshBasicMaterial color="#fff4cf" transparent opacity={0.12} depthWrite={false} />
       </mesh>
 
-      {/* Sun glow */}
-      <mesh position={[40, 70, -250]}>
-        <sphereGeometry args={[20, 12, 12]} />
-        <meshBasicMaterial color="#fff8dc" />
-      </mesh>
-      <mesh position={[40, 70, -250]}>
-        <sphereGeometry args={[35, 12, 12]} />
-        <meshBasicMaterial color="#fff8dc" transparent opacity={0.15} />
-      </mesh>
+      <DistantDepthLayers />
 
       {/* Broad terrain base */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, -150]} receiveShadow>
@@ -4920,7 +5086,7 @@ function Environment() {
 
       {/* Layered atmospheric depth: near detail stays crisp while distant
           structures merge naturally into the horizon. */}
-      <fog attach="fog" args={['#a9c1cf', 34, 165]} />
+      <fog attach="fog" args={['#b9c8d0', 58, 205]} />
     </>
   )
 }
