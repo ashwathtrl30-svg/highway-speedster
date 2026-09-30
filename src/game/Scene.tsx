@@ -62,17 +62,129 @@ interface PowerUp {
 }
 
 // ============== HIGHWAY ==============
+// Lightweight procedural asphalt textures keep the road detailed without
+// introducing external image assets or additional dependencies.
+function createRoadTextures(anisotropy: number) {
+  const width = 256
+  const height = 512
+
+  const colorCanvas = document.createElement('canvas')
+  colorCanvas.width = width
+  colorCanvas.height = height
+  const colorCtx = colorCanvas.getContext('2d')
+  if (!colorCtx) throw new Error('Unable to create road texture canvas')
+
+  const colorData = colorCtx.createImageData(width, height)
+  const colorPixels = colorData.data
+
+  const roughCanvas = document.createElement('canvas')
+  roughCanvas.width = width
+  roughCanvas.height = height
+  const roughCtx = roughCanvas.getContext('2d')
+  if (!roughCtx) throw new Error('Unable to create road roughness texture canvas')
+
+  const roughData = roughCtx.createImageData(width, height)
+  const roughPixels = roughData.data
+
+  // Deterministic micro-variation gives the asphalt a believable aggregate
+  // pattern while avoiding animated/noisy pixels.
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const index = (y * width + x) * 4
+      const wave =
+        Math.sin(x * 0.19) * 4 +
+        Math.sin(y * 0.071 + x * 0.013) * 3 +
+        Math.sin((x + y) * 0.045) * 2
+      const grain = ((x * 17 + y * 31 + x * y * 7) % 29) - 14
+      const value = Math.max(32, Math.min(92, Math.round(57 + wave + grain)))
+
+      colorPixels[index] = value
+      colorPixels[index + 1] = value + 1
+      colorPixels[index + 2] = value + 3
+      colorPixels[index + 3] = 255
+
+      const roughness = Math.max(185, Math.min(245, Math.round(225 - wave * 1.5 - grain * 0.35)))
+      roughPixels[index] = roughness
+      roughPixels[index + 1] = roughness
+      roughPixels[index + 2] = roughness
+      roughPixels[index + 3] = 255
+    }
+  }
+
+  colorCtx.putImageData(colorData, 0, 0)
+  roughCtx.putImageData(roughData, 0, 0)
+
+  // Long, low-contrast surface wear patches add scale and directionality.
+  const patchSeed = (n: number) => {
+    const value = Math.sin(n * 12.9898) * 43758.5453
+    return value - Math.floor(value)
+  }
+
+  for (let i = 0; i < 14; i++) {
+    const x = 20 + patchSeed(i + 1) * (width - 40)
+    const y = patchSeed(i + 20) * height
+    const patchWidth = 18 + patchSeed(i + 40) * 44
+    const patchHeight = 5 + patchSeed(i + 60) * 22
+
+    colorCtx.save()
+    colorCtx.globalAlpha = 0.055
+    colorCtx.fillStyle = '#b9bdc1'
+    colorCtx.translate(x, y)
+    colorCtx.rotate((patchSeed(i + 80) - 0.5) * 0.18)
+    colorCtx.fillRect(-patchWidth * 0.5, -patchHeight * 0.5, patchWidth, patchHeight)
+    colorCtx.restore()
+
+    roughCtx.save()
+    roughCtx.globalAlpha = 0.13
+    roughCtx.fillStyle = '#a8a8a8'
+    roughCtx.translate(x, y)
+    roughCtx.rotate((patchSeed(i + 80) - 0.5) * 0.18)
+    roughCtx.fillRect(-patchWidth * 0.5, -patchHeight * 0.5, patchWidth, patchHeight)
+    roughCtx.restore()
+  }
+
+  const colorMap = new THREE.CanvasTexture(colorCanvas)
+  colorMap.wrapS = THREE.RepeatWrapping
+  colorMap.wrapT = THREE.RepeatWrapping
+  colorMap.repeat.set(1, 1)
+  colorMap.anisotropy = anisotropy
+  colorMap.colorSpace = THREE.SRGBColorSpace
+  colorMap.needsUpdate = true
+
+  const roughnessMap = new THREE.CanvasTexture(roughCanvas)
+  roughnessMap.wrapS = THREE.RepeatWrapping
+  roughnessMap.wrapT = THREE.RepeatWrapping
+  roughnessMap.repeat.set(1, 1)
+  roughnessMap.anisotropy = anisotropy
+  roughnessMap.needsUpdate = true
+
+  return { colorMap, roughnessMap }
+}
+
 function Highway() {
   const segmentsRef = useRef<THREE.Group>(null)
   const offsetRef = useRef(0)
+  const { gl } = useThree()
+
+  const roadTextures = useMemo(
+    () => createRoadTextures(Math.min(4, gl.capabilities.getMaxAnisotropy())),
+    [gl]
+  )
+
+  useEffect(() => {
+    return () => {
+      roadTextures.colorMap.dispose()
+      roadTextures.roughnessMap.dispose()
+    }
+  }, [roadTextures])
 
   useFrame((_, delta) => {
     const state = getState()
     if (state.gameState !== 'playing') return
-    
+
     const speed = state.speed
     offsetRef.current += speed * delta * 0.5
-    
+
     if (segmentsRef.current) {
       segmentsRef.current.position.z = (offsetRef.current % SEGMENT_LENGTH)
     }
@@ -86,35 +198,77 @@ function Highway() {
     return segs
   }, [])
 
+  const roadTints = ['#ffffff', '#f4f5f6', '#fafafa', '#f1f2f3']
+
   return (
     <group ref={segmentsRef}>
       {segments.map((z, i) => (
         <group key={i} position={[0, 0, z]}>
-          {/* Road surface */}
+          {/* Textured asphalt surface */}
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
             <planeGeometry args={[ROAD_WIDTH, SEGMENT_LENGTH]} />
-            <meshStandardMaterial color="#2a2a2a" roughness={0.95} />
+            <meshStandardMaterial
+              map={roadTextures.colorMap}
+              roughnessMap={roadTextures.roughnessMap}
+              color={roadTints[i % roadTints.length]}
+              metalness={0.035}
+              roughness={0.82}
+            />
           </mesh>
-          
-          {/* Road edge lines (solid white) */}
-          {[-ROAD_WIDTH / 2 + 0.3, ROAD_WIDTH / 2 - 0.3].map((x, li) => (
-            <mesh key={`edge-${li}`} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.01, 0]}>
-              <planeGeometry args={[0.18, SEGMENT_LENGTH]} />
-              <meshStandardMaterial color="#ffffff" />
+
+          {/* Narrow asphalt shoulder transition before the gravel */}
+          {[-1, 1].map((side) => (
+            <mesh
+              key={`asphalt-shoulder-${side}`}
+              rotation={[-Math.PI / 2, 0, 0]}
+              position={[side * (ROAD_WIDTH / 2 + 0.38), -0.006, 0]}
+            >
+              <planeGeometry args={[0.76, SEGMENT_LENGTH]} />
+              <meshStandardMaterial
+                color={i % 2 === 0 ? '#4a4d50' : '#474a4d'}
+                roughness={0.9}
+                metalness={0.01}
+              />
             </mesh>
           ))}
-          
-          {/* Lane divider dashes */}
+
+          {/* Road edge paint — slightly softer than pure white to avoid a flat look */}
+          {[-ROAD_WIDTH / 2 + 0.3, ROAD_WIDTH / 2 - 0.3].map((x, li) => (
+            <mesh
+              key={`edge-${li}`}
+              rotation={[-Math.PI / 2, 0, 0]}
+              position={[x, 0.014, 0]}
+              renderOrder={2}
+            >
+              <planeGeometry args={[0.18, SEGMENT_LENGTH]} />
+              <meshStandardMaterial
+                color="#e7e9eb"
+                roughness={0.5}
+                metalness={0.02}
+              />
+            </mesh>
+          ))}
+
+          {/* Lane divider dashes — clean, readable, with a restrained satin finish */}
           {[-LANE_WIDTH, 0, LANE_WIDTH].map((x, li) => (
             <group key={`dash-${li}`}>
               {Array.from({ length: 5 }, (_, di) => (
                 <mesh
                   key={di}
                   rotation={[-Math.PI / 2, 0, 0]}
-                  position={[x, 0.01, -SEGMENT_LENGTH / 2 + di * (SEGMENT_LENGTH / 5) + SEGMENT_LENGTH / 10]}
+                  position={[
+                    x,
+                    0.016,
+                    -SEGMENT_LENGTH / 2 + di * (SEGMENT_LENGTH / 5) + SEGMENT_LENGTH / 10,
+                  ]}
+                  renderOrder={2}
                 >
                   <planeGeometry args={[0.12, SEGMENT_LENGTH / 7]} />
-                  <meshStandardMaterial color="#ffcc00" />
+                  <meshStandardMaterial
+                    color="#e1b61a"
+                    roughness={0.42}
+                    metalness={0.02}
+                  />
                 </mesh>
               ))}
             </group>
@@ -122,9 +276,16 @@ function Highway() {
 
           {/* Road shoulders (gravel) */}
           {[-ROAD_WIDTH / 2 - 1, ROAD_WIDTH / 2 + 1].map((x, si) => (
-            <mesh key={`shoulder-${si}`} rotation={[-Math.PI / 2, 0, 0]} position={[x, -0.005, 0]}>
+            <mesh
+              key={`shoulder-${si}`}
+              rotation={[-Math.PI / 2, 0, 0]}
+              position={[x, -0.005, 0]}
+            >
               <planeGeometry args={[2, SEGMENT_LENGTH]} />
-              <meshStandardMaterial color="#5c4a3a" roughness={1} />
+              <meshStandardMaterial
+                color={i % 2 === 0 ? '#5a554f' : '#5e5952'}
+                roughness={1}
+              />
             </mesh>
           ))}
 
