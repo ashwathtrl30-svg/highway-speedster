@@ -2881,15 +2881,217 @@ function createPowerUpMesh(type: 'magnet' | 'multiplier' | 'shield'): THREE.Grou
   return group
 }
 
+// [GFX] Speed-feel helpers. All inputs are read-only visual signals.
+// Reduce Effects is opt-in via a safe hs_gfx_* key; no game persistence is touched.
+function areSpeedEffectsReduced() {
+  try {
+    const value = window.localStorage.getItem('hs_gfx_reduce_effects')
+    return value === '1' || value === 'true' || value === 'on'
+  } catch {
+    return false
+  }
+}
+
+function SpeedEdgeStreaks() {
+  const groupRef = useRef<THREE.Group>(null)
+  const streaksRef = useRef<Array<{ mesh: THREE.Mesh; side: -1 | 1; y: number; z: number; base: number }>>([])
+  const reducedRef = useRef(false)
+
+  useEffect(() => {
+    reducedRef.current = areSpeedEffectsReduced()
+  }, [])
+
+  useFrame((_, delta) => {
+    const state = getState()
+    if (state.gameState !== 'playing' || !groupRef.current) return
+
+    const reduced = reducedRef.current
+    const normalized = THREE.MathUtils.clamp(state.speed / 120, 0, 1)
+    const intensity = reduced ? normalized * 0.42 : normalized
+
+    groupRef.current.children.forEach((child, i) => {
+      const streak = streaksRef.current[i]
+      if (!streak) return
+      streak.z += (state.speed + 35) * delta * 0.65
+      if (streak.z > 18) {
+        streak.z = -75 - Math.random() * 45
+        streak.base = 0.5 + Math.random() * 0.9
+      }
+
+      streak.mesh.position.set(
+        streak.side * (7.8 + streak.base * 2.5),
+        streak.y,
+        streak.z
+      )
+      streak.mesh.scale.set(
+        1,
+        0.7 + intensity * 3.8,
+        1
+      )
+
+      const material = streak.mesh.material as THREE.MeshBasicMaterial
+      material.opacity = intensity * (0.06 + streak.base * 0.06)
+      streak.mesh.visible = intensity > 0.03
+    })
+  })
+
+  return (
+    <group ref={groupRef}>
+      {Array.from({ length: 28 }, (_, i) => {
+        const side: -1 | 1 = i % 2 === 0 ? -1 : 1
+        return (
+          <mesh
+            key={i}
+            position={[side * (8 + (i % 7) * 0.36), 0.7 + ((i * 13) % 45) / 10, -10 - i * 2.2]}
+          >
+            <boxGeometry args={[0.018, 0.55, 0.018]} />
+            <meshBasicMaterial
+              color="#d8e4e8"
+              transparent
+              opacity={0}
+              depthWrite={false}
+            />
+          </mesh>
+        )
+      })}
+    </group>
+  )
+}
+
+function SpeedVignette() {
+  const materialRef = useRef<THREE.SpriteMaterial>(null)
+  const reducedRef = useRef(false)
+
+  const texture = useMemo(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 128
+    canvas.height = 128
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('Unable to create speed vignette')
+    const gradient = ctx.createRadialGradient(64, 64, 30, 64, 64, 64)
+    gradient.addColorStop(0, 'rgba(0,0,0,0)')
+    gradient.addColorStop(0.67, 'rgba(14,20,24,0.01)')
+    gradient.addColorStop(0.84, 'rgba(14,20,24,0.12)')
+    gradient.addColorStop(1, 'rgba(8,12,16,0.58)')
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, 128, 128)
+    const map = new THREE.CanvasTexture(canvas)
+    map.colorSpace = THREE.SRGBColorSpace
+    map.minFilter = THREE.LinearFilter
+    map.magFilter = THREE.LinearFilter
+    map.needsUpdate = true
+    return map
+  }, [])
+
+  useEffect(() => {
+    reducedRef.current = areSpeedEffectsReduced()
+    return () => texture.dispose()
+  }, [texture])
+
+  useFrame(() => {
+    const state = getState()
+    if (!materialRef.current) return
+    const normalized = THREE.MathUtils.clamp(state.speed / 120, 0, 1)
+    materialRef.current.opacity = (reducedRef.current ? 0.035 : 0.065) * normalized
+    materialRef.current.visible = state.gameState === 'playing' && normalized > 0.08
+  })
+
+  return (
+    <sprite
+      position={[0, 0, -3]}
+      scale={[8.2, 8.2, 1]}
+      material={useMemo(
+        () => new THREE.SpriteMaterial({
+          map: texture,
+          transparent: true,
+          depthWrite: false,
+          depthTest: false,
+        }),
+        [texture]
+      )}
+    />
+  )
+}
+
+function NearMissSpeedEffect() {
+  const groupRef = useRef<THREE.Group>(null)
+  const lastNearMissRef = useRef(0)
+  const effectRef = useRef(0)
+  const reducedRef = useRef(false)
+
+  useEffect(() => {
+    reducedRef.current = areSpeedEffectsReduced()
+  }, [])
+
+  useFrame((_, delta) => {
+    const state = getState()
+    if (!groupRef.current) return
+
+    if (state.nearMisses > lastNearMissRef.current) {
+      lastNearMissRef.current = state.nearMisses
+      effectRef.current = reducedRef.current ? 0.3 : 0.55
+    }
+
+    effectRef.current = Math.max(0, effectRef.current - delta * 2.6)
+    groupRef.current.visible = effectRef.current > 0.01
+
+    groupRef.current.children.forEach((child, i) => {
+      const material = (child as THREE.Mesh).material as THREE.MeshBasicMaterial
+      material.opacity = effectRef.current * (i % 2 === 0 ? 0.2 : 0.13)
+      ;(child as THREE.Mesh).scale.y = 1 + effectRef.current * 4.5
+    })
+  })
+
+  return (
+    <group ref={groupRef} position={[0, 2.3, PLAYER_Z - 9]} visible={false}>
+      {[-1, 1].map((side) => (
+        <mesh key={side} position={[side * 2.2, 0, 0]}>
+          <boxGeometry args={[0.035, 1.2, 0.035]} />
+          <meshBasicMaterial color="#dfe8eb" transparent opacity={0} depthWrite={false} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[0.03, 1.4, 0.03]} />
+        <meshBasicMaterial color="#fff4cf" transparent opacity={0} depthWrite={false} />
+      </mesh>
+    </group>
+  )
+}
+
 // ============== CAMERA ==============
 function GameCamera() {
   const { camera } = useThree()
   const smoothPosRef = useRef(new THREE.Vector3(0, 4, PLAYER_Z + 8))
   const shakeRef = useRef(0)
+  const fovRef = useRef(70)
+  const lastNearMissRef = useRef(0)
+  const nearMissKickRef = useRef(0)
+  const reducedRef = useRef(false)
+
+  useEffect(() => {
+    reducedRef.current = areSpeedEffectsReduced()
+  }, [])
 
   useFrame((_, delta) => {
     const state = getState()
     const playerX = state.playerX
+
+    if (state.nearMisses > lastNearMissRef.current) {
+      lastNearMissRef.current = state.nearMisses
+      nearMissKickRef.current = reducedRef.current ? 0.6 : 1
+    }
+    nearMissKickRef.current = Math.max(0, nearMissKickRef.current - delta * 5.0)
+
+    const speedNormalized = THREE.MathUtils.clamp(
+      (state.speed - 25) / Math.max(1, (state.vehicleMode === 'car' ? state.selectedCar.maxSpeed : state.selectedBike.maxSpeed) - 25),
+      0,
+      1
+    )
+    const speedFov = (reducedRef.current ? 2.5 : 5.5) * speedNormalized
+    const targetFov = 70 + speedFov + nearMissKickRef.current * (reducedRef.current ? 1.2 : 2.2)
+    fovRef.current = THREE.MathUtils.lerp(fovRef.current, targetFov, 1 - Math.exp(-5 * delta))
+    camera.fov = fovRef.current
+    camera.updateProjectionMatrix()
     
     // Chase camera that follows player slightly
     const targetPos = new THREE.Vector3(
@@ -2904,7 +3106,7 @@ function GameCamera() {
     let shakeX = 0, shakeY = 0
     if (shakeRef.current > 0) {
       shakeRef.current -= delta * 5
-      const intensity = shakeRef.current * 0.1
+      const intensity = Math.min(shakeRef.current * 0.025, 0.006)
       shakeX = (Math.random() - 0.5) * intensity
       shakeY = (Math.random() - 0.5) * intensity
     }
@@ -3527,52 +3729,78 @@ function Environment() {
 // ============== SPEED LINES ==============
 function SpeedLines() {
   const linesRef = useRef<THREE.Group>(null)
-  const linesDataRef = useRef<Array<{ x: number; y: number; z: number; speed: number }>>([])
+  const linesDataRef = useRef<Array<{ x: number; y: number; z: number; speed: number; edge: number }>>([])
+  const reducedRef = useRef(false)
 
   useEffect(() => {
     const data = []
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 42; i++) {
+      const side = i % 2 === 0 ? -1 : 1
+      const edge = Math.random()
       data.push({
-        x: (Math.random() - 0.5) * 16,
-        y: Math.random() * 6 + 1,
-        z: -Math.random() * 80,
-        speed: 40 + Math.random() * 40,
+        x: side * (3.9 + edge * 4.8),
+        y: Math.random() * 5 + 1,
+        z: -Math.random() * 90,
+        speed: 35 + Math.random() * 45,
+        edge,
       })
     }
     linesDataRef.current = data
+    reducedRef.current = areSpeedEffectsReduced()
   }, [])
 
   useFrame((_, delta) => {
     const state = getState()
     if (state.gameState !== 'playing' || !linesRef.current) return
 
-    const speedFactor = state.speed / 100
+    const normalized = THREE.MathUtils.clamp(
+      (state.speed - 25) /
+      Math.max(
+        1,
+        (state.vehicleMode === 'car' ? state.selectedCar.maxSpeed : state.selectedBike.maxSpeed) - 25
+      ),
+      0,
+      1
+    )
+    const intensity = reducedRef.current ? normalized * 0.42 : normalized
+
     linesRef.current.children.forEach((child, i) => {
       const line = linesDataRef.current[i]
       if (!line) return
+
       line.z += (state.speed + line.speed) * delta * 0.5
       if (line.z > 15) {
-        line.z = -80 - Math.random() * 40
-        line.x = (Math.random() - 0.5) * 16
-        line.y = Math.random() * 6 + 1
+        line.z = -85 - Math.random() * 40
+        const side = line.x < 0 ? -1 : 1
+        line.x = side * (3.9 + Math.random() * 4.8)
       }
-      child.position.set(line.x, line.y, line.z)
-      child.scale.y = speedFactor * 3
-      ;(child as THREE.Mesh).visible = speedFactor > 0.4
+
+      const mesh = child as THREE.Mesh
+      mesh.position.set(line.x, line.y, line.z)
+      mesh.scale.set(
+        1,
+        (0.55 + line.edge * 0.35) * (1 + intensity * 3.6),
+        1
+      )
+      mesh.visible = intensity > 0.08
+
+      const material = mesh.material as THREE.MeshBasicMaterial
+      material.opacity = intensity * (0.045 + line.edge * 0.05)
     })
   })
 
   return (
     <group ref={linesRef}>
-      {Array.from({ length: 50 }, (_, i) => (
+      {Array.from({ length: 42 }, (_, i) => (
         <mesh key={i}>
           <boxGeometry args={[0.015, 0.4, 0.015]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={0.25} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={0} depthWrite={false} />
         </mesh>
       ))}
     </group>
   )
 }
+
 
 // ============== MAIN SCENE ==============
 export function GameScene() {
@@ -3600,6 +3828,9 @@ export function GameScene() {
       <CoinSystem />
       <PowerUpSystem />
       <SpeedLines />
+      <SpeedEdgeStreaks />
+      <SpeedVignette />
+      <NearMissSpeedEffect />
       <GameCamera />
     </Canvas>
   )
