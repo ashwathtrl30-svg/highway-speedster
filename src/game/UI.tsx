@@ -1390,7 +1390,7 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
       type: 'magnet',
       icon: '🧲',
       title: 'COIN MAGNET',
-      description: 'Auto-collect coins for 10s',
+      description: 'Auto-collect coins for 10s per unit',
       availableClass: 'text-blue-400',
       borderClass: 'border-blue-500/30 bg-gradient-to-r from-blue-500/20 to-blue-600/20',
       selectedBorderClass: 'border-blue-400',
@@ -1399,7 +1399,7 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
       type: 'magnet2x',
       icon: '🧲',
       title: '2× COIN MAGNET',
-      description: 'Collect 2 coins per coin for 10s',
+      description: 'Collect 2 coins per coin for 10s per unit',
       availableClass: 'text-cyan-400',
       borderClass: 'border-cyan-500/30 bg-gradient-to-r from-cyan-500/20 to-blue-500/20',
       selectedBorderClass: 'border-cyan-400',
@@ -1408,7 +1408,7 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
       type: 'multiplier2x',
       icon: '⭐',
       title: '2× SCORE',
-      description: 'Double score for 10s',
+      description: 'Double score for 10s per unit',
       availableClass: 'text-yellow-400',
       borderClass: 'border-yellow-500/30 bg-gradient-to-r from-yellow-500/20 to-orange-500/20',
       selectedBorderClass: 'border-yellow-400',
@@ -1417,7 +1417,7 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
       type: 'multiplier4x',
       icon: '💎',
       title: '4× SCORE',
-      description: 'Quadruple score for 10s',
+      description: 'Quadruple score for 10s per unit',
       availableClass: 'text-purple-400',
       borderClass: 'border-purple-500/30 bg-gradient-to-r from-purple-500/20 to-pink-500/20',
       selectedBorderClass: 'border-purple-400',
@@ -1426,18 +1426,20 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
       type: 'shield',
       icon: '🛡️',
       title: 'SHIELD',
-      description: 'Protects you from 2 crashes',
+      description: 'Protects from 2 crashes per unit',
       availableClass: 'text-green-400',
       borderClass: 'border-green-500/30 bg-gradient-to-r from-green-500/20 to-emerald-500/20',
       selectedBorderClass: 'border-green-400',
     },
   ]
 
-  const selectedCount = state.selectedPowerUps.length
+  const selectedCount = (Object.values(state.selectedPowerUps) as number[]).reduce(
+    (sum, quantity) => sum + Math.max(0, Math.floor(quantity || 0)),
+    0
+  )
 
   return (
     <div className="hs-screen-enter absolute inset-0 flex flex-col bg-gradient-to-b from-indigo-950/95 via-purple-950/95 to-black/95 backdrop-blur-sm">
-      {/* Header */}
       <div className="flex items-center justify-between gap-3 p-3 sm:p-4 border-b border-white/5">
         <div className="flex items-center min-w-0">
           <button
@@ -1449,7 +1451,7 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
           </button>
           <div className="ml-3 min-w-0">
             <h2 className="text-lg sm:text-xl font-bold text-white">Select Power-Ups</h2>
-            <p className="text-[10px] sm:text-xs text-white/45 mt-0.5">Equip up to 3 before the ride starts</p>
+            <p className="text-[10px] sm:text-xs text-white/45 mt-0.5">Choose exactly how many units to use • maximum 3</p>
           </div>
         </div>
         <div className="shrink-0 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1.5 text-xs sm:text-sm font-black text-amber-200">
@@ -1457,53 +1459,69 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
         </div>
       </div>
 
-      {/* Power-ups */}
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6">
         <div className="space-y-3 max-w-md mx-auto w-full">
           {powerUps.map((powerUp) => {
-            const owned = state.inventory[powerUp.type]
-            const selected = state.selectedPowerUps.includes(powerUp.type)
-            const limitReached = selectedCount >= 3 && !selected
-            const unavailable = owned <= 0
-            const disabled = unavailable || limitReached
+            const owned = Math.max(0, Math.floor(state.inventory[powerUp.type] || 0))
+            const quantity = Math.max(0, Math.floor(state.selectedPowerUps[powerUp.type] || 0))
+            const plusDisabled =
+              owned <= quantity ||
+              selectedCount >= 3 ||
+              (powerUp.type === 'magnet' && state.selectedPowerUps.magnet2x > 0) ||
+              (powerUp.type === 'magnet2x' && state.selectedPowerUps.magnet > 0) ||
+              (powerUp.type === 'multiplier2x' && state.selectedPowerUps.multiplier4x > 0) ||
+              (powerUp.type === 'multiplier4x' && state.selectedPowerUps.multiplier2x > 0)
+            const minusDisabled = quantity <= 0
 
             return (
-              <button
+              <div
                 key={powerUp.type}
-                type="button"
-                disabled={disabled}
-                onClick={() => actions.togglePowerUp(powerUp.type)}
                 className={[
-                  'w-full text-left rounded-xl p-4 border-2 hs-selection-card transition-all',
+                  'w-full rounded-xl p-4 border-2 hs-selection-card transition-all',
                   powerUp.borderClass,
-                  selected ? `${powerUp.selectedBorderClass} scale-[1.02] shadow-lg` : '',
-                  unavailable ? 'opacity-45 cursor-not-allowed' : '',
-                  limitReached ? 'opacity-70 cursor-not-allowed' : '',
-                  !disabled ? 'cursor-pointer hover:bg-white/[0.04] active:scale-[0.99]' : '',
+                  quantity > 0 ? powerUp.selectedBorderClass + ' shadow-lg' : '',
+                  owned <= 0 ? 'opacity-45' : '',
                 ].join(' ')}
-                aria-pressed={selected}
               >
-                <div className="flex items-center gap-4">
-                  <div className="text-5xl shrink-0">{powerUp.icon}</div>
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="text-4xl sm:text-5xl shrink-0">{powerUp.icon}</div>
+
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-white font-black text-lg sm:text-xl">{powerUp.title}</h3>
-                    <p className="text-gray-300 text-xs mt-1">{powerUp.description}</p>
-                    <p className={`${powerUp.availableClass} text-sm mt-2 font-bold`}>
+                    <h3 className="text-white font-black text-base sm:text-xl">{powerUp.title}</h3>
+                    <p className="text-gray-300 text-[11px] sm:text-xs mt-1">{powerUp.description}</p>
+                    <p className={powerUp.availableClass + ' text-xs sm:text-sm mt-2 font-bold'}>
                       Available: {owned}
                     </p>
                   </div>
-                  <div
-                    className={`h-7 w-7 shrink-0 rounded-full border-2 flex items-center justify-center transition-all ${
-                      selected
-                        ? `${powerUp.selectedBorderClass} bg-white/10`
-                        : 'border-white/20 bg-black/10'
-                    }`}
-                    aria-hidden="true"
-                  >
-                    {selected && <span className="text-white text-sm font-black">✓</span>}
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => actions.setPowerUpQuantity(powerUp.type, quantity - 1)}
+                      disabled={minusDisabled}
+                      aria-label={'Use fewer ' + powerUp.title + ' power-ups'}
+                      className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg border border-white/15 bg-black/20 text-xl sm:text-2xl font-black text-white transition-all hover:bg-white/10 active:scale-90 disabled:opacity-25 disabled:cursor-not-allowed"
+                    >
+                      −
+                    </button>
+                    <div
+                      aria-label={quantity + ' ' + powerUp.title + ' selected'}
+                      className="flex h-9 min-w-9 sm:h-10 sm:min-w-10 items-center justify-center rounded-lg border border-white/20 bg-black/30 px-2 text-base sm:text-lg font-black text-white tabular-nums"
+                    >
+                      {quantity}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => actions.setPowerUpQuantity(powerUp.type, quantity + 1)}
+                      disabled={plusDisabled}
+                      aria-label={'Use more ' + powerUp.title + ' power-ups'}
+                      className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg border border-white/15 bg-black/20 text-xl sm:text-2xl font-black text-white transition-all hover:bg-white/10 active:scale-90 disabled:opacity-25 disabled:cursor-not-allowed"
+                    >
+                      +
+                    </button>
                   </div>
                 </div>
-              </button>
+              </div>
             )
           })}
         </div>
@@ -1511,28 +1529,26 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
         <div className="max-w-md mx-auto mt-4 rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-center">
           <p className="text-[11px] sm:text-xs font-bold text-white/65">
             {selectedCount === 0
-              ? 'No power-up selected — start normally.'
-              : `${selectedCount} power-${selectedCount === 1 ? 'up' : 'ups'} will activate immediately when the ride starts.`}
+              ? 'No power-ups selected — start normally.'
+              : selectedCount + ' power-' + (selectedCount === 1 ? 'up' : 'ups') + ' will activate immediately when the ride starts.'}
           </p>
           <p className="text-[10px] text-white/35 mt-1">
-            You can own many copies; only up to 3 effects can be equipped per run.
+            Each selected unit is consumed from your inventory. Up to 3 total units can be used per run.
           </p>
         </div>
 
-        {/* Start Button */}
         <div className="mt-4 sm:mt-6 max-w-md mx-auto w-full pb-2">
           <button
             onClick={onStart}
             className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-black text-lg sm:text-xl py-4 rounded-xl shadow-lg shadow-green-500/30 active:scale-95 transition-all border border-green-400/20"
           >
-            🏁 START RIDE{selectedCount > 0 ? ` • ${selectedCount} EQUIPPED` : ''}
+            🏁 START RIDE{selectedCount > 0 ? ' • ' + selectedCount + ' EQUIPPED' : ''}
           </button>
         </div>
       </div>
     </div>
   )
 }
-
 // Bike icon component with distinct visuals for each bike
 function BikeIcon({ bike }: { bike: Bike }) {
   if (bike.id === 'blitz') {
