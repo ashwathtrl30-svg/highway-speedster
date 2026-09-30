@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useGameStore, actions, BIKES, CARS, BIKE_SKINS, getState, type Bike, type Car, type BikeSkin, type GameData } from './store'
+import { useGameStore, actions, BIKES, CARS, BIKE_SKINS, getState, type Bike, type Car, type BikeSkin, type GameData, type PowerUpType } from './store'
 import { fetchAllAnalytics, fetchMyPlaytimeRank } from '../supabase'
 import { HighScoreAnalytics } from '../HighScoreAnalytics'
 
@@ -555,7 +555,7 @@ export function MainMenu() {
       <PowerUpSelection
         onBack={() => setShowPowerUpSelection(false)}
         onStart={() => {
-          actions.useSelectedPowerUp()
+          actions.useSelectedPowerUps()
           actions.setGameState('playing')
         }}
       />
@@ -1377,138 +1377,155 @@ function Store({ onBack }: { onBack: () => void }) {
 function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: () => void }) {
   const state = useGameStore()
 
-  const hasPowerUps = state.inventory.magnet > 0 || state.inventory.magnet2x > 0 || state.inventory.multiplier2x > 0 || state.inventory.multiplier4x > 0 || state.inventory.shield > 0
+  const powerUps: Array<{
+    type: PowerUpType
+    icon: string
+    title: string
+    description: string
+    availableClass: string
+    borderClass: string
+    selectedBorderClass: string
+  }> = [
+    {
+      type: 'magnet',
+      icon: '🧲',
+      title: 'COIN MAGNET',
+      description: 'Auto-collect coins for 10s',
+      availableClass: 'text-blue-400',
+      borderClass: 'border-blue-500/30 bg-gradient-to-r from-blue-500/20 to-blue-600/20',
+      selectedBorderClass: 'border-blue-400',
+    },
+    {
+      type: 'magnet2x',
+      icon: '🧲',
+      title: '2× COIN MAGNET',
+      description: 'Collect 2 coins per coin for 10s',
+      availableClass: 'text-cyan-400',
+      borderClass: 'border-cyan-500/30 bg-gradient-to-r from-cyan-500/20 to-blue-500/20',
+      selectedBorderClass: 'border-cyan-400',
+    },
+    {
+      type: 'multiplier2x',
+      icon: '⭐',
+      title: '2× SCORE',
+      description: 'Double score for 10s',
+      availableClass: 'text-yellow-400',
+      borderClass: 'border-yellow-500/30 bg-gradient-to-r from-yellow-500/20 to-orange-500/20',
+      selectedBorderClass: 'border-yellow-400',
+    },
+    {
+      type: 'multiplier4x',
+      icon: '💎',
+      title: '4× SCORE',
+      description: 'Quadruple score for 10s',
+      availableClass: 'text-purple-400',
+      borderClass: 'border-purple-500/30 bg-gradient-to-r from-purple-500/20 to-pink-500/20',
+      selectedBorderClass: 'border-purple-400',
+    },
+    {
+      type: 'shield',
+      icon: '🛡️',
+      title: 'SHIELD',
+      description: 'Protects you from 2 crashes',
+      availableClass: 'text-green-400',
+      borderClass: 'border-green-500/30 bg-gradient-to-r from-green-500/20 to-emerald-500/20',
+      selectedBorderClass: 'border-green-400',
+    },
+  ]
 
-  if (!hasPowerUps) {
-    // No power-ups, just start the game
-    onStart()
-    return null
-  }
+  const selectedCount = state.selectedPowerUps.length
 
   return (
     <div className="hs-screen-enter absolute inset-0 flex flex-col bg-gradient-to-b from-indigo-950/95 via-purple-950/95 to-black/95 backdrop-blur-sm">
       {/* Header */}
-      <div className="flex items-center p-3 sm:p-4">
-        <button
-          onClick={onBack}
-          className="text-white text-xl sm:text-2xl active:scale-90 transition-transform w-8 h-8 flex items-center justify-center rounded-lg bg-white/5"
-        >
-          ←
-        </button>
-        <h2 className="text-lg sm:text-xl font-bold text-white ml-3">Select Power-Up</h2>
+      <div className="flex items-center justify-between gap-3 p-3 sm:p-4 border-b border-white/5">
+        <div className="flex items-center min-w-0">
+          <button
+            onClick={onBack}
+            className="text-white text-xl sm:text-2xl active:scale-90 transition-transform w-8 h-8 shrink-0 flex items-center justify-center rounded-lg bg-white/5"
+            aria-label="Back"
+          >
+            ←
+          </button>
+          <div className="ml-3 min-w-0">
+            <h2 className="text-lg sm:text-xl font-bold text-white">Select Power-Ups</h2>
+            <p className="text-[10px] sm:text-xs text-white/45 mt-0.5">Equip up to 3 before the ride starts</p>
+          </div>
+        </div>
+        <div className="shrink-0 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1.5 text-xs sm:text-sm font-black text-amber-200">
+          {selectedCount}/3
+        </div>
       </div>
 
       {/* Power-ups */}
-      <div className="flex-1 px-4 sm:px-6 py-4 sm:py-6 flex flex-col justify-center">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6">
         <div className="space-y-3 max-w-md mx-auto w-full">
-          {/* Magnet */}
-          <div 
-            onClick={() => state.inventory.magnet > 0 && actions.selectPowerUp(state.selectedPowerUp === 'magnet' ? null : 'magnet')}
-            className={`bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-xl p-4 border-2 hs-selection-card cursor-pointer ${
-              state.selectedPowerUp === 'magnet' ? 'border-blue-400 scale-105' : 'border-blue-500/30'
-            } ${state.inventory.magnet === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            <div className="flex items-center gap-4">
-              <div className="text-5xl">🧲</div>
-              <div className="flex-1">
-                <h3 className="text-white font-black text-xl">COIN MAGNET</h3>
-                <p className="text-gray-300 text-xs mt-1">Auto-collect coins for 10s</p>
-                <p className="text-blue-400 text-sm mt-2 font-bold">Available: {state.inventory.magnet}</p>
-              </div>
-              {state.selectedPowerUp === 'magnet' && (
-                <div className="text-blue-400 text-2xl">✓</div>
-              )}
-            </div>
-          </div>
+          {powerUps.map((powerUp) => {
+            const owned = state.inventory[powerUp.type]
+            const selected = state.selectedPowerUps.includes(powerUp.type)
+            const limitReached = selectedCount >= 3 && !selected
+            const unavailable = owned <= 0
+            const disabled = unavailable || limitReached
 
-          {/* 2x Magnet */}
-          <div 
-            onClick={() => state.inventory.magnet2x > 0 && actions.selectPowerUp(state.selectedPowerUp === 'magnet2x' ? null : 'magnet2x')}
-            className={`bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-xl p-4 border-2 hs-selection-card cursor-pointer ${
-              state.selectedPowerUp === 'magnet2x' ? 'border-cyan-400 scale-105' : 'border-cyan-500/30'
-            } ${state.inventory.magnet2x === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            <div className="flex items-center gap-4">
-              <div className="text-5xl">🧲</div>
-              <div className="flex-1">
-                <h3 className="text-white font-black text-xl">2× COIN MAGNET</h3>
-                <p className="text-gray-300 text-xs mt-1">Double coins collected for 10s</p>
-                <p className="text-cyan-400 text-sm mt-2 font-bold">Available: {state.inventory.magnet2x}</p>
-              </div>
-              {state.selectedPowerUp === 'magnet2x' && (
-                <div className="text-cyan-400 text-2xl">✓</div>
-              )}
-            </div>
-          </div>
+            return (
+              <button
+                key={powerUp.type}
+                type="button"
+                disabled={disabled}
+                onClick={() => actions.togglePowerUp(powerUp.type)}
+                className={[
+                  'w-full text-left rounded-xl p-4 border-2 hs-selection-card transition-all',
+                  powerUp.borderClass,
+                  selected ? `${powerUp.selectedBorderClass} scale-[1.02] shadow-lg` : '',
+                  unavailable ? 'opacity-45 cursor-not-allowed' : '',
+                  limitReached ? 'opacity-70 cursor-not-allowed' : '',
+                  !disabled ? 'cursor-pointer hover:bg-white/[0.04] active:scale-[0.99]' : '',
+                ].join(' ')}
+                aria-pressed={selected}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="text-5xl shrink-0">{powerUp.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-white font-black text-lg sm:text-xl">{powerUp.title}</h3>
+                    <p className="text-gray-300 text-xs mt-1">{powerUp.description}</p>
+                    <p className={`${powerUp.availableClass} text-sm mt-2 font-bold`}>
+                      Available: {owned}
+                    </p>
+                  </div>
+                  <div
+                    className={`h-7 w-7 shrink-0 rounded-full border-2 flex items-center justify-center transition-all ${
+                      selected
+                        ? `${powerUp.selectedBorderClass} bg-white/10`
+                        : 'border-white/20 bg-black/10'
+                    }`}
+                    aria-hidden="true"
+                  >
+                    {selected && <span className="text-white text-sm font-black">✓</span>}
+                  </div>
+                </div>
+              </button>
+            )
+          })}
+        </div>
 
-          {/* 2x Multiplier */}
-          <div 
-            onClick={() => state.inventory.multiplier2x > 0 && actions.selectPowerUp(state.selectedPowerUp === 'multiplier2x' ? null : 'multiplier2x')}
-            className={`bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-4 border-2 hs-selection-card cursor-pointer ${
-              state.selectedPowerUp === 'multiplier2x' ? 'border-yellow-400 scale-105' : 'border-yellow-500/30'
-            } ${state.inventory.multiplier2x === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            <div className="flex items-center gap-4">
-              <div className="text-5xl">⭐</div>
-              <div className="flex-1">
-                <h3 className="text-white font-black text-xl">2× SCORE</h3>
-                <p className="text-gray-300 text-xs mt-1">Double score for 10s</p>
-                <p className="text-yellow-400 text-sm mt-2 font-bold">Available: {state.inventory.multiplier2x}</p>
-              </div>
-              {state.selectedPowerUp === 'multiplier2x' && (
-                <div className="text-yellow-400 text-2xl">✓</div>
-              )}
-            </div>
-          </div>
-
-          {/* 4x Multiplier */}
-          <div 
-            onClick={() => state.inventory.multiplier4x > 0 && actions.selectPowerUp(state.selectedPowerUp === 'multiplier4x' ? null : 'multiplier4x')}
-            className={`bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl p-4 border-2 hs-selection-card cursor-pointer ${
-              state.selectedPowerUp === 'multiplier4x' ? 'border-purple-400 scale-105' : 'border-purple-500/30'
-            } ${state.inventory.multiplier4x === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            <div className="flex items-center gap-4">
-              <div className="text-5xl">💎</div>
-              <div className="flex-1">
-                <h3 className="text-white font-black text-xl">4× SCORE</h3>
-                <p className="text-gray-300 text-xs mt-1">Quadruple score for 10s</p>
-                <p className="text-purple-400 text-sm mt-2 font-bold">Available: {state.inventory.multiplier4x}</p>
-              </div>
-              {state.selectedPowerUp === 'multiplier4x' && (
-                <div className="text-purple-400 text-2xl">✓</div>
-              )}
-            </div>
-          </div>
-
-          {/* Shield */}
-          <div 
-            onClick={() => state.inventory.shield > 0 && actions.selectPowerUp(state.selectedPowerUp === 'shield' ? null : 'shield')}
-            className={`bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl p-4 border-2 hs-selection-card cursor-pointer ${
-              state.selectedPowerUp === 'shield' ? 'border-green-400 scale-105' : 'border-green-500/30'
-            } ${state.inventory.shield === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            <div className="flex items-center gap-4">
-              <div className="text-5xl">🛡️</div>
-              <div className="flex-1">
-                <h3 className="text-white font-black text-xl">SHIELD</h3>
-                <p className="text-gray-300 text-xs mt-1">Protect from 1 crash</p>
-                <p className="text-green-400 text-sm mt-2 font-bold">Available: {state.inventory.shield}</p>
-              </div>
-              {state.selectedPowerUp === 'shield' && (
-                <div className="text-green-400 text-2xl">✓</div>
-              )}
-            </div>
-          </div>
+        <div className="max-w-md mx-auto mt-4 rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-center">
+          <p className="text-[11px] sm:text-xs font-bold text-white/65">
+            {selectedCount === 0
+              ? 'No power-up selected — start normally.'
+              : `${selectedCount} power-${selectedCount === 1 ? 'up' : 'ups'} will activate immediately when the ride starts.`}
+          </p>
+          <p className="text-[10px] text-white/35 mt-1">
+            You can own many copies; only up to 3 effects can be equipped per run.
+          </p>
         </div>
 
         {/* Start Button */}
-        <div className="mt-6 max-w-md mx-auto w-full">
+        <div className="mt-4 sm:mt-6 max-w-md mx-auto w-full pb-2">
           <button
             onClick={onStart}
-            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-black text-xl py-4 rounded-xl shadow-lg shadow-green-500/30 active:scale-95 transition-all border border-green-400/20"
+            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-black text-lg sm:text-xl py-4 rounded-xl shadow-lg shadow-green-500/30 active:scale-95 transition-all border border-green-400/20"
           >
-            🏁 START RIDE
+            🏁 START RIDE{selectedCount > 0 ? ` • ${selectedCount} EQUIPPED` : ''}
           </button>
         </div>
       </div>
