@@ -25,7 +25,7 @@ export function LoadingScreen() {
   if (done) return null
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-black z-[100]">
+    <div className="hs-screen-enter absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-black z-[100]">
       <div className="text-center">
         <h1 className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-2">
           HIGHWAY SPEEDSTER
@@ -34,8 +34,8 @@ export function LoadingScreen() {
         
         <div className="w-64 sm:w-80 h-1.5 bg-gray-800 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full transition-all duration-200"
-            style={{ width: `${Math.min(100, progress)}%` }}
+            className="hs-progress-fill h-full origin-left rounded-full bg-gradient-to-r from-yellow-400 to-orange-500"
+            style={{ transform: `scaleX(${Math.min(100, progress) / 100})` }}
           />
         </div>
       </div>
@@ -147,7 +147,10 @@ export function HUD() {
           <div className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em] text-white/45">
             Score
           </div>
-          <div className="mt-0.5 text-xl sm:text-3xl font-black tabular-nums leading-none text-white">
+          <div
+            key={`score-${Math.floor(state.score / 100)}`}
+            className="hs-score-update mt-0.5 text-xl sm:text-3xl font-black tabular-nums leading-none text-white"
+          >
             {state.score.toLocaleString()}
           </div>
         </div>
@@ -208,7 +211,10 @@ export function HUD() {
       )}
 
       {/* Active power-ups: real timing values only. Shield has no remaining timer in store. */}
-      <div className="absolute left-1/2 top-[18%] -translate-x-1/2 flex max-w-[calc(100%-120px)] flex-wrap justify-center gap-2">
+      <div
+        key={`${state.magnetActive ? "m" : ""}${state.magnet2xActive ? "m2" : ""}${state.multiplierActive ? (state.multiplier4x ? "x4" : "x2") : ""}${state.shieldActive ? "s" : ""}`}
+        className="hs-powerup-active absolute left-1/2 top-[18%] -translate-x-1/2 flex max-w-[calc(100%-120px)] flex-wrap justify-center gap-2"
+      >
         {(state.magnetActive || state.magnet2xActive) && (
           <div className="min-w-[116px] rounded-2xl border border-cyan-300/20 bg-[#071117]/84 px-2.5 py-2 backdrop-blur-xl shadow-lg shadow-cyan-500/10">
             <div className="flex items-center gap-2">
@@ -222,8 +228,8 @@ export function HUD() {
                 </div>
                 <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-cyan-300 to-amber-200 transition-[width] duration-100"
-                    style={{ width: `${magnetProgress * 100}%` }}
+                    className="hs-progress-fill h-full rounded-full bg-gradient-to-r from-cyan-300 to-amber-200"
+                    style={{ transform: `scaleX(${magnetProgress})` }}
                   />
                 </div>
               </div>
@@ -365,7 +371,7 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
   const totalUsers = analytics.users.length
 
   return (
-    <div className="absolute inset-0 flex flex-col bg-gradient-to-b from-gray-900 via-gray-950 to-black overflow-y-auto">
+    <div className="hs-screen-enter absolute inset-0 flex flex-col bg-gradient-to-b from-gray-900 via-gray-950 to-black overflow-y-auto">
       <div className="flex items-center p-3 sm:p-4 border-b border-white/5 sticky top-0 bg-gray-950/95 backdrop-blur z-10">
         <button onClick={onBack} className="text-white text-xl sm:text-2xl active:scale-90 transition-transform w-8 h-8 flex items-center justify-center rounded-lg bg-white/5">←</button>
         <div className="ml-3">
@@ -561,7 +567,7 @@ export function MainMenu() {
 
   return (
     <div
-      className="absolute inset-0 overflow-hidden bg-[#080a0d] text-white"
+      className="hs-screen-enter absolute inset-0 overflow-hidden bg-[#080a0d] text-white"
       onClick={handleSecretTap}
     >
       <style>{`
@@ -591,7 +597,7 @@ export function MainMenu() {
           18% { opacity: .28; }
           100% { transform: translateY(140px); opacity: 0; }
         }
-        .hs-menu-enter { animation: hsMenuEntrance 720ms cubic-bezier(.2,.72,.2,1) both; }
+        .hs-menu-enter { animation: hsMenuEntrance 260ms cubic-bezier(.2,.72,.2,1) both; }
         .hs-menu-enter-delay { animation-delay: 110ms; }
         .hs-menu-enter-delay-2 { animation-delay: 190ms; }
         .hs-menu-enter-delay-3 { animation-delay: 280ms; }
@@ -679,7 +685,7 @@ export function MainMenu() {
             <div
               key={heroVehicle.id}
               className="absolute inset-0 flex items-center justify-center"
-              style={{ animation: 'hsMenuVehicleIn 320ms ease-out' }}
+              style={{ animation: 'hsMenuVehicleIn 240ms ease-out' }}
             >
               <div
                 className="relative h-[125px] w-[225px] sm:h-[155px] sm:w-[285px]"
@@ -874,7 +880,7 @@ function GarageShowroomPreview({
           key={`${section}-${vehicleId}`}
           className="absolute left-1/2 bottom-14 h-[138px] w-[210px] sm:h-[164px] sm:w-[260px] -translate-x-1/2"
           style={{
-            animation: 'hsGarageVehicleIn 320ms ease-out',
+            animation: 'hsGarageVehicleIn 240ms ease-out',
             perspective: '900px',
           }}
         >
@@ -920,7 +926,7 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
   const [section, setSection] = useState<'bikes' | 'cars'>('bikes')
 
   return (
-    <div className="hs-screen absolute inset-0 flex flex-col bg-[#07080a] overflow-y-auto">
+    <div className="hs-screen hs-screen-enter absolute inset-0 flex flex-col bg-[#07080a] overflow-y-auto">
       {/* Header */}
       <div className="sticky top-0 z-20 flex items-center p-3 sm:p-4 border-b border-white/10 bg-[#07080a]/90 backdrop-blur-xl">
         <button
@@ -1380,7 +1386,7 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
   }
 
   return (
-    <div className="absolute inset-0 flex flex-col bg-gradient-to-b from-indigo-950/95 via-purple-950/95 to-black/95 backdrop-blur-sm">
+    <div className="hs-screen-enter absolute inset-0 flex flex-col bg-gradient-to-b from-indigo-950/95 via-purple-950/95 to-black/95 backdrop-blur-sm">
       {/* Header */}
       <div className="flex items-center p-3 sm:p-4">
         <button
@@ -1398,7 +1404,7 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
           {/* Magnet */}
           <div 
             onClick={() => state.inventory.magnet > 0 && actions.selectPowerUp(state.selectedPowerUp === 'magnet' ? null : 'magnet')}
-            className={`bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-xl p-4 border-2 transition-all cursor-pointer ${
+            className={`bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-xl p-4 border-2 hs-selection-card cursor-pointer ${
               state.selectedPowerUp === 'magnet' ? 'border-blue-400 scale-105' : 'border-blue-500/30'
             } ${state.inventory.magnet === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
@@ -1418,7 +1424,7 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
           {/* 2x Magnet */}
           <div 
             onClick={() => state.inventory.magnet2x > 0 && actions.selectPowerUp(state.selectedPowerUp === 'magnet2x' ? null : 'magnet2x')}
-            className={`bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-xl p-4 border-2 transition-all cursor-pointer ${
+            className={`bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-xl p-4 border-2 hs-selection-card cursor-pointer ${
               state.selectedPowerUp === 'magnet2x' ? 'border-cyan-400 scale-105' : 'border-cyan-500/30'
             } ${state.inventory.magnet2x === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
@@ -1438,7 +1444,7 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
           {/* 2x Multiplier */}
           <div 
             onClick={() => state.inventory.multiplier2x > 0 && actions.selectPowerUp(state.selectedPowerUp === 'multiplier2x' ? null : 'multiplier2x')}
-            className={`bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-4 border-2 transition-all cursor-pointer ${
+            className={`bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-4 border-2 hs-selection-card cursor-pointer ${
               state.selectedPowerUp === 'multiplier2x' ? 'border-yellow-400 scale-105' : 'border-yellow-500/30'
             } ${state.inventory.multiplier2x === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
@@ -1458,7 +1464,7 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
           {/* 4x Multiplier */}
           <div 
             onClick={() => state.inventory.multiplier4x > 0 && actions.selectPowerUp(state.selectedPowerUp === 'multiplier4x' ? null : 'multiplier4x')}
-            className={`bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl p-4 border-2 transition-all cursor-pointer ${
+            className={`bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl p-4 border-2 hs-selection-card cursor-pointer ${
               state.selectedPowerUp === 'multiplier4x' ? 'border-purple-400 scale-105' : 'border-purple-500/30'
             } ${state.inventory.multiplier4x === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
@@ -1478,7 +1484,7 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
           {/* Shield */}
           <div 
             onClick={() => state.inventory.shield > 0 && actions.selectPowerUp(state.selectedPowerUp === 'shield' ? null : 'shield')}
-            className={`bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl p-4 border-2 transition-all cursor-pointer ${
+            className={`bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl p-4 border-2 hs-selection-card cursor-pointer ${
               state.selectedPowerUp === 'shield' ? 'border-green-400 scale-105' : 'border-green-500/30'
             } ${state.inventory.shield === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
@@ -1644,11 +1650,11 @@ export function PauseMenu() {
       <div className="absolute inset-0 flex items-center justify-center bg-black/90 backdrop-blur-md z-50">
         <div className="text-center">
           {countdown > 0 ? (
-            <div className="text-8xl sm:text-9xl font-black text-white animate-pulse">
+            <div className="hs-pop-in text-8xl sm:text-9xl font-black text-white animate-pulse">
               {countdown}
             </div>
           ) : (
-            <div className="text-6xl sm:text-7xl font-black text-green-400 animate-bounce">
+            <div className="hs-pop-in text-6xl sm:text-7xl font-black text-green-400 animate-bounce">
               GO!
             </div>
           )}
@@ -1658,7 +1664,7 @@ export function PauseMenu() {
   }
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center bg-black/85 backdrop-blur-md z-50 overflow-y-auto">
+    <div className="hs-screen-enter absolute inset-0 flex flex-col items-center bg-black/85 backdrop-blur-md z-50 overflow-y-auto">
       <div className="flex flex-col items-center py-6 sm:py-8 px-4 w-full max-w-md">
         <div className="text-4xl mb-3">⏸️</div>
         <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 sm:mb-6">PAUSED</h2>
@@ -1778,7 +1784,7 @@ export function GameOverScreen() {
   if (state.gameState !== 'gameover') return null
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md z-50">
+    <div className="hs-screen-enter absolute inset-0 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md z-50">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-t from-red-900/20 to-transparent" />
       </div>
@@ -1986,7 +1992,7 @@ export function UnlockNotification() {
 
   return (
     <div className="absolute top-1/4 left-1/2 -translate-x-1/2 z-[60]">
-      <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl sm:rounded-2xl px-5 py-3 sm:px-6 sm:py-4 shadow-2xl shadow-orange-500/50 text-center border border-yellow-400/30">
+      <div className="hs-unlock-enter bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl sm:rounded-2xl px-5 py-3 sm:px-6 sm:py-4 shadow-2xl shadow-orange-500/50 text-center border border-yellow-400/30">
         <p className="text-white/80 text-[10px] sm:text-xs uppercase tracking-wider font-medium">🔓 New Vehicle Unlocked!</p>
         <p className="text-white font-black text-lg sm:text-2xl mt-0.5">{bikeName}</p>
         <p className="text-white/60 text-[9px] sm:text-[10px] mt-0.5">Check the Garage</p>
