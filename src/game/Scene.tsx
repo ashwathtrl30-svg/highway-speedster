@@ -3011,7 +3011,7 @@ function CoinSystem() {
   const visualCoinsRef = useRef<Map<number, CoinVisualState>>(new Map())
   const collectionTriggeredRef = useRef<Set<number>>(new Set())
   const magnetTrailsRef = useRef<THREE.LineSegments>(null)
-  const bodyMeshRef = useRef<THREE.InstancedMesh>(null)
+  const bodyMeshRef = useRef<THREE.InstancedMesh | null>(null)
   const faceMeshRef = useRef<THREE.InstancedMesh>(null)
   const glintMeshRef = useRef<THREE.InstancedMesh>(null)
   const magnetGlowMeshRef = useRef<THREE.InstancedMesh>(null)
@@ -4035,11 +4035,13 @@ function CollisionFeedback() {
         const reduced = reducedRef.current
         burst.group.visible = true
         burst.group.position.copy(event.position)
-        burst.smoke.material.opacity = reduced ? (event.absorbed ? 0.04 : 0.07) : (event.absorbed ? 0.07 : 0.12)
-        burst.flash.material.opacity = now - lastFlashAtRef.current >= 333
+        const smokeMaterial = burst.smoke.material as THREE.SpriteMaterial
+        const flashMaterial = burst.flash.material as THREE.SpriteMaterial
+        smokeMaterial.opacity = reduced ? (event.absorbed ? 0.04 : 0.07) : (event.absorbed ? 0.07 : 0.12)
+        flashMaterial.opacity = now - lastFlashAtRef.current >= 333
           ? (reduced ? 0.04 : (event.absorbed ? 0.06 : 0.11))
           : 0
-        if (burst.flash.material.opacity > 0) lastFlashAtRef.current = now
+        if (flashMaterial.opacity > 0) lastFlashAtRef.current = now
         burst.smoke.scale.setScalar(event.absorbed ? 0.7 : 0.9)
         burst.flash.scale.setScalar(event.absorbed ? 0.45 : 0.62)
         burst.smoke.userData.startedAt = now
@@ -4195,8 +4197,9 @@ function GameCamera() {
     const speedFov = (reducedRef.current ? 2.5 : 5.5) * speedNormalized
     const targetFov = 70 + speedFov + nearMissKickRef.current * (reducedRef.current ? 1.2 : 2.2)
     fovRef.current = THREE.MathUtils.lerp(fovRef.current, targetFov, 1 - Math.exp(-5 * delta))
-    camera.fov = fovRef.current
-    camera.updateProjectionMatrix()
+    const perspectiveCamera = camera as THREE.PerspectiveCamera
+    perspectiveCamera.fov = fovRef.current
+    perspectiveCamera.updateProjectionMatrix()
     
     // Chase camera that follows player slightly
     const targetPos = new THREE.Vector3(
