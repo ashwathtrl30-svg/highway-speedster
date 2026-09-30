@@ -121,7 +121,7 @@ export function HUD() {
 
   return (
     <div
-      className="absolute inset-0 pointer-events-none select-none z-20 text-white"
+      className="hs-screen absolute inset-0 pointer-events-none select-none z-20 text-white"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
         paddingLeft: 'env(safe-area-inset-left)',
@@ -143,7 +143,7 @@ export function HUD() {
 
       {/* Top-left: score first, then coins. Panels match garage/menu surfaces. */}
       <div className="absolute left-2.5 sm:left-4 top-2.5 sm:top-4 flex flex-col gap-2">
-        <div className="rounded-2xl border border-white/10 bg-[#080a0d]/78 px-3 py-2.5 sm:px-4 sm:py-3 backdrop-blur-xl shadow-xl shadow-black/20">
+        <div className="hs-panel rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3 backdrop-blur-xl shadow-xl shadow-black/20">
           <div className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em] text-white/45">
             Score
           </div>
@@ -153,7 +153,7 @@ export function HUD() {
         </div>
 
         <div
-          className={`inline-flex w-fit items-center gap-2 rounded-xl border border-amber-300/15 bg-[#080a0d]/78 px-3 py-1.5 sm:px-3.5 backdrop-blur-xl transition-transform ${
+          className={`inline-flex w-fit items-center gap-2 hs-card rounded-xl px-3 py-1.5 sm:px-3.5 backdrop-blur-xl transition-transform ${
             coinBump ? 'shadow-lg shadow-amber-400/15' : ''
           }`}
           style={coinBump ? { animation: 'hsHudCoinBump 180ms ease-out' } : undefined}
@@ -182,7 +182,7 @@ export function HUD() {
 
         <button
           onClick={() => actions.setGameState('paused')}
-          className="pointer-events-auto inline-flex items-center gap-2 rounded-xl border border-white/12 bg-[#080a0d]/80 px-3 py-2 sm:px-3.5 sm:py-2.5 backdrop-blur-xl shadow-lg transition-all hover:bg-white/[0.09] active:scale-95"
+          className="hs-btn hs-btn-secondary pointer-events-auto inline-flex items-center gap-2 rounded-xl px-3 py-2 sm:px-3.5 sm:py-2.5 backdrop-blur-xl shadow-lg transition-all hover:bg-white/[0.09] active:scale-95"
           aria-label="Pause game"
         >
           <svg className="h-4 w-4 sm:h-4.5 sm:w-4.5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -657,7 +657,7 @@ export function MainMenu() {
             <p className="mb-2 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.38em] text-amber-200/55">
               Fast Indian Highway Arcade
             </p>
-            <h1 className="text-5xl sm:text-7xl md:text-8xl font-black leading-[0.82] tracking-[-0.06em] text-white">
+            <h1 className="hs-title text-5xl sm:text-7xl md:text-8xl font-black leading-[0.82] tracking-[-0.06em] text-white">
               HIGHWAY
             </h1>
             <div className="mt-1 flex items-center justify-center gap-2 sm:gap-3">
@@ -740,11 +740,14 @@ export function MainMenu() {
                   actions.setGameState('playing')
                 }
               }}
-              className="group relative overflow-hidden rounded-2xl border border-amber-200/30 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 py-3.5 sm:py-4 text-base sm:text-lg font-black tracking-wide text-black shadow-xl shadow-orange-500/20 transition-all hover:scale-[1.015] hover:shadow-orange-500/30 active:scale-[0.98]"
+              className="hs-btn hs-btn-primary group relative overflow-hidden rounded-2xl py-3.5 sm:py-4 text-base sm:text-lg font-black tracking-wide shadow-xl shadow-orange-500/20 transition-all hover:scale-[1.015] hover:shadow-orange-500/30"
             >
               <span className="absolute inset-0 bg-white/20 opacity-0 transition-opacity group-hover:opacity-100" />
               <span className="relative flex items-center justify-center gap-2">
-                <span className="text-lg sm:text-xl">🏁</span>
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M5 6h8.5a4 4 0 0 1 0 8H9l-2.5 4H4l2-4H5a4 4 0 0 1 0-8Z" stroke="currentColor" strokeWidth="1.8"/>
+                  <path d="M15.5 8.5 20 6v8l-4.5-2.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
                 RIDE NOW
               </span>
             </button>
@@ -752,16 +755,25 @@ export function MainMenu() {
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
               <button
                 onClick={() => setShowBikes(true)}
-                className="rounded-2xl border border-white/12 bg-white/[0.055] py-3 sm:py-3.5 text-sm sm:text-base font-black text-white shadow-lg transition-all hover:bg-white/[0.09] hover:border-white/20 active:scale-[0.98]"
+                className="hs-btn hs-btn-secondary rounded-2xl py-3 sm:py-3.5 text-sm sm:text-base font-black text-white shadow-lg transition-all"
               >
-                🏍️ GARAGE
+                <svg className="mx-auto mb-0.5 h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="6.5" cy="16.5" r="3" stroke="currentColor" strokeWidth="1.7"/>
+                  <circle cx="17.5" cy="16.5" r="3" stroke="currentColor" strokeWidth="1.7"/>
+                  <path d="M8.5 16.5 11 10h4l2.5 6.5M11 10 9.5 7.5h3l2 2.5M15 10l2-2 2 2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                GARAGE
               </button>
 
               <button
                 onClick={() => setShowStore(true)}
                 className="rounded-2xl border border-white/12 bg-white/[0.055] py-3 sm:py-3.5 text-sm sm:text-base font-black text-white shadow-lg transition-all hover:bg-white/[0.09] hover:border-white/20 active:scale-[0.98]"
               >
-                🛒 STORE
+                <svg className="mx-auto mb-0.5 h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M5 8h14l-1 11H6L5 8Z" stroke="currentColor" strokeWidth="1.8"/>
+                  <path d="M9 8V6.5a3 3 0 0 1 6 0V8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+                STORE
               </button>
             </div>
           </div>
@@ -908,12 +920,12 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
   const [section, setSection] = useState<'bikes' | 'cars'>('bikes')
 
   return (
-    <div className="absolute inset-0 flex flex-col bg-[#07080a] overflow-y-auto">
+    <div className="hs-screen absolute inset-0 flex flex-col bg-[#07080a] overflow-y-auto">
       {/* Header */}
       <div className="sticky top-0 z-20 flex items-center p-3 sm:p-4 border-b border-white/10 bg-[#07080a]/90 backdrop-blur-xl">
         <button
           onClick={onBack}
-          className="text-white text-xl sm:text-2xl active:scale-90 transition-transform w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 hover:bg-white/10"
+          className="hs-btn hs-btn-secondary text-white text-xl sm:text-2xl active:scale-90 transition-transform w-8 h-8 flex items-center justify-center rounded-lg"
         >
           ←
         </button>
@@ -934,7 +946,12 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
                 : 'text-gray-400 hover:text-white hover:bg-white/[0.06]'
             }`}
           >
-            🏍️ BIKES
+            <svg className="mx-auto mb-0.5 h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="6.5" cy="16.5" r="3" stroke="currentColor" strokeWidth="1.7"/>
+              <circle cx="17.5" cy="16.5" r="3" stroke="currentColor" strokeWidth="1.7"/>
+              <path d="M8.5 16.5 11 10h4l2.5 6.5M11 10 9.5 7.5h3l2 2.5M15 10l2-2 2 2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            BIKES
           </button>
           <button
             onClick={() => setSection('cars')}
@@ -944,7 +961,13 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
                 : 'text-gray-400 hover:text-white hover:bg-white/[0.06]'
             }`}
           >
-            🚗 CARS
+            <svg className="mx-auto mb-0.5 h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="m5 14 1.6-4.5A2.4 2.4 0 0 1 8.9 8h6.2a2.4 2.4 0 0 1 2.3 1.5L19 14" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/>
+              <path d="M4 14h16v4H4z" stroke="currentColor" strokeWidth="1.7"/>
+              <circle cx="7.5" cy="18" r="1.2" fill="currentColor"/>
+              <circle cx="16.5" cy="18" r="1.2" fill="currentColor"/>
+            </svg>
+            CARS
           </button>
         </div>
       </div>
@@ -962,7 +985,7 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
               return (
                 <div
                   key={bike.id}
-                  className={`group relative overflow-hidden rounded-2xl sm:rounded-[20px] p-3 sm:p-4 transition-all duration-300 border ${
+                  className={`hs-card group relative overflow-hidden rounded-2xl sm:rounded-[20px] p-3 sm:p-4 transition-all duration-300 border ${
                     isSelected
                       ? 'bg-gradient-to-r from-amber-500/[0.10] to-orange-500/[0.05] border-amber-300/35 shadow-lg shadow-amber-500/10'
                       : isUnlocked
