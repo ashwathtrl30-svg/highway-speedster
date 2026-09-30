@@ -1977,16 +1977,27 @@ export function UnlockNotification() {
   const [bikeName, setBikeName] = useState('')
 
   useEffect(() => {
-    if (state.newUnlock) {
-      setBikeName(state.newUnlock)
-      setVisible(true)
-      const timer = setTimeout(() => {
-        setVisible(false)
-        actions.clearNewUnlock()
-      }, 4000)
-      return () => clearTimeout(timer)
+    if (!state.newUnlock || !state.newUnlockUntil) {
+      setVisible(false)
+      return
     }
-  }, [state.newUnlock])
+
+    setBikeName(state.newUnlock)
+    const remaining = Math.max(0, state.newUnlockUntil - Date.now())
+    setVisible(remaining > 0)
+
+    if (remaining <= 0) {
+      actions.clearNewUnlock()
+      return
+    }
+
+    const timer = window.setTimeout(() => {
+      setVisible(false)
+      actions.clearNewUnlock()
+    }, remaining)
+
+    return () => window.clearTimeout(timer)
+  }, [state.newUnlock, state.newUnlockUntil])
 
   if (!visible) return null
 
