@@ -860,45 +860,272 @@ function PlayerContactShadow({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
 }
 
 // ============== MOTORCYCLE ==============
-function ShieldBubble({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
-  const bubbleRef = useRef<THREE.Group>(null)
+type ShieldImpactVisual = {
+  id: number
+  position: THREE.Vector3
+}
+
+let shieldImpactVisual: ShieldImpactVisual | null = null
+
+function emitShieldImpact(position: THREE.Vector3) {
+  shieldImpactVisual = {
+    id: (shieldImpactVisual?.id ?? 0) + 1,
+    position: position.clone(),
+  }
+}
+
+// [GFX] Persistent visual shield. Gameplay state controls only the active flag;
+// the short in/out animation is purely cosmetic.
+function ShieldBubble({
+  vehicleMode,
+  active,
+}: {
+  vehicleMode: 'bike' | 'car'
+  active: boolean
+}) {
+  const groupRef = useRef<THREE.Group>(null)
+  const shellRef = useRef<THREE.Mesh>(null)
+  const innerRef = useRef<THREE.Mesh>(null)
+  const particleRef = useRef<THREE.Points>(null)
+  const rippleRef = useRef<THREE.Mesh>(null)
+  const flashRef = useRef<THREE.Mesh>(null)
+  const lastActiveRef = useRef(false)
+  const transitionStartRef = useRef(0)
+  const lastImpactIdRef = useRef(0)
+  const impactRef = useRef(0)
+  const impactLocalRef = useRef(new THREE.Vector3())
+  const { camera } = useThree()
+
+  // [GFX] Existing shield footprint is unchanged.
   const radius = vehicleMode === 'car' ? 1.85 : 1.2
 
+  const particleGeometry = useMemo(() => {
+    const count = 10
+    const positions = new Float32Array(count * 3)
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2
+      const r = radius * (0.68 + (i % 3) * 0.07)
+      positions[i * 3] = Math.cos(angle) * r
+      positions[i * 3 + 1] = 0.12 + (i % 4) * 0.34
+      positions[i * 3 + 2] = Math.sin(angle) * r
+    }
+    const geometry = new THREE.BufferGeometry()
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    return geometry
+  }, [radius])
+
+  const shellMaterial = useMemo(
+    () => new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      uniforms: {
+        uTime: { value: 0 },
+        uOpacity: { value: 0 },
+        uColor: { value: new THREE.Color('#66cfff') },
+      },
+      vertexShader: shellVS,
+      fragmentShader: shellFS,
+    }),
+    []
+  )
+
+  const innerMaterial = useMemo(
+    () => new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      side: THREE.BackSide,
+      blending: THREE.AdditiveBlending,
+      uniforms: {
+        uTime: { value: 0 },
+        uOpacity: { value: 0 },
+        uColor: { value: new THREE.Color('#d8f5ff') },
+      },
+      vertexShader: innerVS,
+      fragmentShader: innerFS,
+    }),
+    []
+  )
+
+  const particleMaterial = useMemo(
+    () => new THREE.PointsMaterial({
+      color: '#a5e9ff',
+      size: 0.072,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true,
+    }),
+    []
+  )
+
+  const rippleMaterial = useMemo(
+    () => new THREE.MeshBasicMaterial({
+      color: '#dff9ff',
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }),
+    []
+  )
+
+  const flashMaterial = useMemo(
+    () => new THREE.MeshBasicMaterial({
+      color: '#ffffff',
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }),
+    []
+  )
+
+  useEffect(() => {
+    return () => {
+      particleGeometry.dispose()
+      shellMaterial.dispose()
+      innerMaterial.dispose()
+      particleMaterial.dispose()
+      rippleMaterial.dispose()
+      flashMaterial.dispose()
+    }
+  }, [
+    particleGeometry,
+    shellMaterial,
+    innerMaterial,
+    particleMaterial,
+    rippleMaterial,
+    flashMaterial,
+  ])
+
   useFrame((_, delta) => {
-    if (!bubbleRef.current) return
-    bubbleRef.current.rotation.y += delta * 0.2
-    const pulse = 1 + Math.sin(performance.now() * 0.004) * 0.02
-    bubbleRef.current.scale.setScalar(pulse)
+    const now = performance.now()
+    if (!groupRef.current) return
+
+    if (active !== lastActiveRef.current) {
+      lastActiveRef.current = active
+      transitionStartRef.current = now
+    }
+
+    const transition = Math.min((now - transitionStartRef.current) / 220, 1)
+    const progress = active
+      ? 1 - Math.pow(1 - transition, 3)
+      : Math.pow(1 - transition, 2)
+
+    const pulse = 1 + Math.sin(now * 0.0028) * 0.012
+    const visualAlpha = Math.max(0, progress) * pulse
+
+    groupRef.current.visible = active || transition < 1
+    groupRef.current.position.set(getState().playerX, 0.95, PLAYER_Z)
+    groupRef.current.scale.setScalar(THREE.MathUtils.lerp(0.88, 1.0, progress))
+
+    shellMaterial.uniforms.uTime.value = now * 0.001
+    shellMaterial.uniforms.uOpacity.value = visualAlpha
+    innerMaterial.uniforms.uTime.value = now * 0.001
+    innerMaterial.uniforms.uOpacity.value = visualAlpha * 0.68
+
+    if (shellRef.current) {
+      shellRef.current.scale.setScalar(1 + Math.sin(now * 0.0038) * 0.012)
+    }
+
+    if (innerRef.current) {
+      innerRef.current.rotation.y -= delta * 0.16
+      innerRef.current.scale.setScalar(1.006 + Math.sin(now * 0.0021) * 0.01)
+    }
+
+    if (particleRef.current) {
+      const position = particleRef.current.geometry.getAttribute('position')
+      const array = position.array as Float32Array
+
+      for (let i = 0; i < 10; i++) {
+        const base = i * 3
+        const angle = now * (0.00062 + (i % 2) * 0.00015) + i * 0.63
+        const drift = Math.sin(now * 0.0012 + i) * 0.045
+        const r = radius * (0.68 + (i % 3) * 0.07)
+
+        array[base] = Math.cos(angle) * r
+        array[base + 1] = 0.12 + (i % 4) * 0.34 + drift
+        array[base + 2] = Math.sin(angle) * r
+      }
+
+      position.needsUpdate = true
+      particleMaterial.opacity = visualAlpha * 0.38
+      particleRef.current.visible = visualAlpha > 0.01
+    }
+
+    if (
+      shieldImpactVisual &&
+      shieldImpactVisual.id !== lastImpactIdRef.current
+    ) {
+      lastImpactIdRef.current = shieldImpactVisual.id
+      impactRef.current = 1
+      impactLocalRef.current
+        .copy(shieldImpactVisual.position)
+        .sub(groupRef.current.position)
+    }
+
+    impactRef.current = Math.max(0, impactRef.current - delta * 5.0)
+
+    if (rippleRef.current && flashRef.current) {
+      const impact = impactRef.current
+      const local = impactLocalRef.current
+
+      rippleRef.current.position.set(
+        local.x * 0.92,
+        THREE.MathUtils.clamp(local.y, 0.15, 1.8),
+        local.z * 0.92
+      )
+      rippleRef.current.quaternion.copy(camera.quaternion)
+      rippleRef.current.scale.setScalar(0.12 + (1 - impact) * radius * 0.62)
+
+      flashRef.current.position.copy(rippleRef.current.position)
+      flashRef.current.scale.setScalar(0.12 + impact * 0.38)
+
+      rippleMaterial.opacity = impact * 0.5
+      flashMaterial.opacity = impact * 0.32
+      rippleRef.current.visible = impact > 0.02
+      flashRef.current.visible = impact > 0.02
+    }
+
+    if (!active && transition >= 1) {
+      groupRef.current.visible = false
+    }
   })
 
   return (
-    <group ref={bubbleRef} position={[0, 0.95, 0]}>
-      <mesh>
+    <group ref={groupRef} position={[0, 0.95, PLAYER_Z]} visible={false}>
+      <mesh ref={shellRef}>
         <sphereGeometry args={[radius, 24, 16]} />
-        <meshStandardMaterial
-          color="#168cff"
-          emissive="#0077ff"
-          emissiveIntensity={0.65}
-          transparent
-          opacity={0.12}
-          depthWrite={false}
-          roughness={0.2}
-          metalness={0.1}
-        />
+        <primitive object={shellMaterial} attach="material" />
       </mesh>
-      <mesh scale={1.015}>
-        <sphereGeometry args={[radius, 16, 12]} />
-        <meshBasicMaterial
-          color="#39a7ff"
-          transparent
-          opacity={0.2}
-          wireframe
-          depthWrite={false}
-        />
+
+      <mesh ref={innerRef} scale={1.012}>
+        <sphereGeometry args={[radius, 20, 14]} />
+        <primitive object={innerMaterial} attach="material" />
+      </mesh>
+
+      <points
+        ref={particleRef}
+        geometry={particleGeometry}
+        material={particleMaterial}
+      />
+
+      <mesh ref={rippleRef}>
+        <torusGeometry args={[0.46, 0.032, 8, 24]} />
+        <primitive object={rippleMaterial} attach="material" />
+      </mesh>
+
+      <mesh ref={flashRef}>
+        <sphereGeometry args={[0.18, 8, 6]} />
+        <primitive object={flashMaterial} attach="material" />
       </mesh>
     </group>
   )
 }
+
 
 function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
   const meshRef = useRef<THREE.Group>(null)
@@ -997,7 +1224,7 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
         <VehicleLightingAccents vehicleMode={vehicleMode} />
         <PlayerWheelEffects vehicleMode={vehicleMode} speed={0} />
         <PlayerContactShadow vehicleMode={vehicleMode} />
-        {shieldActive && <ShieldBubble vehicleMode={vehicleMode} />}
+        <ShieldBubble vehicleMode={vehicleMode} active={shieldActive} />
       </group>
     </group>
   )
@@ -2178,6 +2405,8 @@ function TrafficSystem() {
       if (collisionX && collisionZ && v.z > PLAYER_Z - 2) {
         // Check if shield is active
         if (state.shieldActive) {
+          // [GFX] Cosmetic impact marker after collision has already been detected.
+          emitShieldImpact(new THREE.Vector3(vehicleX, 0.85, v.z))
           actions.useShield()
           // Remove the vehicle that would have caused crash
           vehicles.splice(i, 1)
