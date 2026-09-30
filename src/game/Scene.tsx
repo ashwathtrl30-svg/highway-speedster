@@ -886,7 +886,6 @@ function ShieldBubble({
   const groupRef = useRef<THREE.Group>(null)
   const shellRef = useRef<THREE.Mesh>(null)
   const innerRef = useRef<THREE.Mesh>(null)
-  const particleRef = useRef<THREE.Points>(null)
   const rippleRef = useRef<THREE.Mesh>(null)
   const flashRef = useRef<THREE.Mesh>(null)
   const lastActiveRef = useRef(false)
@@ -898,21 +897,6 @@ function ShieldBubble({
 
   // [GFX] Existing shield footprint is unchanged.
   const radius = vehicleMode === 'car' ? 1.85 : 1.2
-
-  const particleGeometry = useMemo(() => {
-    const count = 10
-    const positions = new Float32Array(count * 3)
-    for (let i = 0; i < count; i++) {
-      const angle = (i / count) * Math.PI * 2
-      const r = radius * (0.68 + (i % 3) * 0.07)
-      positions[i * 3] = Math.cos(angle) * r
-      positions[i * 3 + 1] = 0.12 + (i % 4) * 0.34
-      positions[i * 3 + 2] = Math.sin(angle) * r
-    }
-    const geometry = new THREE.BufferGeometry()
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-    return geometry
-  }, [radius])
 
   const shellMaterial = useMemo(
     () => new THREE.ShaderMaterial({
@@ -948,19 +932,6 @@ function ShieldBubble({
     []
   )
 
-  const particleMaterial = useMemo(
-    () => new THREE.PointsMaterial({
-      color: '#a5e9ff',
-      size: 0.072,
-      transparent: true,
-      opacity: 0,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      sizeAttenuation: true,
-    }),
-    []
-  )
-
   const rippleMaterial = useMemo(
     () => new THREE.MeshBasicMaterial({
       color: '#dff9ff',
@@ -985,18 +956,14 @@ function ShieldBubble({
 
   useEffect(() => {
     return () => {
-      particleGeometry.dispose()
       shellMaterial.dispose()
       innerMaterial.dispose()
-      particleMaterial.dispose()
       rippleMaterial.dispose()
       flashMaterial.dispose()
     }
   }, [
-    particleGeometry,
     shellMaterial,
     innerMaterial,
-    particleMaterial,
     rippleMaterial,
     flashMaterial,
   ])
@@ -1034,26 +1001,6 @@ function ShieldBubble({
     if (innerRef.current) {
       innerRef.current.rotation.y -= delta * 0.16
       innerRef.current.scale.setScalar(1.006 + Math.sin(now * 0.0021) * 0.01)
-    }
-
-    if (particleRef.current) {
-      const position = particleRef.current.geometry.getAttribute('position')
-      const array = position.array as Float32Array
-
-      for (let i = 0; i < 10; i++) {
-        const base = i * 3
-        const angle = now * (0.00062 + (i % 2) * 0.00015) + i * 0.63
-        const drift = Math.sin(now * 0.0012 + i) * 0.045
-        const r = radius * (0.68 + (i % 3) * 0.07)
-
-        array[base] = Math.cos(angle) * r
-        array[base + 1] = 0.12 + (i % 4) * 0.34 + drift
-        array[base + 2] = Math.sin(angle) * r
-      }
-
-      position.needsUpdate = true
-      particleMaterial.opacity = visualAlpha * 0.38
-      particleRef.current.visible = visualAlpha > 0.01
     }
 
     if (
@@ -1106,12 +1053,6 @@ function ShieldBubble({
         <sphereGeometry args={[radius, 20, 14]} />
         <primitive object={innerMaterial} attach="material" />
       </mesh>
-
-      <points
-        ref={particleRef}
-        geometry={particleGeometry}
-        material={particleMaterial}
-      />
 
       <mesh ref={rippleRef}>
         <torusGeometry args={[0.46, 0.032, 8, 24]} />
@@ -2676,72 +2617,336 @@ type CoinVisualState = {
   phase: number
 }
 
-type CoinCollectionBurst = {
-  group: THREE.Group
-  coinMesh: THREE.Mesh
-  coinMaterial: THREE.MeshStandardMaterial
-  points: THREE.Points
-  pointGeometry: THREE.BufferGeometry
-  pointMaterial: THREE.PointsMaterial
-  positions: Float32Array
-  positionAttribute: THREE.BufferAttribute
-  velocities: THREE.Vector3[]
-  origin: THREE.Vector3
-  startedAt: number
-  active: boolean
+type VfxQualityTier = 'low' | 'medium' | 'high'
+type SharedVfxKind = 1 | 2 | 3 | 4 | 5 | 6
+const VFX_KIND_DUST = 1
+const VFX_KIND_ROAD = 2
+const VFX_KIND_COIN = 3
+const VFX_KIND_MAGNET = 4
+const VFX_KIND_SHIELD = 5
+const VFX_KIND_IMPACT = 6
+
+function getVfxBudget(gl: THREE.WebGLRenderer): { tier: VfxQualityTier; maxParticles: number } {
+  try {
+    const stored = window.localStorage.getItem('hs_gfx_quality')
+    if (stored === 'low') return { tier: 'low', maxParticles: 40 }
+    if (stored === 'medium') return { tier: 'medium', maxParticles: 120 }
+    if (stored === 'high') return { tier: 'high', maxParticles: 250 }
+  } catch {}
+  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  const highCapability = gl.capabilities.maxTextureSize >= 2048 && gl.capabilities.getMaxAnisotropy() >= 4 && dpr <= 2
+  return highCapability ? { tier: 'high', maxParticles: 250 } : { tier: 'medium', maxParticles: 120 }
 }
 
-function createCoinCollectionBurst(
-  coinGeometry: THREE.BufferGeometry,
-): CoinCollectionBurst {
-  const group = new THREE.Group()
+type SharedVfxEmitter = {
+  maxParticles: number
+  positions: Float32Array
+  velocities: Float32Array
+  colors: Float32Array
+  baseColors: Float32Array
+  life: Float32Array
+  maxLife: Float32Array
+  priority: Uint8Array
+  kind: Uint8Array
+  aliveCount: number
+}
+let sharedVfxEmitter: SharedVfxEmitter | null = null
 
-  const coinMaterial = new THREE.MeshStandardMaterial({
-    color: '#ffd447',
-    metalness: 0.86,
-    roughness: 0.19,
-    emissive: '#9a6500',
-    emissiveIntensity: 0.18,
-    transparent: true,
-    opacity: 0,
-  })
-  const coinMesh = new THREE.Mesh(coinGeometry, coinMaterial)
-  coinMesh.rotation.x = -Math.PI / 2
-  coinMesh.visible = false
-  group.add(coinMesh)
+function emitSharedVfx(kind: SharedVfxKind, x: number, y: number, z: number, count: number, priority: number, power = 1) {
+  const fx = sharedVfxEmitter
+  if (!fx) return
+  for (let i = 0; i < count; i++) {
+    let slot = -1
+    for (let j = 0; j < fx.maxParticles; j++) {
+      if (fx.life[j] <= 0) { slot = j; break }
+    }
+    if (slot < 0) {
+      let weakestPriority = priority + 1
+      for (let j = 0; j < fx.maxParticles; j++) {
+        if (fx.life[j] > 0 && fx.priority[j] < weakestPriority) {
+          weakestPriority = fx.priority[j]
+          slot = j
+        }
+      }
+      if (slot < 0 || priority <= weakestPriority) break
+    } else {
+      fx.aliveCount++
+    }
 
-  const particleCount = 10
-  const positions = new Float32Array(particleCount * 3)
-  const positionAttribute = new THREE.BufferAttribute(positions, 3)
-  const pointGeometry = new THREE.BufferGeometry()
-  pointGeometry.setAttribute('position', positionAttribute)
-  const pointMaterial = new THREE.PointsMaterial({
-    color: '#ffe08a',
-    size: 0.075,
+    const base = slot * 3
+    const angle = Math.random() * Math.PI * 2
+    const spread = (0.45 + Math.random() * 0.9) * power
+    let vx = 0, vy = 0, vz = 0
+    let particleLife = 0.32 + Math.random() * 0.28
+    let red = 1, green = 1, blue = 1
+
+    if (kind === VFX_KIND_DUST) {
+      vx = (Math.random() - 0.5) * 0.45
+      vy = 0.12 + Math.random() * 0.32
+      vz = 18 + Math.random() * 14
+      particleLife = 0.5 + Math.random() * 0.45
+      red = 0.56; green = 0.46; blue = 0.34
+    } else if (kind === VFX_KIND_ROAD) {
+      vx = (Math.random() - 0.5) * 0.5
+      vy = 0.2 + Math.random() * 0.45
+      vz = 28 + Math.random() * 20
+      particleLife = 0.32 + Math.random() * 0.24
+      red = 0.74; green = 0.82; blue = 0.86
+    } else if (kind === VFX_KIND_COIN) {
+      vx = Math.cos(angle) * spread
+      vy = 1.15 + Math.random() * 1.35
+      vz = Math.sin(angle) * spread
+      particleLife = 0.28 + Math.random() * 0.18
+      red = 1; green = 0.78 + Math.random() * 0.18; blue = 0.28
+    } else if (kind === VFX_KIND_MAGNET) {
+      const radius = 0.5 + Math.random() * 1.05
+      fx.positions[base] = x + Math.cos(angle) * radius
+      fx.positions[base + 1] = y + (Math.random() - 0.5) * 0.65
+      fx.positions[base + 2] = z + Math.sin(angle) * radius
+      vx = -Math.sin(angle) * (0.55 + Math.random() * 0.45)
+      vy = (Math.random() - 0.5) * 0.4
+      vz = Math.cos(angle) * (0.55 + Math.random() * 0.45)
+      particleLife = 0.3 + Math.random() * 0.26
+      red = 0.30; green = 0.82; blue = 1
+    } else if (kind === VFX_KIND_SHIELD) {
+      const radius = 0.72 + Math.random() * 0.52
+      fx.positions[base] = x + Math.cos(angle) * radius
+      fx.positions[base + 1] = y + 0.18 + Math.random() * 1.2
+      fx.positions[base + 2] = z + Math.sin(angle) * radius
+      vx = Math.cos(angle) * 0.28
+      vy = 0.35 + Math.random() * 0.55
+      vz = Math.sin(angle) * 0.28
+      particleLife = 0.34 + Math.random() * 0.24
+      red = 0.34; green = 0.88; blue = 1
+    } else {
+      vx = Math.cos(angle) * spread * 1.45
+      vy = 0.8 + Math.random() * 1.3
+      vz = Math.sin(angle) * spread * 1.45
+      particleLife = 0.22 + Math.random() * 0.2
+      red = 1; green = 0.48 + Math.random() * 0.28; blue = 0.22
+    }
+
+    if (kind === VFX_KIND_DUST || kind === VFX_KIND_ROAD || kind === VFX_KIND_COIN || kind === VFX_KIND_IMPACT) {
+      fx.positions[base] = x
+      fx.positions[base + 1] = y
+      fx.positions[base + 2] = z
+    }
+    fx.velocities[base] = vx
+    fx.velocities[base + 1] = vy
+    fx.velocities[base + 2] = vz
+    fx.life[slot] = particleLife
+    fx.maxLife[slot] = particleLife
+    fx.priority[slot] = priority
+    fx.kind[slot] = kind
+    fx.baseColors[base] = red
+    fx.baseColors[base + 1] = green
+    fx.baseColors[base + 2] = blue
+    fx.colors[base] = red
+    fx.colors[base + 1] = green
+    fx.colors[base + 2] = blue
+  }
+}
+
+function SharedParticleVFX() {
+  const { gl } = useThree()
+  const pointsRef = useRef<THREE.Points>(null)
+  const hiddenRef = useRef(false)
+  const reducedRef = useRef(false)
+  const ambientTimerRef = useRef(0)
+  const roadTimerRef = useRef(0)
+  const magnetTimerRef = useRef(0)
+  const lastCollisionIdRef = useRef(0)
+  const lastShieldImpactIdRef = useRef(0)
+  const lastShieldActiveRef = useRef(false)
+
+  const budget = useMemo(() => getVfxBudget(gl), [gl])
+  const maxParticles = budget.maxParticles
+  const positions = useMemo(() => new Float32Array(maxParticles * 3), [maxParticles])
+  const velocities = useMemo(() => new Float32Array(maxParticles * 3), [maxParticles])
+  const colors = useMemo(() => new Float32Array(maxParticles * 3), [maxParticles])
+  const baseColors = useMemo(() => new Float32Array(maxParticles * 3), [maxParticles])
+  const life = useMemo(() => new Float32Array(maxParticles), [maxParticles])
+  const maxLife = useMemo(() => new Float32Array(maxParticles), [maxParticles])
+  const priority = useMemo(() => new Uint8Array(maxParticles), [maxParticles])
+  const kind = useMemo(() => new Uint8Array(maxParticles), [maxParticles])
+
+  const geometry = useMemo(() => {
+    const next = new THREE.BufferGeometry()
+    next.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    next.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+    next.setDrawRange(0, maxParticles)
+    return next
+  }, [colors, maxParticles, positions])
+
+  const material = useMemo(() => new THREE.PointsMaterial({
+    color: '#ffffff',
+    size: 0.095,
     transparent: true,
-    opacity: 0,
+    opacity: 0.92,
+    vertexColors: true,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     sizeAttenuation: true,
-  })
-  const points = new THREE.Points(pointGeometry, pointMaterial)
-  points.visible = false
-  group.add(points)
+  }), [])
 
-  return {
-    group,
-    coinMesh,
-    coinMaterial,
-    points,
-    pointGeometry,
-    pointMaterial,
-    positions,
-    positionAttribute,
-    velocities: Array.from({ length: particleCount }, () => new THREE.Vector3()),
-    origin: new THREE.Vector3(),
-    startedAt: 0,
-    active: false,
-  }
+  useEffect(() => {
+    reducedRef.current =
+      areSpeedEffectsReduced() ||
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
+
+    const onVisibility = () => { hiddenRef.current = document.hidden }
+    hiddenRef.current = document.hidden
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [])
+
+  useEffect(() => {
+    const fx: SharedVfxEmitter = {
+      maxParticles, positions, velocities, colors, baseColors, life, maxLife, priority, kind, aliveCount: 0,
+    }
+
+    for (let i = 0; i < maxParticles; i++) {
+      const base = i * 3
+      positions[base] = 0
+      positions[base + 1] = -1000
+      positions[base + 2] = 0
+      colors[base] = 0
+      colors[base + 1] = 0
+      colors[base + 2] = 0
+      baseColors[base] = 0
+      baseColors[base + 1] = 0
+      baseColors[base + 2] = 0
+    }
+
+    sharedVfxEmitter = fx
+    return () => {
+      if (sharedVfxEmitter === fx) sharedVfxEmitter = null
+      geometry.dispose()
+      material.dispose()
+    }
+  }, [baseColors, colors, geometry, kind, life, maxLife, material, maxParticles, positions, priority, velocities])
+
+  useFrame((_, delta) => {
+    if (!pointsRef.current || hiddenRef.current || document.hidden) return
+    const fx = sharedVfxEmitter
+    if (!fx) return
+
+    const state = getState()
+    const dt = Math.min(delta, 0.05)
+
+    if (collisionImpactVisual && collisionImpactVisual.id !== lastCollisionIdRef.current) {
+      lastCollisionIdRef.current = collisionImpactVisual.id
+      emitSharedVfx(
+        VFX_KIND_IMPACT,
+        collisionImpactVisual.position.x,
+        collisionImpactVisual.position.y,
+        collisionImpactVisual.position.z,
+        budget.tier === 'low' ? 5 : budget.tier === 'medium' ? 8 : 12,
+        6,
+        collisionImpactVisual.absorbed ? 0.72 : 1,
+      )
+    }
+
+    if (shieldImpactVisual && shieldImpactVisual.id !== lastShieldImpactIdRef.current) {
+      lastShieldImpactIdRef.current = shieldImpactVisual.id
+      emitSharedVfx(
+        VFX_KIND_SHIELD,
+        shieldImpactVisual.position.x,
+        shieldImpactVisual.position.y,
+        shieldImpactVisual.position.z,
+        budget.tier === 'low' ? 5 : budget.tier === 'medium' ? 8 : 12,
+        5,
+      )
+    }
+
+    if (state.shieldActive !== lastShieldActiveRef.current) {
+      lastShieldActiveRef.current = state.shieldActive
+      if (state.shieldActive) {
+        emitSharedVfx(
+          VFX_KIND_SHIELD,
+          state.playerX,
+          0.8,
+          PLAYER_Z,
+          budget.tier === 'low' ? 8 : budget.tier === 'medium' ? 12 : 18,
+          5,
+        )
+      }
+    }
+
+    if (state.gameState === 'playing') {
+      const speedNorm = THREE.MathUtils.clamp(state.speed / 120, 0, 1)
+
+      ambientTimerRef.current -= dt
+      if (ambientTimerRef.current <= 0) {
+        ambientTimerRef.current = budget.tier === 'low' ? 0.24 : budget.tier === 'medium' ? 0.15 : 0.11
+        emitSharedVfx(VFX_KIND_DUST, state.playerX + (Math.random() - 0.5) * 5, 0.05, -45, 1, 1)
+      }
+
+      roadTimerRef.current -= dt
+      if (roadTimerRef.current <= 0 && speedNorm > 0.28) {
+        roadTimerRef.current = budget.tier === 'low' ? 0.14 : budget.tier === 'medium' ? 0.085 : 0.06
+        emitSharedVfx(
+          VFX_KIND_ROAD,
+          state.playerX + (Math.random() - 0.5) * 7,
+          0.08,
+          -34,
+          budget.tier === 'low' ? 1 : 2,
+          2,
+        )
+      }
+
+      magnetTimerRef.current -= dt
+      if ((state.magnetActive || state.magnet2xActive) && magnetTimerRef.current <= 0) {
+        magnetTimerRef.current = budget.tier === 'low' ? 0.16 : budget.tier === 'medium' ? 0.10 : 0.07
+        emitSharedVfx(VFX_KIND_MAGNET, state.playerX, 0.95, PLAYER_Z, budget.tier === 'low' ? 1 : 2, 4)
+      }
+    }
+
+    const positionAttribute = geometry.getAttribute('position') as THREE.BufferAttribute
+    const colorAttribute = geometry.getAttribute('color') as THREE.BufferAttribute
+
+    for (let i = 0; i < maxParticles; i++) {
+      const currentLife = fx.life[i]
+      if (currentLife <= 0) continue
+
+      const base = i * 3
+      const particleKind = fx.kind[i]
+
+      fx.positions[base] += fx.velocities[base] * dt
+      fx.positions[base + 1] += fx.velocities[base + 1] * dt
+      fx.positions[base + 2] += fx.velocities[base + 2] * dt
+
+      if (particleKind === VFX_KIND_DUST) fx.velocities[base + 1] -= 0.15 * dt
+      else if (particleKind === VFX_KIND_ROAD) fx.velocities[base + 1] -= 0.08 * dt
+      else if (particleKind === VFX_KIND_COIN) fx.velocities[base + 1] -= 3.2 * dt
+      else if (particleKind === VFX_KIND_SHIELD) fx.velocities[base + 1] -= 0.65 * dt
+      else if (particleKind === VFX_KIND_IMPACT) fx.velocities[base + 1] -= 4.8 * dt
+      else if (particleKind === VFX_KIND_MAGNET) {
+        fx.velocities[base] *= 0.992
+        fx.velocities[base + 2] *= 0.992
+      }
+
+      fx.life[i] = Math.max(0, currentLife - dt)
+      if (fx.life[i] <= 0) {
+        fx.aliveCount = Math.max(0, fx.aliveCount - 1)
+        fx.positions[base + 1] = -1000
+        fx.colors[base] = 0
+        fx.colors[base + 1] = 0
+        fx.colors[base + 2] = 0
+      } else {
+        const fade = fx.life[i] / Math.max(0.001, fx.maxLife[i])
+        const intensity = fade * (reducedRef.current ? 0.58 : 1)
+        fx.colors[base] = fx.baseColors[base] * intensity
+        fx.colors[base + 1] = fx.baseColors[base + 1] * intensity
+        fx.colors[base + 2] = fx.baseColors[base + 2] * intensity
+      }
+    }
+
+    positionAttribute.needsUpdate = true
+    colorAttribute.needsUpdate = true
+  })
+
+  return <points ref={pointsRef} geometry={geometry} material={material} frustumCulled={false} />
 }
 
 function MagnetAura() {
@@ -2804,8 +3009,6 @@ function CoinSystem() {
   const groupRef = useRef<THREE.Group>(null)
   const lastGameStateRef = useRef<string>('menu')
   const visualCoinsRef = useRef<Map<number, CoinVisualState>>(new Map())
-  const burstPoolRef = useRef<CoinCollectionBurst[]>([])
-  const burstCursorRef = useRef(0)
   const collectionTriggeredRef = useRef<Set<number>>(new Set())
   const magnetTrailsRef = useRef<THREE.LineSegments>(null)
   const bodyMeshRef = useRef<THREE.InstancedMesh>(null)
@@ -2886,24 +3089,7 @@ function CoinSystem() {
   )
 
   useEffect(() => {
-    if (!groupRef.current) return
-
-    const pool = Array.from({ length: 6 }, () => {
-      const burst = createCoinCollectionBurst(coinBodyGeometry)
-      groupRef.current!.add(burst.group)
-      return burst
-    })
-    burstPoolRef.current = pool
-
     return () => {
-      pool.forEach((burst) => {
-        groupRef.current?.remove(burst.group)
-        burst.coinMaterial.dispose()
-        burst.pointGeometry.dispose()
-        burst.pointMaterial.dispose()
-      })
-      burstPoolRef.current = []
-      collectionTriggeredRef.current.clear()
       coinBodyGeometry.dispose()
       coinFaceGeometry.dispose()
       coinGlintGeometry.dispose()
@@ -2924,46 +3110,6 @@ function CoinSystem() {
     magnetGlowMaterial,
   ])
 
-  const activateCollectionBurst = useCallback((x: number, y: number, z: number, magnetBoost = false) => {
-    const pool = burstPoolRef.current
-    if (!pool.length) return
-
-    const startIndex = burstCursorRef.current % pool.length
-    let burst = pool[startIndex]
-    for (let i = 0; i < pool.length; i++) {
-      const candidate = pool[(startIndex + i) % pool.length]
-      if (!candidate.active) {
-        burst = candidate
-        break
-      }
-    }
-    burstCursorRef.current = (startIndex + 1) % pool.length
-
-    const now = performance.now()
-    burst.active = true
-    burst.startedAt = now
-    burst.origin.set(x, y, z)
-    burst.group.position.copy(burst.origin)
-    burst.coinMaterial.opacity = magnetBoost ? 1.0 : 0.95
-    burst.points.visible = true
-    burst.coinMesh.visible = true
-
-    burst.velocities.forEach((velocity, i) => {
-      const angle = (Math.PI * 2 * i) / burst.velocities.length + (now % 1000) * 0.001
-      const radial = (magnetBoost ? 1.12 : 0.9) + (i % 3) * (magnetBoost ? 0.25 : 0.22)
-      velocity.set(
-        Math.cos(angle) * radial,
-        (magnetBoost ? 1.32 : 1.1) + (i % 4) * (magnetBoost ? 0.25 : 0.22),
-        Math.sin(angle) * radial
-      )
-      const base = i * 3
-      burst.positions[base] = 0
-      burst.positions[base + 1] = 0.08
-      burst.positions[base + 2] = 0
-    })
-    burst.positionAttribute.needsUpdate = true
-  }, [])
-
   useFrame((_, delta) => {
     const state = getState()
 
@@ -2972,10 +3118,6 @@ function CoinSystem() {
       spawnTimerRef.current = 0
       visualCoinsRef.current.clear()
       collectionTriggeredRef.current.clear()
-      burstPoolRef.current.forEach((burst) => {
-        burst.active = false
-        burst.group.visible = false
-      })
     }
     lastGameStateRef.current = state.gameState
 
@@ -3091,10 +3233,10 @@ function CoinSystem() {
           collectionTriggeredRef.current.add(coin.id)
           const magnetBoost = state.magnetActive || state.magnet2xActive
           if (visual) {
-            activateCollectionBurst(visual.x, visual.y, visual.z, magnetBoost)
+            emitSharedVfx(VFX_KIND_COIN, visual.x, visual.y, visual.z, magnetBoost ? 9 : 7, 4, magnetBoost ? 1.2 : 1)
             visualCoinsRef.current.delete(coin.id)
           } else {
-            activateCollectionBurst(coin.x, coin.y, coin.z, magnetBoost)
+            emitSharedVfx(VFX_KIND_COIN, coin.x, coin.y, coin.z, 7, 4, 1)
           }
         }
         return
@@ -3231,41 +3373,6 @@ function CoinSystem() {
     magnetGlowMaterialRef.opacity =
       state.magnetActive || state.magnet2xActive ? 0.14 : 0.0
 
-    // Animate pooled collection bursts independently of the collection event.
-    burstPoolRef.current.forEach((burst) => {
-      if (!burst.active) return
-
-      const t = Math.min((now - burst.startedAt) / 260, 1)
-      const ease = 1 - Math.pow(1 - t, 3)
-      const fade = 1 - t
-
-      burst.group.visible = true
-      burst.coinMesh.position.set(0, ease * 0.72, 0)
-      burst.coinMesh.scale.setScalar((1 + Math.sin(t * Math.PI) * 0.42) * (1 - t * 0.12))
-      burst.coinMaterial.opacity = fade * 0.95
-      burst.coinMesh.rotation.y += delta * 18
-
-      for (let i = 0; i < burst.velocities.length; i++) {
-        const velocity = burst.velocities[i]
-        const base = i * 3
-        const px = velocity.x * t
-        const py = velocity.y * t - 3.2 * t * t
-        const pz = velocity.z * t
-        burst.positions[base] = px
-        burst.positions[base + 1] = 0.08 + py
-        burst.positions[base + 2] = pz
-      }
-      burst.positionAttribute.needsUpdate = true
-      burst.pointMaterial.opacity = fade * 0.78
-
-      if (t >= 1) {
-        burst.active = false
-        burst.group.visible = false
-        burst.coinMesh.visible = false
-        burst.points.visible = false
-      }
-    })
-  })
 
   useEffect(() => {
     if (!groupRef.current) return
@@ -3848,41 +3955,25 @@ function emitCollisionImpact(
 
 type CollisionBurst = {
   group: THREE.Group
-  sparks: THREE.Points
-  sparkPositions: Float32Array
-  sparkAttribute: THREE.BufferAttribute
-  sparkVelocity: THREE.Vector3[]
-  debris: THREE.Points
-  debrisPositions: Float32Array
-  debrisAttribute: THREE.BufferAttribute
-  debrisVelocity: THREE.Vector3[]
   smoke: THREE.Sprite
   flash: THREE.Sprite
-  startedAt: number
-  active: boolean
 }
-
 let collisionBurstTexture: THREE.CanvasTexture | null = null
-
 function getCollisionBurstTexture() {
   if (collisionBurstTexture) return collisionBurstTexture
-
   const canvas = document.createElement('canvas')
   canvas.width = 64
   canvas.height = 64
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Unable to create collision burst texture')
-
   const gradient = ctx.createRadialGradient(32, 32, 2, 32, 32, 31)
   gradient.addColorStop(0, 'rgba(255,250,228,0.95)')
   gradient.addColorStop(0.2, 'rgba(255,210,126,0.76)')
   gradient.addColorStop(0.48, 'rgba(255,122,70,0.3)')
   gradient.addColorStop(0.78, 'rgba(125,87,68,0.12)')
   gradient.addColorStop(1, 'rgba(60,45,38,0)')
-
   ctx.fillStyle = gradient
   ctx.fillRect(0, 0, 64, 64)
-
   collisionBurstTexture = new THREE.CanvasTexture(canvas)
   collisionBurstTexture.colorSpace = THREE.SRGBColorSpace
   collisionBurstTexture.minFilter = THREE.LinearFilter
@@ -3890,75 +3981,22 @@ function getCollisionBurstTexture() {
   collisionBurstTexture.needsUpdate = true
   return collisionBurstTexture
 }
-
 function createCollisionBurst(): CollisionBurst {
   const group = new THREE.Group()
-
-  const sparkPositions = new Float32Array(14 * 3)
-  const sparkAttribute = new THREE.BufferAttribute(sparkPositions, 3)
-  const sparkGeometry = new THREE.BufferGeometry()
-  sparkGeometry.setAttribute('position', sparkAttribute)
-  const sparkMaterial = new THREE.PointsMaterial({
-    color: '#ffe5a7',
-    size: 0.07,
+  const makeSprite = () => new THREE.Sprite(new THREE.SpriteMaterial({
+    map: getCollisionBurstTexture(),
+    color: '#ffffff',
     transparent: true,
     opacity: 0,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
-    sizeAttenuation: true,
-  })
-  const sparks = new THREE.Points(sparkGeometry, sparkMaterial)
-  group.add(sparks)
-
-  const debrisPositions = new Float32Array(8 * 3)
-  const debrisAttribute = new THREE.BufferAttribute(debrisPositions, 3)
-  const debrisGeometry = new THREE.BufferGeometry()
-  debrisGeometry.setAttribute('position', debrisAttribute)
-  const debrisMaterial = new THREE.PointsMaterial({
-    color: '#9ca2a6',
-    size: 0.045,
-    transparent: true,
-    opacity: 0,
-    depthWrite: false,
-    sizeAttenuation: true,
-  })
-  const debris = new THREE.Points(debrisGeometry, debrisMaterial)
-  group.add(debris)
-
-  const makeSprite = (opacity: number) => {
-    const material = new THREE.SpriteMaterial({
-      map: getCollisionBurstTexture(),
-      color: '#ffffff',
-      transparent: true,
-      opacity,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      depthTest: false,
-    })
-    return new THREE.Sprite(material)
-  }
-
-  const smoke = makeSprite(0)
-  const flash = makeSprite(0)
+    depthTest: false,
+  }))
+  const smoke = makeSprite()
+  const flash = makeSprite()
   group.add(smoke, flash)
-
-  return {
-    group,
-    sparks,
-    sparkPositions,
-    sparkAttribute,
-    sparkVelocity: Array.from({ length: 14 }, () => new THREE.Vector3()),
-    debris,
-    debrisPositions,
-    debrisAttribute,
-    debrisVelocity: Array.from({ length: 8 }, () => new THREE.Vector3()),
-    smoke,
-    flash,
-    startedAt: 0,
-    active: false,
-  }
+  return { group, smoke, flash }
 }
-
 function CollisionFeedback() {
   const groupRef = useRef<THREE.Group>(null)
   const poolRef = useRef<CollisionBurst[]>([])
@@ -3966,11 +4004,9 @@ function CollisionFeedback() {
   const lastEventIdRef = useRef(0)
   const lastFlashAtRef = useRef(0)
   const reducedRef = useRef(false)
-
   useEffect(() => {
     reducedRef.current = areSpeedEffectsReduced()
     if (!groupRef.current) return
-
     const pool = Array.from({ length: 4 }, () => {
       const burst = createCollisionBurst()
       burst.group.visible = false
@@ -3978,155 +4014,57 @@ function CollisionFeedback() {
       return burst
     })
     poolRef.current = pool
-
     return () => {
       pool.forEach((burst) => {
         groupRef.current?.remove(burst.group)
-        const sparkMaterial = burst.sparks.material as THREE.Material
-        const debrisMaterial = burst.debris.material as THREE.Material
-        const smokeMaterial = burst.smoke.material as THREE.SpriteMaterial
-        const flashMaterial = burst.flash.material as THREE.SpriteMaterial
-        burst.sparks.geometry.dispose()
-        burst.debris.geometry.dispose()
-        sparkMaterial.dispose()
-        debrisMaterial.dispose()
-        smokeMaterial.dispose()
-        flashMaterial.dispose()
+        ;(burst.smoke.material as THREE.SpriteMaterial).dispose()
+        ;(burst.flash.material as THREE.SpriteMaterial).dispose()
       })
       poolRef.current = []
     }
   }, [])
-
   useFrame((_, delta) => {
     const now = performance.now()
     const event = collisionImpactVisual
-
     if (event && event.id !== lastEventIdRef.current) {
       lastEventIdRef.current = event.id
-
-      const startIndex = cursorRef.current % Math.max(1, poolRef.current.length)
-      let burst = poolRef.current[startIndex]
-      for (let i = 0; i < poolRef.current.length; i++) {
-        const candidate = poolRef.current[(startIndex + i) % poolRef.current.length]
-        if (!candidate.active) {
-          burst = candidate
-          break
-        }
-      }
-      cursorRef.current = poolRef.current.length
-        ? (startIndex + 1) % poolRef.current.length
-        : 0
-
-      if (burst) {
+      if (poolRef.current.length) {
+        const burst = poolRef.current[cursorRef.current % poolRef.current.length]
+        cursorRef.current = (cursorRef.current + 1) % poolRef.current.length
         const reduced = reducedRef.current
-        const absorbed = event.absorbed
-        const sparkScale = reduced
-          ? (absorbed ? 0.48 : 0.7)
-          : (absorbed ? 0.72 : 1.0)
-
-        burst.active = true
-        burst.startedAt = now
         burst.group.visible = true
         burst.group.position.copy(event.position)
-
-        burst.smoke.material.opacity = reduced
-          ? (absorbed ? 0.04 : 0.07)
-          : (absorbed ? 0.07 : 0.12)
-        burst.flash.material.opacity =
-          now - lastFlashAtRef.current >= 333
-            ? (reduced ? 0.04 : (absorbed ? 0.06 : 0.11))
-            : 0
-
-        if (burst.flash.material.opacity > 0) {
-          lastFlashAtRef.current = now
-        }
-
-        burst.sparkVelocity.forEach((velocity, i) => {
-          const angle = (i / burst.sparkVelocity.length) * Math.PI * 2 + now * 0.0004
-          const radial = (0.9 + (i % 4) * 0.2) * sparkScale
-          velocity.set(
-            Math.cos(angle) * radial,
-            (0.8 + (i % 3) * 0.25) * sparkScale,
-            Math.sin(angle) * radial
-          )
-          const base = i * 3
-          burst.sparkPositions[base] = 0
-          burst.sparkPositions[base + 1] = 0.45
-          burst.sparkPositions[base + 2] = 0
-        })
-        burst.sparkAttribute.needsUpdate = true
-
-        burst.debrisVelocity.forEach((velocity, i) => {
-          const angle = (i / burst.debrisVelocity.length) * Math.PI * 2 + 0.35
-          const radial = (0.55 + (i % 3) * 0.16) * sparkScale
-          velocity.set(
-            Math.cos(angle) * radial,
-            (0.45 + (i % 2) * 0.18) * sparkScale,
-            Math.sin(angle) * radial
-          )
-          const base = i * 3
-          burst.debrisPositions[base] = 0
-          burst.debrisPositions[base + 1] = 0.28
-          burst.debrisPositions[base + 2] = 0
-        })
-        burst.debrisAttribute.needsUpdate = true
-
-        burst.smoke.scale.setScalar(absorbed ? 0.7 : 0.9)
-        burst.flash.scale.setScalar(absorbed ? 0.45 : 0.62)
+        burst.smoke.material.opacity = reduced ? (event.absorbed ? 0.04 : 0.07) : (event.absorbed ? 0.07 : 0.12)
+        burst.flash.material.opacity = now - lastFlashAtRef.current >= 333
+          ? (reduced ? 0.04 : (event.absorbed ? 0.06 : 0.11))
+          : 0
+        if (burst.flash.material.opacity > 0) lastFlashAtRef.current = now
+        burst.smoke.scale.setScalar(event.absorbed ? 0.7 : 0.9)
+        burst.flash.scale.setScalar(event.absorbed ? 0.45 : 0.62)
+        burst.smoke.userData.startedAt = now
       }
     }
-
     poolRef.current.forEach((burst) => {
-      if (!burst.active) return
-
-      const t = Math.min((now - burst.startedAt) / 420, 1)
+      const startedAt = Number(burst.smoke.userData.startedAt ?? 0)
+      if (!startedAt || !burst.group.visible) return
+      const t = Math.min((now - startedAt) / 420, 1)
       const fade = 1 - t
-      const sparkFade = Math.pow(fade, 0.8)
-
-      burst.sparks.material.opacity = sparkFade * (reducedRef.current ? 0.32 : 0.62)
-      burst.debris.material.opacity = fade * 0.42
-      burst.smoke.material.opacity *= 0.985
-      burst.smoke.material.opacity = Math.max(0, burst.smoke.material.opacity - delta * 0.12)
-      burst.flash.material.opacity = Math.max(
-        0,
-        burst.flash.material.opacity - delta * 1.9
-      )
-
-      for (let i = 0; i < burst.sparkVelocity.length; i++) {
-        const velocity = burst.sparkVelocity[i]
-        const base = i * 3
-        burst.sparkPositions[base] = velocity.x * t
-        burst.sparkPositions[base + 1] =
-          0.45 + velocity.y * t - 1.8 * t * t
-        burst.sparkPositions[base + 2] = velocity.z * t
-      }
-      burst.sparkAttribute.needsUpdate = true
-
-      for (let i = 0; i < burst.debrisVelocity.length; i++) {
-        const velocity = burst.debrisVelocity[i]
-        const base = i * 3
-        burst.debrisPositions[base] = velocity.x * t
-        burst.debrisPositions[base + 1] =
-          0.28 + velocity.y * t - 1.55 * t * t
-        burst.debrisPositions[base + 2] = velocity.z * t
-      }
-      burst.debrisAttribute.needsUpdate = true
-
-      burst.smoke.position.y = 0.2 + t * 0.55
+      const smokeMaterial = burst.smoke.material as THREE.SpriteMaterial
+      const flashMaterial = burst.flash.material as THREE.SpriteMaterial
+      smokeMaterial.opacity = Math.max(0, smokeMaterial.opacity - delta * 0.3)
+      flashMaterial.opacity = Math.max(0, flashMaterial.opacity - delta * 1.9)
       burst.smoke.scale.multiplyScalar(1 + delta * 1.6)
       burst.flash.scale.multiplyScalar(1 + delta * 3.0)
-
       if (t >= 1) {
-        burst.active = false
         burst.group.visible = false
-        burst.sparks.material.opacity = 0
-        burst.debris.material.opacity = 0
-        burst.smoke.material.opacity = 0
-        burst.flash.material.opacity = 0
+        smokeMaterial.opacity = 0
+        flashMaterial.opacity = 0
+        burst.smoke.userData.startedAt = 0
+      } else {
+        smokeMaterial.opacity *= fade + 0.02
       }
     })
   })
-
   return <group ref={groupRef} />
 }
 
@@ -4995,6 +4933,7 @@ export function GameScene() {
       <Motorcycle bike={selectedBike} car={selectedCar} />
       <TrafficSystem />
       <CoinSystem />
+      <SharedParticleVFX />
       <PowerUpSystem />
       <SpeedLines />
       <SpeedEdgeStreaks />
