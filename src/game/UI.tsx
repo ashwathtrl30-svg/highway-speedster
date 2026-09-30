@@ -927,18 +927,20 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
         </div>
       </div>
 
-      {/* Vehicle tabs — handlers and button behavior preserved exactly */}
-      <div className="px-3 sm:px-4 pt-3 sm:pt-4">
-        <div className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-white/[0.035] border border-white/10 shadow-inner">
+      {/* Vehicle filters — always visible above the showroom */}
+      <div className="relative z-30 px-3 sm:px-4 pt-3 sm:pt-4">
+        <div className="grid grid-cols-2 gap-1.5 rounded-2xl border border-white/15 bg-[#0a1116]/92 p-1.5 shadow-xl shadow-black/30 backdrop-blur-xl">
           <button
+            type="button"
             onClick={() => setSection('bikes')}
-            className={`rounded-xl py-2.5 text-xs sm:text-sm font-black tracking-wide transition-all ${
+            aria-pressed={section === 'bikes'}
+            className={`min-h-[58px] rounded-xl px-3 py-2.5 text-xs sm:text-sm font-black tracking-[0.08em] transition-all ${
               section === 'bikes'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-black shadow-lg shadow-orange-500/20'
-                : 'text-gray-400 hover:text-white hover:bg-white/[0.06]'
+                ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-lg shadow-amber-500/25 ring-1 ring-amber-200/40'
+                : 'bg-white/[0.045] text-white/55 hover:bg-white/[0.08] hover:text-white'
             }`}
           >
-            <svg className="mx-auto mb-0.5 h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <svg className="mx-auto mb-1 h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <circle cx="6.5" cy="16.5" r="3" stroke="currentColor" strokeWidth="1.7"/>
               <circle cx="17.5" cy="16.5" r="3" stroke="currentColor" strokeWidth="1.7"/>
               <path d="M8.5 16.5 11 10h4l2.5 6.5M11 10 9.5 7.5h3l2 2.5M15 10l2-2 2 2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
@@ -946,14 +948,16 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
             BIKES
           </button>
           <button
+            type="button"
             onClick={() => setSection('cars')}
-            className={`rounded-xl py-2.5 text-xs sm:text-sm font-black tracking-wide transition-all ${
+            aria-pressed={section === 'cars'}
+            className={`min-h-[58px] rounded-xl px-3 py-2.5 text-xs sm:text-sm font-black tracking-[0.08em] transition-all ${
               section === 'cars'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-black shadow-lg shadow-orange-500/20'
-                : 'text-gray-400 hover:text-white hover:bg-white/[0.06]'
+                ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-lg shadow-amber-500/25 ring-1 ring-amber-200/40'
+                : 'bg-white/[0.045] text-white/55 hover:bg-white/[0.08] hover:text-white'
             }`}
           >
-            <svg className="mx-auto mb-0.5 h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <svg className="mx-auto mb-1 h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="m5 14 1.6-4.5A2.4 2.4 0 0 1 8.9 8h6.2a2.4 2.4 0 0 1 2.3 1.5L19 14" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/>
               <path d="M4 14h16v4H4z" stroke="currentColor" strokeWidth="1.7"/>
               <circle cx="7.5" cy="18" r="1.2" fill="currentColor"/>
