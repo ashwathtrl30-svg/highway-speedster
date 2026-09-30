@@ -612,6 +612,19 @@ export function MainMenu() {
         .hs-menu-light-sweep-1 { animation:hsMenuLightSweep 5.5s linear infinite; }
         .hs-menu-light-sweep-2 { animation:hsMenuLightSweep 6.4s linear 1.4s infinite; }
         .hs-menu-light-sweep-3 { animation:hsMenuLightSweep 7.3s linear 2.8s infinite; }
+        @keyframes hsMenuTrafficPass { 0% { transform:translate3d(-18vw,0,0) scaleY(.5); opacity:0; } 14% { opacity:.55; } 72% { opacity:.18; } 100% { transform:translate3d(118vw,0,0) scaleY(1.1); opacity:0; } }
+        @keyframes hsMenuRoadsideDepth { 0%,100% { transform:translate3d(0,0,0) scaleY(.94); opacity:.18; } 50% { transform:translate3d(-8px,-10px,0) scaleY(1.04); opacity:.34; } }
+        @keyframes hsMenuForegroundRush { 0% { transform:translate3d(-8%,0,0) scaleX(.84); opacity:0; } 16% { opacity:.4; } 100% { transform:translate3d(108%,0,0) scaleX(1.35); opacity:0; } }
+        @keyframes hsMenuSkylineDrift { 0%,100% { transform:translate3d(0,0,0); } 50% { transform:translate3d(-28px,-2px,0); } }
+        @keyframes hsMenuDustFloat { 0%,100% { transform:translate3d(0,16px,0) scale(.75); opacity:0; } 35% { opacity:.2; } 70% { opacity:.08; } 100% { transform:translate3d(18px,-64px,0) scale(1.15); opacity:0; } }
+        @keyframes hsMenuNearLight { 0% { transform:translate3d(0,-20px,0) scale(.55); opacity:0; } 20% { opacity:.46; } 100% { transform:translate3d(0,150px,0) scale(1.2); opacity:0; } }
+        .hs-menu-traffic-pass { animation:hsMenuTrafficPass 4.8s linear infinite; }
+        .hs-menu-roadside-depth { animation:hsMenuRoadsideDepth 4.7s ease-in-out infinite; transform-origin:center bottom; }
+        .hs-menu-foreground-rush { animation:hsMenuForegroundRush 3.4s cubic-bezier(.2,.65,.18,1) infinite; }
+        .hs-menu-skyline-drift { animation:hsMenuSkylineDrift 9s ease-in-out infinite; }
+        .hs-menu-dust-float { animation:hsMenuDustFloat 3.8s ease-out infinite; }
+        .hs-menu-near-light { animation:hsMenuNearLight 2.6s ease-in infinite; }
+
       `}</style>
 
       {/* Static highway backdrop: restrained metallic tones with no continuous background motion. */}
@@ -637,6 +650,40 @@ export function MainMenu() {
             transformOrigin: 'top center',
           }}
         />
+
+        {/* Layered racing-depth elements: distant structures, passing traffic lights, dust and foreground streaks. */}
+        <div className="absolute inset-x-0 top-[13%] h-[21%] overflow-hidden opacity-40">
+          <div className="hs-menu-skyline-drift absolute left-[-6%] bottom-0 h-[72%] w-[112%]">
+            <div className="absolute inset-x-0 bottom-0 h-[18%] bg-white/[0.035]" />
+            <div className="absolute left-[6%] bottom-[14%] h-[44%] w-[7%] border border-white/[0.08] bg-black/15" />
+            <div className="absolute left-[16%] bottom-[14%] h-[66%] w-[10%] border border-white/[0.07] bg-black/20" />
+            <div className="absolute left-[31%] bottom-[14%] h-[52%] w-[8%] border border-white/[0.06] bg-black/20" />
+            <div className="absolute left-[49%] bottom-[14%] h-[76%] w-[11%] border border-white/[0.07] bg-black/20" />
+            <div className="absolute left-[68%] bottom-[14%] h-[48%] w-[8%] border border-white/[0.06] bg-black/20" />
+            <div className="absolute left-[82%] bottom-[14%] h-[61%] w-[12%] border border-white/[0.07] bg-black/20" />
+          </div>
+        </div>
+
+        <div className="hs-menu-roadside-depth absolute left-[10%] top-[34%] h-[34%] w-[3px] rounded-full bg-gradient-to-b from-transparent via-white/20 to-amber-200/35" />
+        <div className="hs-menu-roadside-depth absolute left-[18%] top-[39%] h-[28%] w-[2px] rounded-full bg-gradient-to-b from-transparent via-slate-200/20 to-amber-200/25" style={{ animationDelay: '-1.8s' }} />
+        <div className="hs-menu-roadside-depth absolute right-[17%] top-[36%] h-[31%] w-[3px] rounded-full bg-gradient-to-b from-transparent via-white/18 to-amber-200/30" style={{ animationDelay: '-2.6s' }} />
+        <div className="hs-menu-roadside-depth absolute right-[9%] top-[31%] h-[39%] w-[2px] rounded-full bg-gradient-to-b from-transparent via-slate-100/18 to-amber-200/28" style={{ animationDelay: '-.9s' }} />
+
+        <div className="hs-menu-traffic-pass absolute left-[8%] top-[39%] h-1 w-[19%] rounded-full bg-gradient-to-r from-transparent via-white/38 to-transparent blur-[1px]" />
+        <div className="hs-menu-traffic-pass absolute left-[26%] top-[43%] h-px w-[14%] rounded-full bg-gradient-to-r from-transparent via-amber-200/35 to-transparent" style={{ animationDelay: '-1.3s' }} />
+        <div className="hs-menu-traffic-pass absolute left-[55%] top-[37%] h-1 w-[22%] rounded-full bg-gradient-to-r from-transparent via-white/28 to-transparent blur-[1px]" style={{ animationDelay: '-2.4s' }} />
+
+        <div className="hs-menu-near-light absolute left-[32%] top-[42%] h-2 w-2 rounded-full bg-amber-200 shadow-[0_0_20px_rgba(255,215,140,.6)]" />
+        <div className="hs-menu-near-light absolute left-[71%] top-[39%] h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_18px_rgba(255,255,255,.5)]" style={{ animationDelay: '-1.1s' }} />
+        <div className="hs-menu-near-light absolute left-[84%] top-[48%] h-2 w-2 rounded-full bg-amber-200 shadow-[0_0_20px_rgba(255,215,140,.45)]" style={{ animationDelay: '-1.9s' }} />
+
+        <div className="hs-menu-foreground-rush absolute left-[-15%] bottom-[23%] h-1.5 w-[28%] rounded-full bg-gradient-to-r from-transparent via-white/22 to-transparent blur-[2px]" />
+        <div className="hs-menu-foreground-rush absolute left-[-5%] bottom-[28%] h-px w-[20%] rounded-full bg-gradient-to-r from-transparent via-amber-200/25 to-transparent" style={{ animationDelay: '-1.6s' }} />
+
+        <div className="hs-menu-dust-float absolute left-[26%] top-[60%] h-1.5 w-1.5 rounded-full bg-white/30" />
+        <div className="hs-menu-dust-float absolute left-[67%] top-[56%] h-1 w-1 rounded-full bg-white/22" style={{ animationDelay: '-1.4s' }} />
+        <div className="hs-menu-dust-float absolute left-[76%] top-[62%] h-1.5 w-1.5 rounded-full bg-amber-200/25" style={{ animationDelay: '-2.5s' }} />
+
         <div className="absolute inset-x-0 bottom-0 h-[34%] bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
       </div>
 
@@ -1163,6 +1210,17 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
         @keyframes hsGarageVehicleDrift { 0%,100% { transform:translate3d(0,0,0) scale(.98); } 50% { transform:translate3d(-18px,5px,0) scale(1.01); } }
         @keyframes hsGarageReflection { 0% { transform:translateX(-30%); opacity:0; } 25% { opacity:.12; } 75% { opacity:.06; } 100% { transform:translateX(130%); opacity:0; } }
         .hs-garage-floor-depth { background:linear-gradient(rgba(159,178,190,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(159,178,190,.06) 1px,transparent 1px); background-size:84px 58px; animation:hsGarageFloorFlow 5.5s linear infinite; mask-image:linear-gradient(to top,black,transparent 92%); }
+        @keyframes hsGarageBayTraverse { 0%,100% { transform:translate3d(-3%,0,0) rotateY(0deg); opacity:.16; } 50% { transform:translate3d(3%,0,0) rotateY(-4deg); opacity:.3; } }
+        @keyframes hsGarageCeilingSweep { 0% { transform:translate3d(-38vw,0,0); opacity:0; } 16% { opacity:.26; } 82% { opacity:.09; } 100% { transform:translate3d(138vw,0,0); opacity:0; } }
+        @keyframes hsGaragePanelGlow { 0%,100% { transform:scaleY(.85); opacity:.11; } 50% { transform:scaleY(1.04); opacity:.3; } }
+        @keyframes hsGarageDustDrift { 0% { transform:translate3d(0,28px,0) scale(.65); opacity:0; } 25% { opacity:.18; } 75% { opacity:.06; } 100% { transform:translate3d(28px,-70px,0) scale(1.08); opacity:0; } }
+        @keyframes hsGarageFloorReflection { 0% { transform:translateX(-46%); opacity:0; } 18% { opacity:.16; } 72% { opacity:.07; } 100% { transform:translateX(146%); opacity:0; } }
+        .hs-garage-bay-traverse { animation:hsGarageBayTraverse 8.5s ease-in-out infinite; }
+        .hs-garage-ceiling-sweep { animation:hsGarageCeilingSweep 5.8s linear infinite; }
+        .hs-garage-panel-glow { animation:hsGaragePanelGlow 3.9s ease-in-out infinite; }
+        .hs-garage-dust-drift { animation:hsGarageDustDrift 4.4s ease-out infinite; }
+        .hs-garage-floor-reflection { animation:hsGarageFloorReflection 6.2s linear infinite; }
+
       `}</style>
       {/* Static garage environment. Selected vehicle is visible in the background, offset from labels. */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
@@ -1177,6 +1235,35 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
         <div className="absolute right-[-6%] top-[15%] h-44 w-[42%] max-w-[360px] opacity-[0.13] saturate-50 sm:right-[2%] sm:top-[13%] sm:h-56 sm:w-[34%]" style={{ animation: "hsGarageVehicleDrift 7s ease-in-out infinite" }}>
           {section === "bikes" ? <BikeIcon bike={state.selectedBike} /> : <CarIcon car={state.selectedCar} />}
         </div>
+
+        {/* Multi-layer garage depth: ceiling bays, moving reflections and foreground particles. */}
+        <div className="hs-garage-bay-traverse absolute inset-x-[4%] top-[8%] h-[34%] [perspective:900px]" aria-hidden="true">
+          <div className="absolute inset-x-0 top-0 h-full [transform:rotateX(58deg)] [transform-origin:center_top]">
+            <div className="absolute inset-x-[5%] top-0 h-1/2 border-t border-white/[0.08] bg-gradient-to-b from-white/[0.025] to-transparent" />
+            <div className="absolute left-[8%] top-0 h-[82%] w-px bg-gradient-to-b from-white/15 to-transparent" />
+            <div className="absolute left-[27%] top-0 h-[82%] w-px bg-gradient-to-b from-white/12 to-transparent" />
+            <div className="absolute left-[50%] top-0 h-[82%] w-px bg-gradient-to-b from-white/12 to-transparent" />
+            <div className="absolute left-[74%] top-0 h-[82%] w-px bg-gradient-to-b from-white/12 to-transparent" />
+            <div className="absolute right-[8%] top-0 h-[82%] w-px bg-gradient-to-b from-white/15 to-transparent" />
+          </div>
+        </div>
+
+        <div className="hs-garage-ceiling-sweep absolute top-[11%] left-[-30%] h-px w-[44%] bg-gradient-to-r from-transparent via-white/24 to-transparent blur-[1px]" />
+        <div className="hs-garage-ceiling-sweep absolute top-[19%] left-[-24%] h-px w-[34%] bg-gradient-to-r from-transparent via-amber-200/24 to-transparent" style={{ animationDelay: '-2.2s' }} />
+        <div className="hs-garage-ceiling-sweep absolute top-[27%] left-[-20%] h-px w-[30%] bg-gradient-to-r from-transparent via-slate-200/18 to-transparent" style={{ animationDelay: '-3.6s' }} />
+
+        <div className="hs-garage-panel-glow absolute left-[7%] top-[25%] h-[22%] w-1 rounded-full bg-gradient-to-b from-transparent via-white/25 to-transparent" />
+        <div className="hs-garage-panel-glow absolute left-[18%] top-[20%] h-[28%] w-px rounded-full bg-gradient-to-b from-transparent via-amber-200/24 to-transparent" style={{ animationDelay: '-1.2s' }} />
+        <div className="hs-garage-panel-glow absolute right-[19%] top-[18%] h-[31%] w-px rounded-full bg-gradient-to-b from-transparent via-slate-200/20 to-transparent" style={{ animationDelay: '-2.1s' }} />
+        <div className="hs-garage-panel-glow absolute right-[8%] top-[24%] h-[23%] w-1 rounded-full bg-gradient-to-b from-transparent via-amber-200/20 to-transparent" style={{ animationDelay: '-.7s' }} />
+
+        <div className="hs-garage-floor-reflection absolute left-[-20%] bottom-[14%] h-1 w-[46%] rounded-full bg-gradient-to-r from-transparent via-white/18 to-transparent blur-[3px]" />
+        <div className="hs-garage-floor-reflection absolute left-[-12%] bottom-[20%] h-px w-[34%] rounded-full bg-gradient-to-r from-transparent via-amber-200/16 to-transparent" style={{ animationDelay: '-3.1s' }} />
+
+        <div className="hs-garage-dust-drift absolute left-[28%] top-[48%] h-1.5 w-1.5 rounded-full bg-white/28" />
+        <div className="hs-garage-dust-drift absolute left-[64%] top-[43%] h-1 w-1 rounded-full bg-amber-100/22" style={{ animationDelay: '-1.7s' }} />
+        <div className="hs-garage-dust-drift absolute left-[79%] top-[51%] h-1.5 w-1.5 rounded-full bg-white/20" style={{ animationDelay: '-3.0s' }} />
+
         <div className="absolute inset-x-0 bottom-0 h-[44%] bg-gradient-to-t from-black/55 to-transparent" />
       </div>
       {/* Header */}
@@ -1546,6 +1633,17 @@ function Store({ onBack }: { onBack: () => void }) {
         @keyframes hsStoreSignal { 0%,100% { opacity:.20; transform:scaleY(.85); } 50% { opacity:.50; transform:scaleY(1); } }
         @keyframes hsStoreBadgeFloat { 0%,100% { transform:translate3d(0,0,0); } 50% { transform:translate3d(-10px,5px,0); } }
         .hs-store-floor-depth { background:repeating-linear-gradient(90deg,transparent 0 8%,rgba(214,178,93,.13) 8.2% 8.5%,transparent 8.8% 24%),repeating-linear-gradient(180deg,transparent 0 54px,rgba(142,165,177,.10) 55px 56px,transparent 57px 108px); background-size:100% 180px,100% 108px; animation:hsStoreLaneFlow 4.4s linear infinite; mask-image:linear-gradient(to bottom,transparent 0%,black 18%,black 100%); }
+        @keyframes hsStorePitLaneRush { 0% { transform:translate3d(-36vw,0,0) skewX(-18deg); opacity:0; } 15% { opacity:.34; } 100% { transform:translate3d(136vw,0,0) skewX(-18deg); opacity:0; } }
+        @keyframes hsStoreShelfDepth { 0%,100% { transform:translate3d(0,0,0) rotateY(-4deg); opacity:.18; } 50% { transform:translate3d(-14px,-3px,0) rotateY(4deg); opacity:.32; } }
+        @keyframes hsStoreBeaconFloat { 0%,100% { transform:translate3d(0,0,0) scale(.9); opacity:.18; } 50% { transform:translate3d(7px,-11px,0) scale(1.06); opacity:.48; } }
+        @keyframes hsStoreCrateSlide { 0% { transform:translate3d(-18vw,8px,0) rotate(-5deg); opacity:0; } 16% { opacity:.22; } 82% { opacity:.1; } 100% { transform:translate3d(118vw,-6px,0) rotate(3deg); opacity:0; } }
+        @keyframes hsStoreScannerDeep { 0% { transform:scaleX(.55) translateX(-34%); opacity:0; } 25% { opacity:.24; } 70% { opacity:.12; } 100% { transform:scaleX(1.2) translateX(34%); opacity:0; } }
+        .hs-store-pit-lane-rush { animation:hsStorePitLaneRush 4.2s linear infinite; }
+        .hs-store-shelf-depth { animation:hsStoreShelfDepth 7.4s ease-in-out infinite; }
+        .hs-store-beacon-float { animation:hsStoreBeaconFloat 3.2s ease-in-out infinite; }
+        .hs-store-crate-slide { animation:hsStoreCrateSlide 7.2s cubic-bezier(.16,.7,.18,1) infinite; }
+        .hs-store-scanner-deep { animation:hsStoreScannerDeep 4.6s ease-in-out infinite; }
+
       `}</style>
       {/* Static performance-store backdrop: steel, road-night and restrained amber accents. */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
@@ -1567,6 +1665,40 @@ function Store({ onBack }: { onBack: () => void }) {
         <div className="absolute top-[24%] left-[6%] h-px w-[34%] bg-gradient-to-r from-transparent via-sky-200/20 to-transparent" style={{ animation: "hsStoreScanner 5.5s linear infinite" }} />
         <div className="absolute top-[28%] left-[37%] h-px w-[34%] bg-gradient-to-r from-transparent via-sky-200/20 to-transparent" style={{ animation: "hsStoreScanner 6.3s linear 1.1s infinite" }} />
         <div className="absolute top-[22%] left-[68%] h-px w-[34%] bg-gradient-to-r from-transparent via-sky-200/20 to-transparent" style={{ animation: "hsStoreScanner 7.1s linear 2.2s infinite" }} />
+
+        {/* Moving pit-lane depth: shelves, scanning passes, floating beacons and foreground cargo. */}
+        <div className="hs-store-shelf-depth absolute left-[5%] top-[14%] h-[38%] w-[24%] [perspective:700px]" aria-hidden="true">
+          <div className="absolute inset-0 [transform:rotateY(12deg)] border border-white/[0.06] bg-white/[0.015] shadow-2xl">
+            <div className="absolute left-0 right-0 top-[22%] h-px bg-white/[0.08]" />
+            <div className="absolute left-0 right-0 top-[49%] h-px bg-white/[0.07]" />
+            <div className="absolute left-0 right-0 top-[76%] h-px bg-white/[0.06]" />
+            <div className="absolute left-[18%] top-[10%] h-2.5 w-8 rounded-sm bg-amber-200/20 shadow-[0_0_18px_rgba(255,210,120,.18)]" />
+            <div className="absolute left-[52%] top-[37%] h-2.5 w-11 rounded-sm bg-white/10" />
+            <div className="absolute left-[28%] top-[63%] h-2.5 w-9 rounded-sm bg-slate-200/10" />
+          </div>
+        </div>
+
+        <div className="hs-store-shelf-depth absolute right-[6%] top-[20%] h-[31%] w-[20%] [perspective:700px]" style={{ animationDelay: '-2.8s' }} aria-hidden="true">
+          <div className="absolute inset-0 [transform:rotateY(-10deg)] border border-white/[0.05] bg-black/[0.12]">
+            <div className="absolute left-0 right-0 top-[33%] h-px bg-white/[0.07]" />
+            <div className="absolute left-0 right-0 top-[66%] h-px bg-white/[0.06]" />
+          </div>
+        </div>
+
+        <div className="hs-store-pit-lane-rush absolute left-[-30%] top-[17%] h-px w-[42%] bg-gradient-to-r from-transparent via-amber-200/32 to-transparent blur-[1px]" />
+        <div className="hs-store-pit-lane-rush absolute left-[-35%] top-[24%] h-1 w-[27%] bg-gradient-to-r from-transparent via-white/22 to-transparent" style={{ animationDelay: '-1.7s' }} />
+        <div className="hs-store-pit-lane-rush absolute left-[-20%] top-[33%] h-px w-[34%] bg-gradient-to-r from-transparent via-slate-200/22 to-transparent" style={{ animationDelay: '-2.6s' }} />
+
+        <div className="hs-store-scanner-deep absolute left-[22%] top-[55%] h-1 w-[56%] rounded-full bg-gradient-to-r from-transparent via-amber-200/18 to-transparent blur-[2px]" />
+        <div className="hs-store-scanner-deep absolute left-[27%] top-[64%] h-px w-[46%] rounded-full bg-gradient-to-r from-transparent via-white/14 to-transparent" style={{ animationDelay: '-1.8s' }} />
+
+        <div className="hs-store-beacon-float absolute left-[38%] top-[29%] h-2 w-2 rounded-full bg-amber-200 shadow-[0_0_24px_rgba(255,210,120,.5)]" />
+        <div className="hs-store-beacon-float absolute left-[57%] top-[22%] h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,.4)]" style={{ animationDelay: '-1.1s' }} />
+        <div className="hs-store-beacon-float absolute right-[27%] top-[43%] h-2 w-2 rounded-full bg-sky-200/80 shadow-[0_0_22px_rgba(180,220,255,.32)]" style={{ animationDelay: '-2.1s' }} />
+
+        <div className="hs-store-crate-slide absolute left-[-18%] bottom-[24%] h-7 w-11 rounded-md border border-white/10 bg-white/[0.035] shadow-xl" />
+        <div className="hs-store-crate-slide absolute left-[-26%] bottom-[31%] h-4 w-7 rounded-sm border border-amber-200/10 bg-amber-200/[0.035]" style={{ animationDelay: '-3.4s' }} />
+
         <div className="absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-black/58 to-transparent" />
       </div>
       {/* Header */}
