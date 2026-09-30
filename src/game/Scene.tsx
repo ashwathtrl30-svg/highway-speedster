@@ -905,7 +905,6 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
   const tiltRef = useRef(0)
   const bikeRef = useRef(bike)
   const wheelSpinRef = useRef(0)
-  const shieldActive = useGameStore((s) => s.shieldActive)
   const vehicleMode = useGameStore((s) => s.vehicleMode)
 
   useEffect(() => { bikeRef.current = bike }, [bike])
@@ -2436,9 +2435,6 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
     hub.renderOrder = 11
     group.add(hub)
   })
-  visibleWheelTire.dispose()
-  visibleWheelHub.dispose()
-
   // [GFX] Additive tail-light bloom without a dynamic light.
   const tailGlowMaterial = new THREE.SpriteMaterial({
     map: getGlowTexture('tail'),
