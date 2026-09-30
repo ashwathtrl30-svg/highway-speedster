@@ -2284,13 +2284,13 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
     group.add(handle)
 
     // Traffic-scooter signature: broad front apron and rear utility box.
-    const apronGeo = new THREE.RoundedBoxGeometry(w * 0.72, h * 0.18, l * 0.22, 0.025, 1)
+    const apronGeo = new RoundedBoxGeometry(w * 0.72, h * 0.18, l * 0.22, 0.025, 1)
     const apronMat = new THREE.MeshStandardMaterial({ color: '#e7b62f', metalness: 0.4, roughness: 0.4 })
     const apron = new THREE.Mesh(apronGeo, apronMat)
     apron.position.set(0, h * 0.56, -l * 0.20)
     group.add(apron)
 
-    const boxGeo = new THREE.RoundedBoxGeometry(w * 0.48, h * 0.20, l * 0.22, 0.025, 1)
+    const boxGeo = new RoundedBoxGeometry(w * 0.48, h * 0.20, l * 0.22, 0.025, 1)
     const boxMat = new THREE.MeshStandardMaterial({ color: '#4e5960', metalness: 0.4, roughness: 0.5 })
     const box = new THREE.Mesh(boxGeo, boxMat)
     box.position.set(0, h * 0.84, l * 0.22)
