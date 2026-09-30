@@ -266,7 +266,7 @@ function Highway() {
         return (
           <group key={i} position={[0, 0, z]}>
             {/* [GFX] Road geometry dimensions are intentionally unchanged. */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
               <planeGeometry args={[ROAD_WIDTH, SEGMENT_LENGTH]} />
               {GFX_UPGRADE_ENABLED ? (
                 <meshStandardMaterial
@@ -396,6 +396,165 @@ function Highway() {
   )
 }
 
+// [GFX] Lightweight vehicle lighting: additive billboard glows and restrained
+// specular/rim accents. No gameplay transform, collision, or input dependency.
+let headGlowTexture: THREE.CanvasTexture | null = null
+let tailGlowTexture: THREE.CanvasTexture | null = null
+
+function getGlowTexture(kind: 'head' | 'tail') {
+  const cached = kind === 'head' ? headGlowTexture : tailGlowTexture
+  if (cached) return cached
+
+  const canvas = document.createElement('canvas')
+  canvas.width = 64
+  canvas.height = 64
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Unable to create glow texture')
+
+  const gradient = ctx.createRadialGradient(32, 32, 2, 32, 32, 31)
+  if (kind === 'head') {
+    gradient.addColorStop(0, 'rgba(255,255,240,0.98)')
+    gradient.addColorStop(0.22, 'rgba(255,248,205,0.72)')
+    gradient.addColorStop(0.58, 'rgba(255,235,145,0.22)')
+    gradient.addColorStop(1, 'rgba(255,224,120,0)')
+  } else {
+    gradient.addColorStop(0, 'rgba(255,80,72,0.98)')
+    gradient.addColorStop(0.22, 'rgba(255,50,45,0.68)')
+    gradient.addColorStop(0.58, 'rgba(255,25,25,0.18)')
+    gradient.addColorStop(1, 'rgba(255,0,0,0)')
+  }
+
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, 64, 64)
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.minFilter = THREE.LinearFilter
+  texture.magFilter = THREE.LinearFilter
+  texture.needsUpdate = true
+
+  if (kind === 'head') headGlowTexture = texture
+  else tailGlowTexture = texture
+  return texture
+}
+
+function VehicleLightingAccents({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
+  const isCar = vehicleMode === 'car'
+  const frontZ = isCar ? -1.65 : -1.05
+  const rearZ = isCar ? 1.75 : 1.08
+  const y = isCar ? 0.58 : 0.64
+  const spread = isCar ? 0.52 : 0.32
+  const highlightX = isCar ? 0.72 : 0.5
+  const highlightLength = isCar ? 2.6 : 1.65
+
+  const headMaterial = useMemo(
+    () => new THREE.SpriteMaterial({
+      map: getGlowTexture('head'),
+      color: '#fff8d6',
+      transparent: true,
+      opacity: 0.72,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }),
+    []
+  )
+  const tailMaterial = useMemo(
+    () => new THREE.SpriteMaterial({
+      map: getGlowTexture('tail'),
+      color: '#ff433d',
+      transparent: true,
+      opacity: 0.7,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }),
+    []
+  )
+
+  useEffect(() => {
+    return () => {
+      headMaterial.dispose()
+      tailMaterial.dispose()
+    }
+  }, [headMaterial, tailMaterial])
+
+  return (
+    <group>
+      <sprite position={[-spread, y, frontZ]} scale={[0.42, 0.42, 1]} material={headMaterial} />
+      <sprite position={[spread, y, frontZ]} scale={[0.42, 0.42, 1]} material={headMaterial} />
+      <sprite position={[-spread, y * 0.9, rearZ]} scale={[0.32, 0.32, 1]} material={tailMaterial} />
+      <sprite position={[spread, y * 0.9, rearZ]} scale={[0.32, 0.32, 1]} material={tailMaterial} />
+
+      {/* [GFX] Thin highlight rails read as specular accents without adding lights. */}
+      <mesh position={[-highlightX, isCar ? 0.55 : 0.52, 0]}>
+        <boxGeometry args={[0.035, 0.06, highlightLength]} />
+        <meshStandardMaterial
+          color="#eef1f1"
+          metalness={0.9}
+          roughness={0.16}
+          transparent
+          opacity={0.42}
+        />
+      </mesh>
+      <mesh position={[highlightX, isCar ? 0.55 : 0.52, 0]}>
+        <boxGeometry args={[0.035, 0.06, highlightLength]} />
+        <meshStandardMaterial
+          color="#eef1f1"
+          metalness={0.9}
+          roughness={0.16}
+          transparent
+          opacity={0.42}
+        />
+      </mesh>
+    </group>
+  )
+}
+
+function LightingRig() {
+  const keyRef = useRef<THREE.DirectionalLight>(null)
+  const targetRef = useRef<THREE.Object3D>(null)
+
+  useFrame(() => {
+    const state = getState()
+    const playerX = state.playerX
+
+    if (keyRef.current && targetRef.current) {
+      keyRef.current.position.set(playerX + 18, 28, PLAYER_Z + 18)
+      targetRef.current.position.set(playerX, 0, PLAYER_Z - 9)
+      targetRef.current.updateMatrixWorld()
+      keyRef.current.target.updateMatrixWorld()
+    }
+  })
+
+  return (
+    <group>
+      <hemisphereLight
+        color="#b9d9ec"
+        groundColor="#53664a"
+        intensity={0.72}
+      />
+      <ambientLight intensity={0.14} color="#e9e2d5" />
+      <directionalLight
+        ref={keyRef}
+        position={[18, 28, PLAYER_Z + 18]}
+        color="#ffd9ad"
+        intensity={1.65}
+        castShadow
+        shadow-mapSize-width={512}
+        shadow-mapSize-height={512}
+        shadow-bias={-0.00015}
+        shadow-normalBias={0.025}
+        shadow-camera-near={1}
+        shadow-camera-far={70}
+        shadow-camera-left={-13}
+        shadow-camera-right={13}
+        shadow-camera-top={12}
+        shadow-camera-bottom={-8}
+      />
+      <object3D ref={targetRef} position={[0, 0, PLAYER_Z - 9]} />
+    </group>
+  )
+}
+
 // ============== MOTORCYCLE ==============
 function ShieldBubble({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
   const bubbleRef = useRef<THREE.Group>(null)
@@ -495,9 +654,21 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
     }
   }
 
+  useEffect(() => {
+    const root = meshRef.current
+    if (!root) return
+    root.traverse((object) => {
+      if (object instanceof THREE.Mesh) {
+        object.castShadow = true
+        object.receiveShadow = true
+      }
+    })
+  }, [bike.id, car.id, vehicleMode])
+
   return (
     <group ref={meshRef} position={[0, 0, PLAYER_Z]}>
       {vehicleMode === 'car' ? renderCarModel() : renderBikeModel()}
+      <VehicleLightingAccents vehicleMode={vehicleMode} />
       {shieldActive && <ShieldBubble vehicleMode={vehicleMode} />}
     </group>
   )
@@ -578,7 +749,6 @@ function BlitzBike({ bike }: { bike: Bike }) {
         <sphereGeometry args={[0.09, 8, 8]} />
         <meshStandardMaterial color="#ffffff" emissive="#ffffee" emissiveIntensity={3} />
       </mesh>
-      <pointLight position={[0, 0.62, -1.4]} intensity={0.5} distance={15} color="#ffffee" />
 
       {/* Tail light */}
       <mesh position={[0, 0.52, 1.0]}>
@@ -719,7 +889,6 @@ function ApexBike({ bike }: { bike: Bike }) {
         <sphereGeometry args={[0.12, 8, 8]} />
         <meshStandardMaterial color="#ffffff" emissive="#ffffee" emissiveIntensity={3} />
       </mesh>
-      <pointLight position={[0, 0.65, -1.5]} intensity={0.6} distance={15} color="#ffffee" />
 
       {/* Tail light */}
       <mesh position={[0, 0.55, 1.05]}>
@@ -863,7 +1032,6 @@ function ChronosBike({ bike }: { bike: Bike }) {
         <sphereGeometry args={[0.08, 8, 8]} />
         <meshStandardMaterial color="#ffffff" emissive="#ffffee" emissiveIntensity={3.5} />
       </mesh>
-      <pointLight position={[0, 0.68, -1.5]} intensity={0.7} distance={15} color="#ffffee" />
 
       {/* Tail light - slim LED style */}
       <mesh position={[0, 0.58, 1.08]}>
@@ -989,7 +1157,6 @@ function StratosBike({ bike }: { bike: Bike }) {
         <boxGeometry args={[0.15, 0.06, 0.04]} />
         <meshStandardMaterial color="#ffffff" emissive="#ffffee" emissiveIntensity={4} />
       </mesh>
-      <pointLight position={[0, 0.65, -1.5]} intensity={0.8} distance={15} color="#ffffee" />
 
       {/* Tail light - LED strip */}
       <mesh position={[0, 0.55, 1.1]}>
@@ -1121,7 +1288,6 @@ function ZenithBike({ bike }: { bike: Bike }) {
         <boxGeometry args={[0.2, 0.04, 0.03]} />
         <meshStandardMaterial color="#ffffff" emissive="#ffffee" emissiveIntensity={5} />
       </mesh>
-      <pointLight position={[0, 0.62, -1.6]} intensity={1.0} distance={18} color="#ffffee" />
 
       {/* Tail light - LED strip */}
       <mesh position={[0, 0.52, 1.15]}>
@@ -1665,6 +1831,20 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
     group.add(wheel)
   })
 
+  // [GFX] Additive tail-light bloom without a dynamic light.
+  const tailGlowMaterial = new THREE.SpriteMaterial({
+    map: getGlowTexture('tail'),
+    color: '#ff433d',
+    transparent: true,
+    opacity: 0.62,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  })
+  const tailGlow = new THREE.Sprite(tailGlowMaterial)
+  tailGlow.position.set(0, h * 0.38, l / 2 + 0.015)
+  tailGlow.scale.set(0.44, 0.32, 1)
+  group.add(tailGlow)
+
   // Tail lights
   const tailGeo = new THREE.BoxGeometry(0.12, 0.08, 0.04)
   const tailMat = new THREE.MeshStandardMaterial({ color: '#ff0000', emissive: '#ff0000', emissiveIntensity: 0.8 })
@@ -1674,6 +1854,20 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
   const tailR = new THREE.Mesh(tailGeo, tailMat)
   tailR.position.set(w * 0.35, h * 0.35, l / 2)
   group.add(tailR)
+
+  // [GFX] Additive head-light bloom keeps approaching traffic readable.
+  const headGlowMaterial = new THREE.SpriteMaterial({
+    map: getGlowTexture('head'),
+    color: '#fff8d6',
+    transparent: true,
+    opacity: 0.56,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  })
+  const headGlow = new THREE.Sprite(headGlowMaterial)
+  headGlow.position.set(0, h * 0.38, -l / 2 - 0.015)
+  headGlow.scale.set(0.48, 0.34, 1)
+  group.add(headGlow)
 
   // Headlights (front)
   const headGeo = new THREE.BoxGeometry(0.1, 0.06, 0.04)
@@ -2291,6 +2485,7 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
       vertexColors: true,
     })
     const trunkMesh = new THREE.InstancedMesh(trunkGeo, trunkMat, trees.length)
+    trunkMesh.castShadow = true
 
     const canopyGeos = [
       new THREE.SphereGeometry(1.25, 8, 6),
@@ -2341,9 +2536,13 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
     const railGeo = new THREE.BoxGeometry(0.12, 0.58, 4.4)
     const railMat = new THREE.MeshStandardMaterial({ color: '#aeb1b2', metalness: 0.58, roughness: 0.36 })
     const railMesh = new THREE.InstancedMesh(railGeo, railMat, guardrailRails.length)
+    railMesh.castShadow = true
+    railMesh.receiveShadow = true
     const postGeo = new THREE.BoxGeometry(0.18, 0.56, 0.18)
     const postMat = new THREE.MeshStandardMaterial({ color: '#656b6f', metalness: 0.45, roughness: 0.5 })
     const postMesh = new THREE.InstancedMesh(postGeo, postMat, guardrailPosts.length)
+    postMesh.castShadow = true
+    postMesh.receiveShadow = true
 
     guardrailRails.forEach((item, idx) => {
       dummy.position.set(item.x, 0.52, item.z)
@@ -2367,6 +2566,7 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
     const poleGeo = new THREE.CylinderGeometry(0.045, 0.07, 6.2, 6)
     const poleMat = new THREE.MeshStandardMaterial({ color: '#62686c', metalness: 0.7, roughness: 0.28 })
     const poleMesh = new THREE.InstancedMesh(poleGeo, poleMat, lamps.length)
+    poleMesh.castShadow = true
     const lampGeo = new THREE.SphereGeometry(0.12, 7, 6)
     const lampMat = new THREE.MeshStandardMaterial({
       color: '#fff6d5',
@@ -2477,6 +2677,8 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
       roughness: 0.72,
     })
     const propMesh = new THREE.InstancedMesh(propGeo, propMat, props.length)
+    propMesh.castShadow = true
+    propMesh.receiveShadow = true
     props.forEach((item, idx) => {
       dummy.position.set(item.x, 0.56 * item.scale, item.z)
       dummy.rotation.set(0, item.rotation, 0)
@@ -2733,7 +2935,7 @@ function Environment() {
       </mesh>
 
       {/* Broad terrain base */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, -150]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, -150]} receiveShadow>
         <planeGeometry args={[300, 800]} />
         <meshStandardMaterial color="#5a8a4a" roughness={1} />
       </mesh>
@@ -2767,27 +2969,12 @@ function Environment() {
         <DistantTower key={`tower-${i}`} {...tower} />
       ))}
 
-      {/* Lighting */}
-      <ambientLight intensity={0.55} color="#e8e0d0" />
-      <directionalLight
-        position={[30, 40, -20]}
-        intensity={1.3}
-        color="#fff5e0"
-      />
-      <directionalLight
-        position={[-15, 25, 15]}
-        intensity={0.25}
-        color="#b3d9ff"
-      />
-      <hemisphereLight
-        color="#87ceeb"
-        groundColor="#4a7c3f"
-        intensity={0.4}
-      />
+      {/* [GFX] One-key lighting rig with hemisphere fill and tight player shadow map. */}
+      <LightingRig />
 
       {/* Layered atmospheric depth: near detail stays crisp while distant
           structures merge naturally into the horizon. */}
-      <fog attach="fog" args={['#a8c8d8', 32, 155]} />
+      <fog attach="fog" args={['#a9c1cf', 34, 165]} />
     </>
   )
 }
@@ -2851,7 +3038,15 @@ export function GameScene() {
     <Canvas
       camera={{ position: [0, 4, PLAYER_Z + 8], fov: 70, near: 0.1, far: 500 }}
       style={{ width: '100%', height: '100%' }}
-      gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
+      gl={{
+        antialias: true,
+        alpha: false,
+        powerPreference: 'high-performance',
+        outputColorSpace: THREE.SRGBColorSpace,
+        toneMapping: THREE.ACESFilmicToneMapping,
+        toneMappingExposure: 1.0,
+      }}
+      shadows={{ type: THREE.PCFSoftShadowMap }}
     >
       <Environment />
       <Highway />
