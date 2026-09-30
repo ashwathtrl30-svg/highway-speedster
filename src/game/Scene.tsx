@@ -641,152 +641,6 @@ function getContactShadowTexture() {
   return contactShadowTexture
 }
 
-const PLAYER_FINISH_PROFILES: Record<string, {
-  body: [number, number, number]
-  bodyPosition: [number, number, number]
-  accent: [number, number, number]
-  accentPosition: [number, number, number]
-}> = {
-  blitz: {
-    body: [0.44, 0.24, 0.96],
-    bodyPosition: [0, 0.64, -0.02],
-    accent: [0.29, 0.055, 0.58],
-    accentPosition: [0, 0.78, -0.1],
-  },
-  apex: {
-    body: [0.58, 0.28, 1.05],
-    bodyPosition: [0, 0.66, -0.04],
-    accent: [0.36, 0.06, 0.65],
-    accentPosition: [0, 0.81, -0.12],
-  },
-  chronos: {
-    body: [0.52, 0.32, 1.06],
-    bodyPosition: [0, 0.68, -0.17],
-    accent: [0.30, 0.05, 0.58],
-    accentPosition: [0, 0.84, -0.32],
-  },
-  stratos: {
-    body: [0.50, 0.31, 1.06],
-    bodyPosition: [0, 0.66, -0.12],
-    accent: [0.29, 0.05, 0.58],
-    accentPosition: [0, 0.81, -0.26],
-  },
-  zenith: {
-    body: [0.52, 0.32, 1.08],
-    bodyPosition: [0, 0.64, -0.09],
-    accent: [0.29, 0.05, 0.59],
-    accentPosition: [0, 0.79, -0.24],
-  },
-}
-
-function PlayerVehicleFinish({
-  bike,
-  car,
-  quality,
-}: {
-  bike: Bike
-  car: Car
-  quality: VehicleGfxQuality
-}) {
-  const isCar = car.id !== 'none' && getState().vehicleMode === 'car'
-  const profile = PLAYER_FINISH_PROFILES[bike.id] ?? PLAYER_FINISH_PROFILES.blitz
-  const bodySize: [number, number, number] = isCar
-    ? [1.42, 0.26, 2.35]
-    : profile.body
-  const bodyPosition: [number, number, number] = isCar
-    ? [0, 0.59, 0]
-    : profile.bodyPosition
-  const accentSize: [number, number, number] = isCar
-    ? [0.86, 0.045, 1.15]
-    : profile.accent
-  const accentPosition: [number, number, number] = isCar
-    ? [0, 0.76, -0.36]
-    : profile.accentPosition
-
-  const bodyGeometry = useMemo(
-    () => new RoundedBoxGeometry(
-      bodySize[0],
-      bodySize[1],
-      bodySize[2],
-      0.055,
-      2
-    ),
-    [bodySize[0], bodySize[1], bodySize[2]]
-  )
-  const accentGeometry = useMemo(
-    () => new RoundedBoxGeometry(
-      accentSize[0],
-      accentSize[1],
-      accentSize[2],
-      0.018,
-      2
-    ),
-    [accentSize[0], accentSize[1], accentSize[2]]
-  )
-
-  const bodyMaterial = useMemo<THREE.Material>(() => {
-    if (quality === 'high') {
-      return new THREE.MeshPhysicalMaterial({
-        color: isCar ? car.color : bike.color,
-        metalness: 0.5,
-        roughness: 0.24,
-        clearcoat: 0.72,
-        clearcoatRoughness: 0.16,
-        envMapIntensity: 0.85,
-      })
-    }
-
-    return new THREE.MeshMatcapMaterial({
-      color: isCar ? car.color : bike.color,
-      matcap: getVehicleMatcapTexture(),
-    })
-  }, [quality, isCar, bike.color, car.color])
-
-  const accentMaterial = useMemo<THREE.Material>(() => {
-    if (quality === 'high') {
-      return new THREE.MeshPhysicalMaterial({
-        color: isCar ? car.accentColor : bike.accentColor,
-        metalness: 0.68,
-        roughness: 0.2,
-        clearcoat: 0.58,
-        clearcoatRoughness: 0.18,
-      })
-    }
-
-    return new THREE.MeshMatcapMaterial({
-      color: isCar ? car.accentColor : bike.accentColor,
-      matcap: getVehicleMatcapTexture(),
-    })
-  }, [quality, isCar, bike.accentColor, car.accentColor])
-
-  useEffect(() => {
-    return () => {
-      bodyGeometry.dispose()
-      accentGeometry.dispose()
-      bodyMaterial.dispose()
-      accentMaterial.dispose()
-    }
-  }, [bodyGeometry, accentGeometry, bodyMaterial, accentMaterial])
-
-  return (
-    <group>
-      <mesh
-        geometry={bodyGeometry}
-        material={bodyMaterial}
-        position={bodyPosition}
-        castShadow
-        receiveShadow
-      />
-      <mesh
-        geometry={accentGeometry}
-        material={accentMaterial}
-        position={accentPosition}
-        castShadow
-      />
-    </group>
-  )
-}
-
 function PlayerWheelEffects({ vehicleMode, speed }: { vehicleMode: 'bike' | 'car'; speed: number }) {
   const blurFrontRef = useRef<THREE.Mesh>(null)
   const blurRearRef = useRef<THREE.Mesh>(null)
@@ -1130,8 +984,6 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
   const wheelSpinRef = useRef(0)
   const shieldActive = useGameStore((s) => s.shieldActive)
   const vehicleMode = useGameStore((s) => s.vehicleMode)
-  const { gl } = useThree()
-  const vehicleQuality = useMemo(() => getVehicleGfxQuality(gl), [gl])
 
   useEffect(() => { bikeRef.current = bike }, [bike])
 
@@ -1214,10 +1066,7 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
     <group ref={meshRef} position={[0, 0, PLAYER_Z]}>
       <group ref={visualRef}>
         {vehicleMode === 'car' ? renderCarModel() : renderBikeModel()}
-        <PlayerVehicleFinish bike={bike} car={car} quality={vehicleQuality} />
         <VehicleLightingAccents vehicleMode={vehicleMode} />
-        <PlayerWheelEffects vehicleMode={vehicleMode} speed={0} />
-        <PlayerContactShadow vehicleMode={vehicleMode} />
         <ShieldBubble vehicleMode={vehicleMode} active={shieldActive} />
       </group>
     </group>
@@ -2497,8 +2346,10 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
   const bodyMat = new THREE.MeshStandardMaterial({
     color,
     metalness: 0.5,
-    roughness: 0.36,
-    envMapIntensity: 0.65,
+    roughness: 0.32,
+    emissive: new THREE.Color(color).multiplyScalar(0.10),
+    emissiveIntensity: 0.22,
+    envMapIntensity: 1.0,
   })
   const body = new THREE.Mesh(bodyGeo, bodyMat)
   body.position.y = h * 0.35
@@ -2507,7 +2358,7 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
   // Cabin/Roof
   if (type === 'car') {
     const roofGeo = new RoundedBoxGeometry(w * 0.82, h * 0.38, l * 0.45, 0.04, 1)
-    const roofMat = new THREE.MeshStandardMaterial({ color: '#1a1a2e', metalness: 0.3, roughness: 0.4 })
+    const roofMat = new THREE.MeshStandardMaterial({ color: '#22283a', metalness: 0.3, roughness: 0.35 })
     const roof = new THREE.Mesh(roofGeo, roofMat)
     roof.position.y = h * 0.65
     roof.position.z = -l * 0.05
@@ -2547,14 +2398,14 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
   } else if (type === 'truck') {
     // Cabin
     const cabinGeo = new THREE.BoxGeometry(w * 0.88, h * 0.5, l * 0.22)
-    const cabinMat = new THREE.MeshStandardMaterial({ color: '#2c3e50', metalness: 0.3, roughness: 0.5 })
+    const cabinMat = new THREE.MeshStandardMaterial({ color: '#3b5266', metalness: 0.3, roughness: 0.45 })
     const cabin = new THREE.Mesh(cabinGeo, cabinMat)
     cabin.position.y = h * 0.6
     cabin.position.z = -l * 0.32
     group.add(cabin)
     // Cargo
     const cargoGeo = new RoundedBoxGeometry(w * 0.95, h * 0.7, l * 0.6, 0.045, 1)
-    const cargoMat = new THREE.MeshStandardMaterial({ color: '#5d4037', roughness: 0.8 })
+    const cargoMat = new THREE.MeshStandardMaterial({ color: '#705040', roughness: 0.72 })
     const cargo = new THREE.Mesh(cargoGeo, cargoMat)
     cargo.position.y = h * 0.5
     cargo.position.z = l * 0.1
@@ -2568,7 +2419,7 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
     group.add(body2)
     // Windows
     const winGeo = new THREE.BoxGeometry(w * 0.96, h * 0.25, l * 0.85)
-    const winMat = new THREE.MeshStandardMaterial({ color: '#87ceeb', metalness: 0.5, roughness: 0.2, transparent: true, opacity: 0.7 })
+    const winMat = new THREE.MeshStandardMaterial({ color: '#a3def6', metalness: 0.5, roughness: 0.16, transparent: true, opacity: 0.7 })
     const windows = new THREE.Mesh(winGeo, winMat)
     windows.position.y = h * 0.7
     group.add(windows)
