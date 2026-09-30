@@ -2438,24 +2438,237 @@ interface Coin {
   magnetized: boolean
 }
 
+type CoinVisualState = {
+  x: number
+  y: number
+  z: number
+  phase: number
+}
+
+type CoinCollectionBurst = {
+  group: THREE.Group
+  coinMesh: THREE.Mesh
+  coinMaterial: THREE.MeshStandardMaterial
+  points: THREE.Points
+  pointGeometry: THREE.BufferGeometry
+  pointMaterial: THREE.PointsMaterial
+  positions: Float32Array
+  positionAttribute: THREE.BufferAttribute
+  velocities: THREE.Vector3[]
+  origin: THREE.Vector3
+  startedAt: number
+  active: boolean
+}
+
+function createCoinCollectionBurst(
+  coinGeometry: THREE.BufferGeometry,
+): CoinCollectionBurst {
+  const group = new THREE.Group()
+
+  const coinMaterial = new THREE.MeshStandardMaterial({
+    color: '#ffd447',
+    metalness: 0.86,
+    roughness: 0.19,
+    emissive: '#9a6500',
+    emissiveIntensity: 0.18,
+    transparent: true,
+    opacity: 0,
+  })
+  const coinMesh = new THREE.Mesh(coinGeometry, coinMaterial)
+  coinMesh.rotation.x = -Math.PI / 2
+  coinMesh.visible = false
+  group.add(coinMesh)
+
+  const particleCount = 10
+  const positions = new Float32Array(particleCount * 3)
+  const positionAttribute = new THREE.BufferAttribute(positions, 3)
+  const pointGeometry = new THREE.BufferGeometry()
+  pointGeometry.setAttribute('position', positionAttribute)
+  const pointMaterial = new THREE.PointsMaterial({
+    color: '#ffe08a',
+    size: 0.075,
+    transparent: true,
+    opacity: 0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true,
+  })
+  const points = new THREE.Points(pointGeometry, pointMaterial)
+  points.visible = false
+  group.add(points)
+
+  return {
+    group,
+    coinMesh,
+    coinMaterial,
+    points,
+    pointGeometry,
+    pointMaterial,
+    positions,
+    positionAttribute,
+    velocities: Array.from({ length: particleCount }, () => new THREE.Vector3()),
+    origin: new THREE.Vector3(),
+    startedAt: 0,
+    active: false,
+  }
+}
+
 function CoinSystem() {
   const coinsRef = useRef<Coin[]>([])
   const nextIdRef = useRef(0)
   const spawnTimerRef = useRef(0)
-  const meshCacheRef = useRef<Map<number, THREE.Group>>(new Map())
   const groupRef = useRef<THREE.Group>(null)
   const lastGameStateRef = useRef<string>('menu')
+  const visualCoinsRef = useRef<Map<number, CoinVisualState>>(new Map())
+  const burstPoolRef = useRef<CoinCollectionBurst[]>([])
+  const burstCursorRef = useRef(0)
+  const bodyMeshRef = useRef<THREE.InstancedMesh>(null)
+  const faceMeshRef = useRef<THREE.InstancedMesh>(null)
+  const glintMeshRef = useRef<THREE.InstancedMesh>(null)
+
+  const coinBodyGeometry = useMemo(() => {
+    const shape = new THREE.Shape()
+    shape.absarc(0, 0, 0.3, 0, Math.PI * 2, false)
+    const geometry = new THREE.ExtrudeGeometry(shape, {
+      depth: 0.08,
+      bevelEnabled: true,
+      bevelThickness: 0.025,
+      bevelSize: 0.018,
+      bevelSegments: 2,
+      curveSegments: 24,
+    })
+    geometry.center()
+    return geometry
+  }, [])
+
+  const coinFaceGeometry = useMemo(
+    () => new THREE.CylinderGeometry(0.205, 0.205, 0.012, 16),
+    []
+  )
+  const coinGlintGeometry = useMemo(
+    () => new THREE.PlaneGeometry(0.075, 0.34),
+    []
+  )
+
+  const coinBodyMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({
+      color: '#d8a92f',
+      metalness: 0.9,
+      roughness: 0.2,
+      emissive: '#7b5200',
+      emissiveIntensity: 0.12,
+    }),
+    []
+  )
+  const coinFaceMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({
+      color: '#ffe08a',
+      metalness: 0.82,
+      roughness: 0.16,
+      emissive: '#8e6100',
+      emissiveIntensity: 0.16,
+    }),
+    []
+  )
+  const coinGlintMaterial = useMemo(
+    () => new THREE.MeshBasicMaterial({
+      color: '#fff6d2',
+      transparent: true,
+      opacity: 0.0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }),
+    []
+  )
+
+  useEffect(() => {
+    if (!groupRef.current) return
+
+    const pool = Array.from({ length: 6 }, () => {
+      const burst = createCoinCollectionBurst(coinBodyGeometry)
+      groupRef.current!.add(burst.group)
+      return burst
+    })
+    burstPoolRef.current = pool
+
+    return () => {
+      pool.forEach((burst) => {
+        groupRef.current?.remove(burst.group)
+        burst.coinMaterial.dispose()
+        burst.pointGeometry.dispose()
+        burst.pointMaterial.dispose()
+      })
+      burstPoolRef.current = []
+      coinBodyGeometry.dispose()
+      coinFaceGeometry.dispose()
+      coinGlintGeometry.dispose()
+      coinBodyMaterial.dispose()
+      coinFaceMaterial.dispose()
+      coinGlintMaterial.dispose()
+    }
+  }, [
+    coinBodyGeometry,
+    coinFaceGeometry,
+    coinGlintGeometry,
+    coinBodyMaterial,
+    coinFaceMaterial,
+    coinGlintMaterial,
+  ])
+
+  const activateCollectionBurst = useCallback((x: number, y: number, z: number) => {
+    const pool = burstPoolRef.current
+    if (!pool.length) return
+
+    const startIndex = burstCursorRef.current % pool.length
+    let burst = pool[startIndex]
+    for (let i = 0; i < pool.length; i++) {
+      const candidate = pool[(startIndex + i) % pool.length]
+      if (!candidate.active) {
+        burst = candidate
+        break
+      }
+    }
+    burstCursorRef.current = (startIndex + 1) % pool.length
+
+    const now = performance.now()
+    burst.active = true
+    burst.startedAt = now
+    burst.origin.set(x, y, z)
+    burst.group.position.copy(burst.origin)
+    burst.coinMaterial.opacity = 0.95
+    burst.points.visible = true
+    burst.coinMesh.visible = true
+
+    burst.velocities.forEach((velocity, i) => {
+      const angle = (Math.PI * 2 * i) / burst.velocities.length + (now % 1000) * 0.001
+      const radial = 0.9 + (i % 3) * 0.22
+      velocity.set(
+        Math.cos(angle) * radial,
+        1.1 + (i % 4) * 0.22,
+        Math.sin(angle) * radial
+      )
+      const base = i * 3
+      burst.positions[base] = 0
+      burst.positions[base + 1] = 0.08
+      burst.positions[base + 2] = 0
+    })
+    burst.positionAttribute.needsUpdate = true
+  }, [])
 
   useFrame((_, delta) => {
     const state = getState()
-    
-    // Clear coins when game restarts
+
     if (state.gameState === 'playing' && lastGameStateRef.current !== 'playing') {
       coinsRef.current = []
       spawnTimerRef.current = 0
+      visualCoinsRef.current.clear()
+      burstPoolRef.current.forEach((burst) => {
+        burst.active = false
+        burst.group.visible = false
+      })
     }
     lastGameStateRef.current = state.gameState
-    
+
     if (state.gameState !== 'playing') return
 
     const clampedDelta = Math.min(delta, 0.05)
@@ -2466,7 +2679,7 @@ function CoinSystem() {
       spawnTimerRef.current = 0.8 + Math.random() * 0.5
 
       const lane = Math.floor(Math.random() * 3) - 1
-      
+
       coinsRef.current.push({
         id: nextIdRef.current++,
         lane,
@@ -2544,40 +2757,168 @@ function CoinSystem() {
       }
     }
 
-    // Update meshes
-    if (!groupRef.current) return
-    const existingIds = new Set<number>()
-    
+    if (!groupRef.current || !bodyMeshRef.current || !faceMeshRef.current || !glintMeshRef.current) return
+
+    const now = performance.now()
+    const liveIds = new Set<number>()
+    const dummy = new THREE.Object3D()
+    const maxInstances = bodyMeshRef.current.count
+    let instanceIndex = 0
+
     coins.forEach((coin) => {
-      if (coin.collected) return
-      existingIds.add(coin.id)
-      
-      let mesh = meshCacheRef.current.get(coin.id)
-      if (!mesh) {
-        mesh = createCoinMesh()
-        meshCacheRef.current.set(coin.id, mesh)
-        groupRef.current!.add(mesh)
+      const visual = visualCoinsRef.current.get(coin.id)
+
+      if (coin.collected) {
+        // The collection event has already fired above. This only starts the
+        // visual burst from the coin's last rendered position.
+        if (visual) {
+          activateCollectionBurst(visual.x, visual.y, visual.z)
+          visualCoinsRef.current.delete(coin.id)
+        } else {
+          activateCollectionBurst(coin.x, coin.y, coin.z)
+        }
+        return
       }
 
-      // Move the visible coin toward the bike while the magnet is pulling it.
-      mesh.position.set(coin.x, coin.y, coin.z)
-      mesh.rotation.y += clampedDelta * (coin.magnetized ? 8 : 3)
+      if (instanceIndex >= maxInstances) return
 
-      // Subtle pulse while being magnetized to make the attraction easier to see.
-      const pulse = coin.magnetized
-        ? 1 + Math.sin(performance.now() * 0.02 + coin.id) * 0.12
-        : 1
-      mesh.scale.setScalar(pulse)
+      const phase = visual?.phase ?? coin.id * 1.61803398875
+      visualCoinsRef.current.set(coin.id, {
+        x: coin.x,
+        y: coin.y,
+        z: coin.z,
+        phase,
+      })
+      liveIds.add(coin.id)
+
+      const rotationY = now * 0.0028 + phase
+      const scale = 1 + Math.sin(now * 0.005 + phase) * 0.018
+
+      dummy.position.set(coin.x, coin.y, coin.z)
+      dummy.rotation.set(0, rotationY, 0)
+      dummy.scale.setScalar(scale)
+      dummy.updateMatrix()
+      bodyMeshRef.current.setMatrixAt(instanceIndex, dummy.matrix)
+
+      // Slightly lifted embossed face.
+      dummy.position.set(coin.x, coin.y + 0.012, coin.z)
+      dummy.rotation.set(0, rotationY, 0)
+      dummy.scale.setScalar(scale)
+      dummy.updateMatrix()
+      faceMeshRef.current.setMatrixAt(instanceIndex, dummy.matrix)
+
+      // Occasional moving glint sweep. The matrix is zero-scaled unless the
+      // coin's phase is currently inside the brief glint window.
+      const glintPhase = (Math.sin(now * 0.0016 + phase * 1.7) + 1) * 0.5
+      const glintStrength = glintPhase > 0.965
+        ? (glintPhase - 0.965) / 0.035
+        : 0
+      dummy.position.set(coin.x, coin.y + 0.055, coin.z)
+      dummy.rotation.set(-Math.PI / 2, rotationY, glintStrength * Math.PI * 0.35)
+      dummy.scale.set(glintStrength * 0.9, glintStrength * 0.9, 1)
+      dummy.updateMatrix()
+      glintMeshRef.current.setMatrixAt(instanceIndex, dummy.matrix)
+
+      instanceIndex++
     })
 
-    // Remove collected/old meshes
-    meshCacheRef.current.forEach((mesh, id) => {
-      if (!existingIds.has(id)) {
-        groupRef.current!.remove(mesh)
-        meshCacheRef.current.delete(id)
+    visualCoinsRef.current.forEach((_, id) => {
+      if (!liveIds.has(id)) {
+        visualCoinsRef.current.delete(id)
+      }
+    })
+
+    // Hide unused instanced slots by scaling them to zero.
+    for (let i = instanceIndex; i < maxInstances; i++) {
+      dummy.position.set(0, -100, 0)
+      dummy.rotation.set(0, 0, 0)
+      dummy.scale.setScalar(0)
+      dummy.updateMatrix()
+      bodyMeshRef.current.setMatrixAt(i, dummy.matrix)
+      faceMeshRef.current.setMatrixAt(i, dummy.matrix)
+      glintMeshRef.current.setMatrixAt(i, dummy.matrix)
+    }
+
+    bodyMeshRef.current.instanceMatrix.needsUpdate = true
+    faceMeshRef.current.instanceMatrix.needsUpdate = true
+    glintMeshRef.current.instanceMatrix.needsUpdate = true
+
+    // Animate pooled collection bursts independently of the collection event.
+    burstPoolRef.current.forEach((burst) => {
+      if (!burst.active) return
+
+      const t = Math.min((now - burst.startedAt) / 260, 1)
+      const ease = 1 - Math.pow(1 - t, 3)
+      const fade = 1 - t
+
+      burst.group.visible = true
+      burst.coinMesh.position.set(0, ease * 0.72, 0)
+      burst.coinMesh.scale.setScalar((1 + Math.sin(t * Math.PI) * 0.42) * (1 - t * 0.12))
+      burst.coinMaterial.opacity = fade * 0.95
+      burst.coinMesh.rotation.y += delta * 18
+
+      for (let i = 0; i < burst.velocities.length; i++) {
+        const velocity = burst.velocities[i]
+        const base = i * 3
+        const px = velocity.x * t
+        const py = velocity.y * t - 3.2 * t * t
+        const pz = velocity.z * t
+        burst.positions[base] = px
+        burst.positions[base + 1] = 0.08 + py
+        burst.positions[base + 2] = pz
+      }
+      burst.positionAttribute.needsUpdate = true
+      burst.pointMaterial.opacity = fade * 0.78
+
+      if (t >= 1) {
+        burst.active = false
+        burst.group.visible = false
+        burst.coinMesh.visible = false
+        burst.points.visible = false
       }
     })
   })
+
+  useEffect(() => {
+    if (!groupRef.current) return
+
+    const bodyMesh = new THREE.InstancedMesh(
+      coinBodyGeometry,
+      coinBodyMaterial,
+      64
+    )
+    bodyMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    bodyMesh.frustumCulled = false
+
+    const faceMesh = new THREE.InstancedMesh(
+      coinFaceGeometry,
+      coinFaceMaterial,
+      64
+    )
+    faceMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    faceMesh.frustumCulled = false
+
+    const glintMesh = new THREE.InstancedMesh(
+      coinGlintGeometry,
+      coinGlintMaterial,
+      64
+    )
+    glintMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    glintMesh.frustumCulled = false
+
+    bodyMeshRef.current = bodyMesh
+    faceMeshRef.current = faceMesh
+    glintMeshRef.current = glintMesh
+
+    groupRef.current.add(bodyMesh, faceMesh, glintMesh)
+
+    return () => {
+      groupRef.current?.remove(bodyMesh, faceMesh, glintMesh)
+      bodyMeshRef.current = null
+      faceMeshRef.current = null
+      glintMeshRef.current = null
+    }
+  }, [coinBodyGeometry, coinFaceGeometry, coinGlintGeometry, coinBodyMaterial, coinFaceMaterial, coinGlintMaterial])
 
   return <group ref={groupRef} />
 }
@@ -2585,11 +2926,12 @@ function CoinSystem() {
 function createCoinMesh(): THREE.Group {
   const group = new THREE.Group()
   
-  // Coin body
+  // Legacy visual helper retained for rollback safety; the live renderer above
+  // now uses the shared instanced coin meshes and pooled collection bursts.
   const coinGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.08, 16)
-  const coinMat = new THREE.MeshStandardMaterial({ 
-    color: '#ffd700', 
-    metalness: 0.8, 
+  const coinMat = new THREE.MeshStandardMaterial({
+    color: '#ffd700',
+    metalness: 0.8,
     roughness: 0.2,
     emissive: '#ffa500',
     emissiveIntensity: 0.3,
@@ -2598,22 +2940,20 @@ function createCoinMesh(): THREE.Group {
   coin.rotation.x = Math.PI / 2
   group.add(coin)
 
-  // Coin inner circle
   const innerGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.09, 16)
-  const innerMat = new THREE.MeshStandardMaterial({ 
-    color: '#ffed4a', 
-    metalness: 0.9, 
+  const innerMat = new THREE.MeshStandardMaterial({
+    color: '#ffed4a',
+    metalness: 0.9,
     roughness: 0.1,
   })
   const inner = new THREE.Mesh(innerGeo, innerMat)
   inner.rotation.x = Math.PI / 2
   group.add(inner)
 
-  // Glow
   const glowGeo = new THREE.SphereGeometry(0.4, 8, 8)
-  const glowMat = new THREE.MeshBasicMaterial({ 
-    color: '#ffd700', 
-    transparent: true, 
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: '#ffd700',
+    transparent: true,
     opacity: 0.15,
   })
   const glow = new THREE.Mesh(glowGeo, glowMat)
