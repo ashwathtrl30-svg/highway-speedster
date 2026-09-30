@@ -991,7 +991,8 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
               return (
                 <div
                   key={bike.id}
-                  className={`hs-card group relative overflow-hidden rounded-2xl sm:rounded-[20px] p-3 sm:p-4 transition-all duration-300 border ${
+                  onClick={() => isUnlocked && !isSelected && actions.selectBike(bike)}
+                  className={`hs-card group relative overflow-hidden rounded-2xl sm:rounded-[20px] p-3 sm:p-4 transition-all duration-300 border cursor-${isUnlocked ? 'pointer' : 'default'} ${
                     isSelected
                       ? 'bg-gradient-to-r from-amber-500/[0.10] to-orange-500/[0.05] border-amber-300/35 shadow-lg shadow-amber-500/10'
                       : isUnlocked
@@ -1034,12 +1035,7 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
 
                     <div className="flex-1 min-w-0">
                       <h3
-                        onClick={() => isUnlocked && !isSelected && actions.selectBike(bike)}
-                        className={`text-white font-black text-sm sm:text-base truncate ${
-                          isUnlocked && !isSelected
-                            ? 'cursor-pointer hover:text-amber-300 transition-colors'
-                            : ''
-                        }`}
+                        className="text-white font-black text-sm sm:text-base truncate"
                       >{bike.name}</h3>
                       <p className="text-gray-400 text-[10px] sm:text-xs truncate">
                         {isUnlocked ? bike.description : `Unlock at ${bike.unlockScore.toLocaleString()} pts`}
@@ -1098,7 +1094,8 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
               return (
                 <div
                   key={car.id}
-                  className={`group relative overflow-hidden rounded-2xl sm:rounded-[20px] p-3 sm:p-4 transition-all duration-300 border ${
+                  onClick={() => isUnlocked && !isSelected && actions.selectCar(car)}
+                  className={`group relative overflow-hidden rounded-2xl sm:rounded-[20px] p-3 sm:p-4 transition-all duration-300 border cursor-${isUnlocked ? 'pointer' : 'default'} ${
                     isSelected
                       ? 'bg-gradient-to-r from-amber-500/[0.10] to-orange-500/[0.05] border-amber-300/35 shadow-lg shadow-amber-500/10'
                       : isUnlocked
@@ -1141,12 +1138,7 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
 
                     <div className="flex-1 min-w-0">
                       <h3
-                        onClick={() => isUnlocked && !isSelected && actions.selectCar(car)}
-                        className={`text-white font-black text-sm sm:text-base truncate ${
-                          isUnlocked && !isSelected
-                            ? 'cursor-pointer hover:text-amber-300 transition-colors'
-                            : ''
-                        }`}
+                        className="text-white font-black text-sm sm:text-base truncate"
                       >{car.name}</h3>
                       <p className="text-gray-400 text-[10px] sm:text-xs truncate">
                         {isUnlocked ? car.description : `Unlock at ${car.unlockScore.toLocaleString()} pts`}
