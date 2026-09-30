@@ -823,81 +823,6 @@ function ShieldBubble({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
   )
 }
 
-function PlayerWheelFaces({
-  vehicleMode,
-  carId,
-}: {
-  vehicleMode: 'bike' | 'car'
-  carId: string
-}) {
-  const carGeometry = {
-    'kanto-zip': { w: 1.55, l: 3.2, scale: 0.95 },
-    'saber-swift': { w: 1.65, l: 4.2, scale: 1 },
-    'goliath-titan': { w: 1.9, l: 4.6, scale: 1.08 },
-    'kaiser-monarch': { w: 1.85, l: 4.7, scale: 1 },
-    'scuderia-fury': { w: 1.9, l: 4.4, scale: 1.02 },
-  } as const
-  const car = carGeometry[carId as keyof typeof carGeometry] ?? carGeometry['kanto-zip']
-
-  if (vehicleMode === 'bike') {
-    return (
-      <group>
-        {[-0.98, 0.88].map((z) => (
-          <group key={z} position={[0, 0.25, z]} renderOrder={10}>
-            <mesh rotation={[0, 0, 0]} renderOrder={10}>
-              <torusGeometry args={[0.24, 0.055, 8, 16]} />
-              <meshStandardMaterial
-                color="#2b2f33"
-                roughness={0.82}
-                metalness={0.08}
-                depthTest={false}
-              />
-            </mesh>
-            <mesh renderOrder={11}>
-              <cylinderGeometry args={[0.13, 0.13, 0.045, 12]} />
-              <meshStandardMaterial
-                color="#b8c0c7"
-                roughness={0.18}
-                metalness={0.9}
-                depthTest={false}
-              />
-            </mesh>
-          </group>
-        ))}
-      </group>
-    )
-  }
-
-  const wheelZ = car.l * 0.34 * car.scale
-  const wheelX = car.w * 0.5 * car.scale
-  return (
-    <group>
-      {[-1, 1].map((side) => (
-        <group key={side} position={[side * wheelX, 0.24 * car.scale, wheelZ]} renderOrder={10}>
-          <mesh renderOrder={10}>
-            <torusGeometry args={[0.28 * car.scale, 0.07 * car.scale, 8, 16]} />
-            <meshStandardMaterial
-              color="#2b2f33"
-              roughness={0.82}
-              metalness={0.08}
-              depthTest={false}
-            />
-          </mesh>
-          <mesh renderOrder={11}>
-            <cylinderGeometry args={[0.14 * car.scale, 0.14 * car.scale, 0.055 * car.scale, 12]} />
-            <meshStandardMaterial
-              color="#b8c0c7"
-              roughness={0.18}
-              metalness={0.9}
-              depthTest={false}
-            />
-          </mesh>
-        </group>
-      ))}
-    </group>
-  )
-}
-
 function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
   const meshRef = useRef<THREE.Group>(null)
   const visualRef = useRef<THREE.Group>(null)
@@ -990,7 +915,6 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
       <group ref={visualRef}>
         {vehicleMode === 'car' ? renderCarModel() : renderBikeModel()}
         <VehicleLightingAccents vehicleMode={vehicleMode} />
-        <PlayerWheelFaces vehicleMode={vehicleMode} carId={car.id} />
         {shieldActive && <ShieldBubble vehicleMode={vehicleMode} />}
       </group>
     </group>
@@ -1878,39 +1802,19 @@ function CarBase({
       {[-1, 1].map((side) => (
         <group key={side}>
           {[-wheelZ, wheelZ].map((z) => (
-            <group
-              key={z}
-              position={[side * w * 0.52, h * 0.24, z]}
-            >
-              <mesh
-                name="player-wheel"
-                geometry={wheelTireGeometry}
-                rotation={[0, Math.PI / 2, 0]}
-                castShadow
-                receiveShadow
-              >
-                <primitive object={wheelMaterial} attach="material" />
+            <group key={z} position={[side * w * 0.52, h * 0.24, z]}>
+              <mesh rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[0.27, 0.27, 0.22, 16]} />
+                <meshStandardMaterial color="#101010" roughness={0.82} metalness={0.05} />
               </mesh>
-              <mesh
-                name="player-wheel"
-                geometry={wheelHubGeometry}
-                rotation={[0, 0, Math.PI / 2]}
-                castShadow
-              >
-                <primitive object={hubMaterial} attach="material" />
-              </mesh>
-              <mesh
-                geometry={wheelDiscGeometry}
-                rotation={[0, 0, Math.PI / 2]}
-              >
-                <primitive object={discMaterial} attach="material" />
+              <mesh position={[side > 0 ? 0.115 : -0.115, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[0.13, 0.13, 0.025, 16]} />
+                <meshStandardMaterial color="#9ca3af" metalness={0.75} roughness={0.2} />
               </mesh>
             </group>
           ))}
         </group>
       ))}
-
-      {/* [GFX] Thin emissive light elements remain on the exact existing footprint. */}
       <mesh position={[-w * 0.3, h * 0.36, -l / 2 - 0.01]}>
         <boxGeometry args={[w * 0.2, h * 0.12, 0.05]} />
         <meshStandardMaterial
@@ -2365,7 +2269,7 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
 
   // Wheels
   const wheelGeo = new THREE.CylinderGeometry(0.22, 0.22, 0.12, 8)
-  const wheelMat = new THREE.MeshStandardMaterial({ color: '#24282c', roughness: 0.84, metalness: 0.05 })
+  const wheelMat = new THREE.MeshStandardMaterial({ color: '#111111', roughness: 0.9 })
   
   const wheelZ = type === 'bus' || type === 'truck' ? l * 0.35 : type === 'bike' || type === 'scooter' ? l * 0.38 : l * 0.3
   const wheelPositions = (type === 'bike' || type === 'scooter')
@@ -2390,52 +2294,6 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
     group.add(wheel)
   })
 
-  // Front-facing wheel presentation keeps approaching traffic readable from the
-  // fixed rear camera without changing the underlying wheel/collision geometry.
-  const frontWheelPositions = (type === 'bike' || type === 'scooter')
-    ? [[0, 0.24]]
-    : [[-w * 0.38, 0.24], [w * 0.38, 0.24]]
-  const visibleWheelTire = new THREE.TorusGeometry(
-    type === 'bike' || type === 'scooter' ? 0.24 : 0.28,
-    0.055,
-    8,
-    16
-  )
-  const visibleWheelHub = new THREE.CylinderGeometry(
-    type === 'bike' || type === 'scooter' ? 0.12 : 0.14,
-    type === 'bike' || type === 'scooter' ? 0.12 : 0.14,
-    0.045,
-    12
-  )
-  frontWheelPositions.forEach(([x, y]) => {
-    const tire = new THREE.Mesh(
-      visibleWheelTire,
-      new THREE.MeshStandardMaterial({
-        color: '#2b2f33',
-        roughness: 0.82,
-        metalness: 0.08,
-        depthTest: false,
-        depthWrite: false,
-      })
-    )
-    tire.position.set(x, y, -l * 0.39 - 0.01)
-    tire.renderOrder = 10
-    group.add(tire)
-
-    const hub = new THREE.Mesh(
-      visibleWheelHub,
-      new THREE.MeshStandardMaterial({
-        color: '#b8c0c7',
-        roughness: 0.18,
-        metalness: 0.9,
-        depthTest: false,
-        depthWrite: false,
-      })
-    )
-    hub.position.set(x, y, -l * 0.39 - 0.025)
-    hub.renderOrder = 11
-    group.add(hub)
-  })
   // [GFX] Additive tail-light bloom without a dynamic light.
   const tailGlowMaterial = new THREE.SpriteMaterial({
     map: getGlowTexture('tail'),
