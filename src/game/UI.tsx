@@ -1084,7 +1084,7 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
           </div>
 
           <div className="pb-4 pt-1 text-center">
-            <span className="text-xs text-gray-500">{state.unlockedBikes.length} out of {BIKES.length} Bikes unlocked</span>
+            <span className="text-xs text-gray-500">{new Set(state.unlockedBikes).size} out of {BIKES.length} Bikes unlocked</span>
           </div>
         </>
       ) : (
@@ -1189,7 +1189,7 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
 
           <div className="pb-4 pt-1 text-center">
             <span className="text-xs text-gray-500">
-              {state.unlockedCars.length} out of {CARS.length} Cars unlocked
+              {new Set(state.unlockedCars).size} out of {CARS.length} Cars unlocked
             </span>
           </div>
         </>
@@ -1204,14 +1204,15 @@ function CarIcon({ car }: { car: Car }) {
   if (car.id === 'kanto-zip') {
     return (
       <svg viewBox="0 0 100 60" className="w-full h-full">
-        <circle cx="23" cy="46" r="9" fill="#222" stroke="#555" strokeWidth="2"/>
-        <circle cx="77" cy="46" r="9" fill="#222" stroke="#555" strokeWidth="2"/>
-        <path d="M15 42 L20 29 L36 25 L56 25 L68 31 L82 38 L85 43 L15 43Z" fill={common.fill}/>
-        <path d="M28 29 L39 20 L57 20 L67 30 L30 30Z" fill={common.accent} opacity="0.95"/>
-        <path d="M40 22 L55 22 L62 28 L43 28Z" fill="#1b2638"/>
-        <rect x="19" y="35" width="10" height="3" rx="1.5" fill="#eee"/>
-        <rect x="72" y="37" width="8" height="3" rx="1.5" fill="#d33"/>
-        <rect x="31" y="40" width="38" height="3" rx="1.5" fill="#2b2b2b"/>
+        <circle cx="23" cy="46" r="9" fill="#222" stroke="#777" strokeWidth="2"/>
+        <circle cx="77" cy="46" r="9" fill="#222" stroke="#777" strokeWidth="2"/>
+        <path d="M13 43 L18 33 L28 31 L38 22 L56 21 L66 25 L73 33 L84 38 L87 43Z" fill={common.fill}/>
+        <path d="M29 30 L39 22 L55 22 L64 30Z" fill={common.accent}/>
+        <path d="M40 23 L53 23 L60 29 L43 29Z" fill="#172330"/>
+        <path d="M15 40 L28 40 L28 43 L15 43Z" fill="#303030"/>
+        <rect x="18" y="35" width="10" height="3" rx="1.5" fill="#f4f4f4"/>
+        <rect x="72" y="37" width="9" height="3" rx="1.5" fill="#d9343a"/>
+        <path d="M69 29 L78 34 L81 37 L68 37Z" fill={common.accent} opacity="0.45"/>
       </svg>
     )
   }
@@ -1219,14 +1220,16 @@ function CarIcon({ car }: { car: Car }) {
   if (car.id === 'saber-swift') {
     return (
       <svg viewBox="0 0 100 60" className="w-full h-full">
-        <circle cx="21" cy="46" r="9.5" fill="#1e1e1e" stroke="#555" strokeWidth="2"/>
-        <circle cx="79" cy="46" r="9.5" fill="#1e1e1e" stroke="#555" strokeWidth="2"/>
-        <path d="M13 42 L19 31 L33 27 L44 20 L64 21 L72 29 L85 36 L87 43 L13 43Z" fill={common.fill}/>
-        <path d="M31 28 L44 21 L61 22 L69 29 L35 29Z" fill="#1e2b3a"/>
-        <path d="M17 34 L30 30 L70 30 L82 36 L82 39 L18 39Z" fill={common.accent} opacity="0.35"/>
-        <path d="M16 40 L29 40 L29 43 L16 43Z" fill="#222"/>
-        <path d="M72 39 L84 39 L84 42 L72 42Z" fill="#c7363d"/>
-        <rect x="41" y="34" width="29" height="3" rx="1.5" fill="#dfe6ee" opacity="0.65"/>
+        <circle cx="19" cy="47" r="9" fill="#1d1d1d" stroke="#777" strokeWidth="2"/>
+        <circle cx="81" cy="47" r="9" fill="#1d1d1d" stroke="#777" strokeWidth="2"/>
+        <path d="M9 43 L16 35 L29 32 L39 25 L61 25 L72 30 L79 34 L90 38 L92 43Z" fill={common.fill}/>
+        <path d="M30 32 L40 25 L60 25 L71 31Z" fill={common.accent}/>
+        <path d="M41 26 L58 26 L66 31 L45 31Z" fill="#1e2b3a"/>
+        <path d="M15 38 L29 35 L73 35 L86 39 L84 42 L16 42Z" fill={common.accent} opacity="0.28"/>
+        <rect x="13" y="40" width="13" height="2.5" rx="1" fill="#f5f5f5"/>
+        <rect x="76" y="39" width="10" height="3" rx="1" fill="#c7363d"/>
+        <rect x="38" y="38" width="30" height="2" rx="1" fill="#dfe6ee" opacity="0.75"/>
+        <path d="M22 31 L26 28 L30 31" stroke="#9ba8b4" strokeWidth="1.3" fill="none"/>
       </svg>
     )
   }
@@ -1234,16 +1237,16 @@ function CarIcon({ car }: { car: Car }) {
   if (car.id === 'goliath-titan') {
     return (
       <svg viewBox="0 0 100 60" className="w-full h-full">
-        <circle cx="21" cy="47" r="10" fill="#202020" stroke="#555" strokeWidth="2"/>
-        <circle cx="79" cy="47" r="10" fill="#202020" stroke="#555" strokeWidth="2"/>
-        <path d="M12 43 L17 28 L29 24 L29 17 L68 17 L78 25 L86 29 L89 43 L12 43Z" fill={common.fill}/>
-        <rect x="30" y="20" width="34" height="13" rx="2" fill="#23303a"/>
-        <path d="M18 29 L29 27 L29 36 L17 37Z" fill={common.accent} opacity="0.55"/>
-        <rect x="28" y="36" width="45" height="5" rx="2" fill="#3b4147"/>
-        <rect x="75" y="34" width="9" height="4" rx="1.5" fill="#cf3434"/>
-        <circle cx="83" cy="29" r="3.2" fill="#333" stroke="#777" strokeWidth="1"/>
-        <rect x="33" y="15" width="34" height="2" rx="1" fill="#141414"/>
-        <rect x="19" y="40" width="12" height="3" fill="#ddd"/>
+        <circle cx="19" cy="47" r="10.5" fill="#202020" stroke="#777" strokeWidth="2"/>
+        <circle cx="81" cy="47" r="10.5" fill="#202020" stroke="#777" strokeWidth="2"/>
+        <path d="M10 44 L14 28 L24 24 L24 16 L68 16 L77 22 L82 27 L88 30 L91 44Z" fill={common.fill}/>
+        <rect x="28" y="19" width="39" height="14" rx="2" fill="#22313b"/>
+        <path d="M17 29 L27 27 L27 38 L16 39Z" fill={common.accent} opacity="0.62"/>
+        <rect x="24" y="37" width="50" height="5" rx="2" fill="#3b4147"/>
+        <rect x="75" y="35" width="10" height="4" rx="1.5" fill="#cf3434"/>
+        <circle cx="82" cy="29" r="3.2" fill="#333" stroke="#8b8b8b" strokeWidth="1"/>
+        <path d="M30 15 L37 11 L63 11 L69 15" fill="none" stroke={common.accent} strokeWidth="2"/>
+        <path d="M14 42 L14 34 M86 42 L86 34" stroke="#6e7377" strokeWidth="2"/>
       </svg>
     )
   }
@@ -1251,29 +1254,34 @@ function CarIcon({ car }: { car: Car }) {
   if (car.id === 'kaiser-monarch') {
     return (
       <svg viewBox="0 0 100 60" className="w-full h-full">
-        <circle cx="21" cy="46" r="9.5" fill="#191919" stroke="#555" strokeWidth="2"/>
-        <circle cx="79" cy="46" r="9.5" fill="#191919" stroke="#555" strokeWidth="2"/>
-        <path d="M11 42 L18 31 L34 28 L46 20 L65 21 L74 29 L85 34 L89 42 L11 42Z" fill={common.fill}/>
-        <path d="M31 29 L46 21 L63 22 L71 29Z" fill="#16202c"/>
-        <path d="M17 34 L30 31 L75 31 L83 35 L81 39 L18 39Z" fill={common.accent} opacity="0.32"/>
-        <rect x="36" y="38" width="44" height="2.2" rx="1" fill="#bfc5cd" opacity="0.75"/>
-        <rect x="14" y="39" width="11" height="2.5" rx="1" fill="#f4f0c8"/>
-        <path d="M74 37 L85 37 L85 40 L74 40Z" fill="#d92f3b"/>
+        <circle cx="19" cy="46" r="9" fill="#191919" stroke="#777" strokeWidth="2"/>
+        <circle cx="81" cy="46" r="9" fill="#191919" stroke="#777" strokeWidth="2"/>
+        <path d="M8 43 L17 33 L29 30 L45 20 L62 18 L74 23 L82 30 L92 36 L94 43Z" fill={common.fill}/>
+        <path d="M32 30 L46 21 L61 19 L72 24 L77 30Z" fill="#16202c"/>
+        <path d="M18 35 L31 32 L76 31 L85 35 L82 39 L17 39Z" fill={common.accent} opacity="0.27"/>
+        <path d="M75 34 L88 35 L91 38 L76 38Z" fill="#101820"/>
+        <rect x="15" y="39" width="13" height="2.5" rx="1" fill="#f2eab7"/>
+        <rect x="74" y="39" width="13" height="3" rx="1" fill="#d92f3b"/>
+        <rect x="36" y="38" width="29" height="2" rx="1" fill="#c9cdd2"/>
+        <path d="M68 25 L80 24 L84 27" stroke={common.accent} strokeWidth="2" fill="none"/>
       </svg>
     )
   }
 
+  // Scuderia Fury — very low wedge supercar with a long nose, wide stance and rear wing.
   return (
     <svg viewBox="0 0 100 60" className="w-full h-full">
-      <circle cx="20" cy="46" r="9.5" fill="#121212" stroke="#555" strokeWidth="2"/>
-      <circle cx="80" cy="46" r="9.5" fill="#121212" stroke="#555" strokeWidth="2"/>
-      <path d="M9 42 L18 31 L29 28 L39 19 L59 16 L72 23 L80 31 L89 35 L92 42 L9 42Z" fill={common.fill}/>
-      <path d="M31 28 L42 20 L58 17 L70 24 L75 29Z" fill="#18222b"/>
-      <path d="M15 35 L29 31 L75 31 L86 35 L83 39 L16 39Z" fill={common.accent} opacity="0.28"/>
-      <path d="M68 35 L85 35 L88 38 L69 38Z" fill="#111" />
-      <rect x="18" y="39" width="16" height="2.5" rx="1" fill="#f5edb8"/>
-      <rect x="68" y="39" width="16" height="2.5" rx="1" fill="#e42f3f"/>
-      <rect x="37" y="38.2" width="28" height="2" rx="1" fill="#d4d4d4" opacity="0.7"/>
+      <circle cx="18" cy="46" r="8" fill="#111" stroke="#777" strokeWidth="2"/>
+      <circle cx="82" cy="46" r="8" fill="#111" stroke="#777" strokeWidth="2"/>
+      <path d="M5 43 L15 36 L28 33 L41 23 L58 18 L70 22 L81 30 L91 35 L95 43Z" fill={common.fill}/>
+      <path d="M35 31 L44 24 L58 19 L69 24 L77 30Z" fill="#101820"/>
+      <path d="M13 36 L29 33 L75 32 L88 36 L84 39 L11 39Z" fill={common.accent} opacity="0.24"/>
+      <path d="M70 34 L87 34 L92 38 L72 38Z" fill="#0c0f12"/>
+      <path d="M72 26 L85 28 L90 31" stroke="#252a31" strokeWidth="2.5" fill="none"/>
+      <rect x="12" y="39" width="18" height="2.5" rx="1" fill="#f7eeb4"/>
+      <rect x="70" y="39" width="18" height="2.5" rx="1" fill="#e12d3b"/>
+      <path d="M59 21 L87 21 L89 24 L61 24Z" fill="#111"/>
+      <path d="M8 42 L14 39 M92 42 L86 39" stroke={common.accent} strokeWidth="2"/>
     </svg>
   )
 }
