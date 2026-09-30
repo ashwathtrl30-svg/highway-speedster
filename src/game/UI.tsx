@@ -601,11 +601,31 @@ export function MainMenu() {
         .hs-menu-enter-delay { animation-delay: 110ms; }
         .hs-menu-enter-delay-2 { animation-delay: 190ms; }
         .hs-menu-enter-delay-3 { animation-delay: 280ms; }
+        @keyframes hsMenuRoadRush { from { background-position: 0 0, 0 0; } to { background-position: 0 120px, 0 240px; } }
+        @keyframes hsMenuSideFlow { 0%,100% { transform: translate3d(0,0,0) scaleX(.98); opacity:.22; } 50% { transform: translate3d(16px,5px,0) scaleX(1.02); opacity:.38; } }
+        @keyframes hsMenuHorizonPulse { 0%,100% { transform: scaleX(.9); opacity:.12; } 50% { transform: scaleX(1.05); opacity:.25; } }
+        @keyframes hsMenuLightSweep { 0% { transform:translateX(-24vw); opacity:0; } 18% {opacity:.16;} 76% {opacity:.08;} 100% {transform:translateX(124vw); opacity:0;} }
+        .hs-menu-road-depth { background: repeating-linear-gradient(90deg,transparent 0 14%,rgba(223,186,108,.16) 14.15% 14.35%,transparent 14.5% 36%,rgba(125,151,165,.11) 36.15% 36.35%,transparent 36.5% 50%), repeating-linear-gradient(180deg,transparent 0 70px,rgba(235,191,92,.14) 71px 74px,transparent 75px 150px); background-size:100% 180px,100% 180px; animation:hsMenuRoadRush 2.7s linear infinite; mask-image:linear-gradient(to bottom,transparent 0%,black 22%,black 100%); }
+        .hs-menu-road-edge-left { animation:hsMenuSideFlow 5.5s ease-in-out infinite; }
+        .hs-menu-road-edge-right { animation:hsMenuSideFlow 6.4s ease-in-out -1.4s infinite reverse; }
+        .hs-menu-horizon-pulse { animation:hsMenuHorizonPulse 4.2s ease-in-out infinite; }
+        .hs-menu-light-sweep-1 { animation:hsMenuLightSweep 5.5s linear infinite; }
+        .hs-menu-light-sweep-2 { animation:hsMenuLightSweep 6.4s linear 1.4s infinite; }
+        .hs-menu-light-sweep-3 { animation:hsMenuLightSweep 7.3s linear 2.8s infinite; }
       `}</style>
 
       {/* Static highway backdrop: restrained metallic tones with no continuous background motion. */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_18%,rgba(216,154,62,.18),transparent_24%),radial-gradient(circle_at_18%_72%,rgba(54,86,103,.18),transparent_30%),linear-gradient(145deg,#10161b_0%,#182129_42%,#0c1014_72%,#07090b_100%)]" />
+        <div className="absolute left-1/2 top-[18%] h-[54%] w-[118%] -translate-x-1/2 [perspective:620px]">
+          <div className="hs-menu-road-depth absolute inset-0 [transform:rotateX(67deg)] [transform-origin:center_top]" />
+        </div>
+        <div className="hs-menu-road-edge-left absolute left-[7%] top-[30%] h-[44%] w-[18%] border-l border-amber-300/15" />
+        <div className="hs-menu-road-edge-right absolute right-[7%] top-[30%] h-[44%] w-[18%] border-r border-amber-300/15" />
+        <div className="hs-menu-horizon-pulse absolute left-1/2 top-[26%] h-12 w-[42%] -translate-x-1/2 rounded-full bg-amber-200/10 blur-2xl" />
+        <div className="hs-menu-light-sweep-1 absolute top-[34%] left-[12%] h-px w-[28%] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        <div className="hs-menu-light-sweep-2 absolute top-[37%] left-[40%] h-px w-[26%] bg-gradient-to-r from-transparent via-slate-200/16 to-transparent" />
+        <div className="hs-menu-light-sweep-3 absolute top-[32%] left-[61%] h-px w-[30%] bg-gradient-to-r from-transparent via-amber-200/14 to-transparent" />
         <div className="absolute inset-x-0 top-[28%] h-px bg-gradient-to-r from-transparent via-slate-400/20 to-transparent" />
         <div className="absolute left-[7%] top-[30%] h-[48%] w-px bg-gradient-to-b from-transparent via-amber-300/18 to-transparent" />
         <div className="absolute right-[12%] top-[22%] h-[58%] w-px bg-gradient-to-b from-transparent via-white/10 to-transparent" />
