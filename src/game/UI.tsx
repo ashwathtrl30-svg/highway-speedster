@@ -606,42 +606,143 @@ function SkinSelector({ bikeId }: { bikeId: string }) {
 }
 
 // ============== GARAGE ==============
+function GarageShowroomPreview({
+  state,
+  section,
+}: {
+  state: ReturnType<typeof useGameStore>
+  section: 'bikes' | 'cars'
+}) {
+  const isBike = section === 'bikes'
+  const vehicle = isBike ? state.selectedBike : state.selectedCar
+  const vehicleId = vehicle.id
+  const vehicleName = vehicle.name
+
+  return (
+    <div className="mx-3 sm:mx-4 mt-3 sm:mt-4">
+      <style>{`
+        @keyframes hsGarageTurntable {
+          0%, 100% {
+            transform: perspective(900px) rotateY(-9deg) rotateX(2deg) translateY(0);
+          }
+          50% {
+            transform: perspective(900px) rotateY(9deg) rotateX(-1deg) translateY(-4px);
+          }
+        }
+        @keyframes hsGarageVehicleIn {
+          0% {
+            opacity: 0;
+            transform: translateX(18px) scale(.97);
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+          }
+        }
+        @keyframes hsGarageFloorGlow {
+          0%, 100% { transform: scaleX(.94); opacity: .34; }
+          50% { transform: scaleX(1.04); opacity: .5; }
+        }
+      `}</style>
+
+      <div className="relative h-[210px] sm:h-[245px] overflow-hidden rounded-[24px] border border-white/10 bg-[radial-gradient(circle_at_50%_15%,rgba(255,210,120,.16),transparent_36%),linear-gradient(180deg,#1a1d22_0%,#0b0d10_56%,#07080a_100%)] shadow-2xl">
+        {/* Studio backdrop */}
+        <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/[0.06] to-transparent" />
+        <div className="absolute left-1/2 top-4 h-28 w-[72%] -translate-x-1/2 rounded-full bg-white/[0.025] blur-2xl" />
+
+        {/* Showroom floor */}
+        <div className="absolute inset-x-4 bottom-4 h-[72px] rounded-[50%] bg-gradient-to-b from-white/[0.05] to-transparent border-t border-white/[0.06]" />
+        <div
+          className="absolute left-1/2 bottom-12 h-8 w-44 sm:w-56 -translate-x-1/2 rounded-[50%] bg-yellow-300/10 blur-xl"
+          style={{ animation: 'hsGarageFloorGlow 3.6s ease-in-out infinite' }}
+        />
+        <div className="absolute left-1/2 bottom-10 h-5 w-36 sm:w-48 -translate-x-1/2 rounded-[50%] border border-white/[0.08] bg-black/25" />
+
+        {/* Vehicle turntable */}
+        <div
+          key={`${section}-${vehicleId}`}
+          className="absolute left-1/2 bottom-14 h-[138px] w-[210px] sm:h-[164px] sm:w-[260px] -translate-x-1/2"
+          style={{
+            animation: 'hsGarageVehicleIn 320ms ease-out',
+            perspective: '900px',
+          }}
+        >
+          <div
+            className="absolute inset-0 flex items-center justify-center"
+            style={{
+              transformStyle: 'preserve-3d',
+              animation: 'hsGarageTurntable 7.5s ease-in-out infinite',
+            }}
+          >
+            <div
+              className="h-[104px] w-[178px] sm:h-[126px] sm:w-[218px] rounded-2xl flex items-center justify-center"
+              style={{
+                background: `linear-gradient(145deg, ${vehicle.color}1f, ${vehicle.accentColor}12)`,
+                boxShadow: `0 16px 42px ${vehicle.color}16`,
+              }}
+            >
+              <div className="h-[88px] w-[168px] sm:h-[112px] sm:w-[208px]">
+                {isBike ? <BikeIcon bike={state.selectedBike} /> : <CarIcon car={state.selectedCar} />}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Showroom metadata — uses only existing vehicle fields */}
+        <div className="absolute left-4 top-4 sm:left-5 sm:top-5">
+          <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.24em] text-white/40 font-semibold">
+            {isBike ? 'Bike Showroom' : 'Car Showroom'}
+          </p>
+          <p className="mt-1 text-sm sm:text-base font-black text-white">{vehicleName}</p>
+        </div>
+
+        <div className="absolute right-4 top-4 sm:right-5 sm:top-5 rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-white/55 backdrop-blur-sm">
+          Studio
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function GarageSelection({ onBack }: { onBack: () => void }) {
   const state = useGameStore()
   const [section, setSection] = useState<'bikes' | 'cars'>('bikes')
 
   return (
-    <div className="absolute inset-0 flex flex-col bg-gradient-to-b from-gray-900 via-gray-950 to-black overflow-y-auto">
+    <div className="absolute inset-0 flex flex-col bg-[#07080a] overflow-y-auto">
       {/* Header */}
-      <div className="flex items-center p-3 sm:p-4 border-b border-white/5">
+      <div className="sticky top-0 z-20 flex items-center p-3 sm:p-4 border-b border-white/10 bg-[#07080a]/90 backdrop-blur-xl">
         <button
           onClick={onBack}
-          className="text-white text-xl sm:text-2xl active:scale-90 transition-transform w-8 h-8 flex items-center justify-center rounded-lg bg-white/5"
+          className="text-white text-xl sm:text-2xl active:scale-90 transition-transform w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 hover:bg-white/10"
         >
           ←
         </button>
-        <h2 className="text-lg sm:text-xl font-bold text-white ml-3">Garage</h2>
+        <div className="ml-3">
+          <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-white/35 font-semibold">Vehicle Collection</p>
+          <h2 className="text-lg sm:text-xl font-black text-white">Garage</h2>
+        </div>
       </div>
 
-      {/* Vehicle tabs */}
+      {/* Vehicle tabs — handlers and button behavior preserved exactly */}
       <div className="px-3 sm:px-4 pt-3 sm:pt-4">
-        <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-white/[0.04] border border-white/5">
+        <div className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-white/[0.035] border border-white/10 shadow-inner">
           <button
             onClick={() => setSection('bikes')}
-            className={`rounded-lg py-2.5 text-xs sm:text-sm font-bold transition-all ${
+            className={`rounded-xl py-2.5 text-xs sm:text-sm font-black tracking-wide transition-all ${
               section === 'bikes'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-700 text-white shadow-lg'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-black shadow-lg shadow-orange-500/20'
+                : 'text-gray-400 hover:text-white hover:bg-white/[0.06]'
             }`}
           >
             🏍️ BIKES
           </button>
           <button
             onClick={() => setSection('cars')}
-            className={`rounded-lg py-2.5 text-xs sm:text-sm font-bold transition-all ${
+            className={`rounded-xl py-2.5 text-xs sm:text-sm font-black tracking-wide transition-all ${
               section === 'cars'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-700 text-white shadow-lg'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-black shadow-lg shadow-orange-500/20'
+                : 'text-gray-400 hover:text-white hover:bg-white/[0.06]'
             }`}
           >
             🚗 CARS
@@ -649,9 +750,10 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
         </div>
       </div>
 
+      <GarageShowroomPreview state={state} section={section} />
+
       {section === 'bikes' ? (
         <>
-          {/* Bike list — same card layout as the original garage */}
           <div className="flex-1 px-3 sm:px-4 py-3 sm:py-4 space-y-3">
             {BIKES.map((bike) => {
               const isUnlocked = state.unlockedBikes.includes(bike.id)
@@ -661,32 +763,55 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
               return (
                 <div
                   key={bike.id}
-                  className={`relative rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all ${
+                  className={`group relative overflow-hidden rounded-2xl sm:rounded-[20px] p-3 sm:p-4 transition-all duration-300 border ${
                     isSelected
-                      ? 'bg-gradient-to-r from-yellow-500/10 to-orange-500/10 ring-1 ring-yellow-400/40'
+                      ? 'bg-gradient-to-r from-amber-500/[0.10] to-orange-500/[0.05] border-amber-300/35 shadow-lg shadow-amber-500/10'
                       : isUnlocked
-                      ? 'bg-white/[0.04] hover:bg-white/[0.07]'
-                      : 'bg-white/[0.02]'
+                      ? 'bg-white/[0.035] border-white/[0.07] hover:bg-white/[0.055] hover:border-white/[0.14]'
+                      : 'bg-white/[0.018] border-white/[0.045]'
                   }`}
                 >
+                  {isSelected && (
+                    <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-amber-300 to-orange-500" />
+                  )}
+
                   <div className="flex items-center gap-3 sm:gap-4">
-                    {/* Bike icon */}
                     <div
-                      className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
+                      className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden border ${
+                        isSelected
+                          ? 'border-amber-300/25'
+                          : 'border-white/[0.06]'
+                      }`}
                       style={{
                         background: isUnlocked
-                          ? `linear-gradient(135deg, ${bike.color}30, ${bike.accentColor}30)`
-                          : 'rgba(255,255,255,0.03)',
+                          ? `linear-gradient(145deg, ${bike.color}28, ${bike.accentColor}18)`
+                          : 'rgba(255,255,255,0.025)',
                       }}
                     >
-                      {isUnlocked ? <BikeIcon bike={bike} /> : <span className="text-2xl sm:text-3xl">🔒</span>}
+                      {isUnlocked ? (
+                        <div className="w-full h-full transition-transform duration-300 group-hover:scale-[1.06]">
+                          <BikeIcon bike={bike} />
+                        </div>
+                      ) : (
+                        <>
+                          <div className="w-full h-full opacity-25 grayscale">
+                            <BikeIcon bike={bike} />
+                          </div>
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+                            <span className="rounded-full border border-white/15 bg-black/50 px-2 py-1 text-sm shadow-lg">🔒</span>
+                          </div>
+                        </>
+                      )}
                     </div>
 
-                    {/* Info */}
                     <div className="flex-1 min-w-0">
                       <h3
                         onClick={() => isUnlocked && !isSelected && actions.selectBike(bike)}
-                        className={`text-white font-bold text-sm sm:text-base truncate ${isUnlocked && !isSelected ? 'cursor-pointer hover:text-yellow-300 transition-colors' : ''}`}
+                        className={`text-white font-black text-sm sm:text-base truncate ${
+                          isUnlocked && !isSelected
+                            ? 'cursor-pointer hover:text-amber-300 transition-colors'
+                            : ''
+                        }`}
                       >{bike.name}</h3>
                       <p className="text-gray-400 text-[10px] sm:text-xs truncate">
                         {isUnlocked ? bike.description : `Unlock at ${bike.unlockScore.toLocaleString()} pts`}
@@ -705,9 +830,9 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
 
                       {!isUnlocked && (
                         <div className="mt-1.5">
-                          <div className="h-1 sm:h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                          <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full transition-all duration-500"
+                              className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-500"
                               style={{ width: `${progress}%` }}
                             />
                           </div>
@@ -719,7 +844,8 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
                     </div>
 
                     {isSelected && (
-                      <div className="text-yellow-400 text-[10px] sm:text-xs font-bold shrink-0 bg-yellow-400/10 px-2 py-1 rounded-md">
+                      <div className="shrink-0 flex items-center gap-1.5 text-amber-300 text-[10px] sm:text-xs font-black bg-amber-300/10 px-2.5 py-1.5 rounded-full border border-amber-300/15">
+                        <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-amber-300 text-black text-[9px]">✓</span>
                         ACTIVE
                       </div>
                     )}
@@ -729,13 +855,12 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
             })}
           </div>
 
-          <div className="pb-4 pt-2 text-center">
+          <div className="pb-4 pt-1 text-center">
             <span className="text-xs text-gray-500">{state.unlockedBikes.length} out of {BIKES.length} Bikes unlocked</span>
           </div>
         </>
       ) : (
         <>
-          {/* Car list — same card spacing/arrangement as the Bike garage */}
           <div className="flex-1 px-3 sm:px-4 py-3 sm:py-4 space-y-3">
             {CARS.map((car) => {
               const isUnlocked = state.unlockedCars.includes(car.id)
@@ -745,50 +870,73 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
               return (
                 <div
                   key={car.id}
-                  className={`relative rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all ${
+                  className={`group relative overflow-hidden rounded-2xl sm:rounded-[20px] p-3 sm:p-4 transition-all duration-300 border ${
                     isSelected
-                      ? 'bg-gradient-to-r from-yellow-500/10 to-orange-500/10 ring-1 ring-yellow-400/40'
+                      ? 'bg-gradient-to-r from-amber-500/[0.10] to-orange-500/[0.05] border-amber-300/35 shadow-lg shadow-amber-500/10'
                       : isUnlocked
-                      ? 'bg-white/[0.04] hover:bg-white/[0.07]'
-                      : 'bg-white/[0.02]'
+                      ? 'bg-white/[0.035] border-white/[0.07] hover:bg-white/[0.055] hover:border-white/[0.14]'
+                      : 'bg-white/[0.018] border-white/[0.045]'
                   }`}
                 >
+                  {isSelected && (
+                    <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-amber-300 to-orange-500" />
+                  )}
+
                   <div className="flex items-center gap-3 sm:gap-4">
-                    {/* Car icon */}
                     <div
-                      className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
+                      className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden border ${
+                        isSelected
+                          ? 'border-amber-300/25'
+                          : 'border-white/[0.06]'
+                      }`}
                       style={{
                         background: isUnlocked
-                          ? `linear-gradient(135deg, ${car.color}30, ${car.accentColor}30)`
-                          : 'rgba(255,255,255,0.03)',
+                          ? `linear-gradient(145deg, ${car.color}28, ${car.accentColor}18)`
+                          : 'rgba(255,255,255,0.025)',
                       }}
                     >
-                      {isUnlocked ? <CarIcon car={car} /> : <span className="text-2xl sm:text-3xl">🔒</span>}
+                      {isUnlocked ? (
+                        <div className="w-full h-full transition-transform duration-300 group-hover:scale-[1.06]">
+                          <CarIcon car={car} />
+                        </div>
+                      ) : (
+                        <>
+                          <div className="w-full h-full opacity-25 grayscale">
+                            <CarIcon car={car} />
+                          </div>
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+                            <span className="rounded-full border border-white/15 bg-black/50 px-2 py-1 text-sm shadow-lg">🔒</span>
+                          </div>
+                        </>
+                      )}
                     </div>
 
-                    {/* Info */}
                     <div className="flex-1 min-w-0">
                       <h3
                         onClick={() => isUnlocked && !isSelected && actions.selectCar(car)}
-                        className={`text-white font-bold text-sm sm:text-base truncate ${isUnlocked && !isSelected ? 'cursor-pointer hover:text-yellow-300 transition-colors' : ''}`}
+                        className={`text-white font-black text-sm sm:text-base truncate ${
+                          isUnlocked && !isSelected
+                            ? 'cursor-pointer hover:text-amber-300 transition-colors'
+                            : ''
+                        }`}
                       >{car.name}</h3>
-                      <p className="text-gray-400 text-[10px] sm:text-xs truncate">{isUnlocked ? car.description : `Unlock at ${car.unlockScore.toLocaleString()} pts`}</p>
+                      <p className="text-gray-400 text-[10px] sm:text-xs truncate">
+                        {isUnlocked ? car.description : `Unlock at ${car.unlockScore.toLocaleString()} pts`}
+                      </p>
 
                       {isUnlocked && (
-                        <>
-                          <div className="mt-1.5">
-                            <p className="text-[10px] sm:text-xs text-gray-400">
-                              Top Speed: <span className="text-white font-semibold">{car.maxSpeed} kmph</span>
-                            </p>
-                          </div>
-                        </>
+                        <div className="mt-1.5">
+                          <p className="text-[10px] sm:text-xs text-gray-400">
+                            Top Speed: <span className="text-white font-semibold">{car.maxSpeed} kmph</span>
+                          </p>
+                        </div>
                       )}
 
                       {!isUnlocked && (
                         <div className="mt-1.5">
-                          <div className="h-1 sm:h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                          <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full transition-all duration-500"
+                              className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-500"
                               style={{ width: `${progress}%` }}
                             />
                           </div>
@@ -800,7 +948,8 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
                     </div>
 
                     {isSelected && (
-                      <div className="text-yellow-400 text-[10px] sm:text-xs font-bold shrink-0 bg-yellow-400/10 px-2 py-1 rounded-md">
+                      <div className="shrink-0 flex items-center gap-1.5 text-amber-300 text-[10px] sm:text-xs font-black bg-amber-300/10 px-2.5 py-1.5 rounded-full border border-amber-300/15">
+                        <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-amber-300 text-black text-[9px]">✓</span>
                         ACTIVE
                       </div>
                     )}
@@ -810,7 +959,7 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
             })}
           </div>
 
-          <div className="pb-4 pt-2 text-center">
+          <div className="pb-4 pt-1 text-center">
             <span className="text-xs text-gray-500">
               {state.unlockedCars.length} out of {CARS.length} Cars unlocked
             </span>
@@ -821,7 +970,6 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
   )
 }
 
-// Car icon component with five distinct silhouettes inspired by the requested real-life vehicles.
 function CarIcon({ car }: { car: Car }) {
   const common = { fill: car.color, accent: car.accentColor }
 
