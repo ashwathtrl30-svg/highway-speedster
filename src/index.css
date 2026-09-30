@@ -121,9 +121,8 @@ button:focus-visible,
   border-radius: var(--hs-radius-xl);
   box-shadow: var(--hs-shadow-sm);
   transition:
-    background var(--hs-motion-standard) var(--hs-ease-press),
-    border-color var(--hs-motion-standard) var(--hs-ease-press),
-    transform var(--hs-motion-fast) var(--hs-ease-press);
+    transform var(--hs-motion-fast) var(--hs-ease-press),
+    opacity var(--hs-motion-fast) var(--hs-ease-press);
 }
 
 .hs-card:hover {
@@ -139,9 +138,7 @@ button:focus-visible,
   letter-spacing: 0.015em;
   transition:
     transform var(--hs-motion-fast) var(--hs-ease-press),
-    background var(--hs-motion-standard) var(--hs-ease-press),
-    border-color var(--hs-motion-standard) var(--hs-ease-press),
-    box-shadow var(--hs-motion-standard) var(--hs-ease-press);
+    opacity var(--hs-motion-fast) var(--hs-ease-press);
 }
 
 .hs-btn:active {
@@ -220,12 +217,64 @@ button:focus-visible,
   opacity: 0.5;
 }
 
+@keyframes hsScreenEnter {
+  0% { opacity: 0; transform: translateY(8px) scale(.992); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes hsPopIn {
+  0% { opacity: 0; transform: scale(.94); }
+  65% { opacity: 1; transform: scale(1.025); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes hsScoreUpdate {
+  0% { opacity: .72; transform: scale(.94); }
+  55% { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes hsUnlockEnter {
+  0% { opacity: 0; transform: translateY(-8px) scale(.96); }
+  70% { opacity: 1; transform: translateY(1px) scale(1.015); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes hsPowerupActive {
+  0% { opacity: .7; transform: scale(.96); }
+  65% { opacity: 1; transform: scale(1.025); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes hsListEnter {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.hs-screen-enter { animation: hsScreenEnter 240ms var(--hs-ease-standard) both; }
+.hs-pop-in { animation: hsPopIn 220ms var(--hs-ease-standard) both; }
+.hs-score-update { display: inline-block; transform-origin: center; animation: hsScoreUpdate 160ms var(--hs-ease-standard) both; }
+.hs-unlock-enter { animation: hsUnlockEnter 240ms var(--hs-ease-standard) both; }
+.hs-powerup-active { animation: hsPowerupActive 220ms var(--hs-ease-standard) both; }
+.hs-list-enter { animation: hsListEnter 220ms var(--hs-ease-standard) both; }
+.hs-selection-card {
+  transition: transform var(--hs-motion-fast) var(--hs-ease-press), opacity var(--hs-motion-fast) var(--hs-ease-press) !important;
+}
+.hs-selection-card:active { transform: scale(.985); }
+.hs-progress-fill {
+  transform-origin: left center;
+  transition: transform var(--hs-motion-fast) linear !important;
+  will-change: transform;
+}
+.transition-all {
+  transition: transform var(--hs-motion-fast) var(--hs-ease-press), opacity var(--hs-motion-fast) var(--hs-ease-press) !important;
+}
+.transition-colors { transition: none !important; }
+button {
+  transition: transform var(--hs-motion-fast) var(--hs-ease-press), opacity var(--hs-motion-fast) var(--hs-ease-press) !important;
+}
+button:active:not(:disabled) { transform: scale(.985) !important; }
 @media (prefers-reduced-motion: reduce) {
-  .hs-card,
-  .hs-btn {
-    transition: none;
+  html { scroll-behavior: auto !important; }
+  .hs-card, .hs-btn, .hs-screen-enter, .hs-pop-in, .hs-score-update, .hs-unlock-enter,
+  .hs-powerup-active, .hs-list-enter, .hs-selection-card, .transition-all,
+  .transition-transform, .transition-opacity {
+    animation: none !important;
+    transition: none !important;
   }
-  .hs-btn:active {
-    transform: none;
-  }
+  button:active:not(:disabled) { transform: none !important; }
 }
