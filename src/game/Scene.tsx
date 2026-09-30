@@ -1797,19 +1797,33 @@ function CarBase({
         />
       </mesh>
 
-      {/* [GFX] Better wheel/tire presentation, including hub + brake-disc illusion.
-          The existing player-wheel name keeps the rotation entirely visual-only. */}
+      {/* [GFX] Premium round road wheels with visible metallic hubs and brake discs. */}
       {[-1, 1].map((side) => (
         <group key={side}>
           {[-wheelZ, wheelZ].map((z) => (
             <group key={z} position={[side * w * 0.52, h * 0.24, z]}>
-              <mesh rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[0.27, 0.27, 0.22, 16]} />
-                <meshStandardMaterial color="#101010" roughness={0.82} metalness={0.05} />
+              <mesh
+                name="player-wheel"
+                geometry={wheelTireGeometry}
+                rotation={[0, Math.PI / 2, 0]}
+                castShadow
+                receiveShadow
+              >
+                <primitive object={wheelMaterial} attach="material" />
               </mesh>
-              <mesh position={[side > 0 ? 0.115 : -0.115, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[0.13, 0.13, 0.025, 16]} />
-                <meshStandardMaterial color="#9ca3af" metalness={0.75} roughness={0.2} />
+              <mesh
+                geometry={wheelHubGeometry}
+                rotation={[0, 0, Math.PI / 2]}
+                castShadow
+              >
+                <primitive object={hubMaterial} attach="material" />
+              </mesh>
+              <mesh
+                geometry={wheelDiscGeometry}
+                rotation={[0, 0, Math.PI / 2]}
+                position={[side > 0 ? 0.052 : -0.052, 0, 0]}
+              >
+                <primitive object={discMaterial} attach="material" />
               </mesh>
             </group>
           ))}
@@ -1956,9 +1970,9 @@ function TrafficSystem() {
   const playtimeTrackerRef = useRef(0)
 
   const vehicleColors = useMemo(() => [
-    '#f4b942', '#39b8c4', '#e16b3a', '#8f5de7', '#58a85b',
-    '#f08a3c', '#5cc8d7', '#c45ad8', '#e0a72f', '#4fae7a',
-    '#d96c9b', '#6f9be8',
+    '#e74c3c', '#3498db', '#27ae60', '#f39c12', '#8e44ad',
+    '#1abc9c', '#e67e22', '#ecf0f1', '#2c3e50', '#d35400',
+    '#c0392b', '#16a085', '#f1c40f', '#7f8c8d', '#2980b9',
   ], [])
 
   const getVehicleDimensions = useCallback((type: string): [number, number, number] => {
@@ -2183,7 +2197,7 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
   const [w, h, l] = getDimensions(type)
 
   // Body
-  const displayColor = getTrafficDisplayColor(color)
+  const displayColor = color
   const bodyGeo = new RoundedBoxGeometry(w, h * 0.55, l, 0.045, 1)
   const bodyMat = new THREE.MeshStandardMaterial({
     color: displayColor,
@@ -2210,7 +2224,7 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
     // resembling the selectable player car roster.
     const windshieldGeo = new THREE.BoxGeometry(w * 0.58, h * 0.13, 0.035)
     const windshieldMat = new THREE.MeshStandardMaterial({
-      color: '#243442',
+      color: '#17212b',
       metalness: 0.15,
       roughness: 0.24,
       transparent: true,
@@ -2223,9 +2237,9 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
 
     const trafficStripeGeo = new THREE.BoxGeometry(w * 0.84, 0.045, l * 0.035)
     const trafficStripeMat = new THREE.MeshStandardMaterial({
-      color: '#f3cf59',
-      metalness: 0.3,
-      roughness: 0.34,
+      color: '#5f646a',
+      metalness: 0.35,
+      roughness: 0.3,
     })
     const trafficStripe = new THREE.Mesh(trafficStripeGeo, trafficStripeMat)
     trafficStripe.position.set(0, h * 0.45, -l * 0.09)
@@ -2263,11 +2277,9 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
 
     const tankAccentGeo = new THREE.BoxGeometry(w * 0.34, h * 0.08, l * 0.28)
     const tankAccentMat = new THREE.MeshStandardMaterial({
-      color: '#f4c842',
-      metalness: 0.55,
-      roughness: 0.3,
-      emissive: '#5a4510',
-      emissiveIntensity: 0.12,
+      color: '#777777',
+      metalness: 0.65,
+      roughness: 0.22,
     })
     const tankAccent = new THREE.Mesh(tankAccentGeo, tankAccentMat)
     tankAccent.position.set(0, h * 0.53, -l * 0.05)
@@ -2326,8 +2338,14 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
   }
 
   // Wheels
-  const wheelGeo = new THREE.CylinderGeometry(0.22, 0.22, 0.12, 8)
-  const wheelMat = new THREE.MeshStandardMaterial({ color: '#111111', roughness: 0.9 })
+  // Rounded tires + visible hubs keep traffic wheels readable instead of looking like flat blocks.
+  const wheelRadius = type === 'bus' || type === 'truck' ? 0.25 : type === 'car' ? 0.27 : 0.22
+  const wheelTireGeo = new THREE.TorusGeometry(wheelRadius, wheelRadius * 0.26, 8, 16)
+  const wheelHubGeo = new THREE.CylinderGeometry(wheelRadius * 0.46, wheelRadius * 0.46, 0.06, 12)
+  const wheelDiscGeo = new THREE.CylinderGeometry(wheelRadius * 0.28, wheelRadius * 0.28, 0.02, 10)
+  const wheelMat = new THREE.MeshStandardMaterial({ color: '#101010', roughness: 0.86, metalness: 0.04 })
+  const wheelHubMat = new THREE.MeshStandardMaterial({ color: '#8f969b', roughness: 0.22, metalness: 0.78 })
+  const wheelDiscMat = new THREE.MeshStandardMaterial({ color: '#4e555a', roughness: 0.18, metalness: 0.9 })
   
   const wheelZ = type === 'bus' || type === 'truck' ? l * 0.35 : type === 'bike' || type === 'scooter' ? l * 0.38 : l * 0.3
   const wheelPositions = (type === 'bike' || type === 'scooter')
@@ -2346,10 +2364,23 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
   }
 
   wheelPositions.forEach(([x, y, z]) => {
-    const wheel = new THREE.Mesh(wheelGeo, wheelMat)
-    wheel.position.set(x, y, z)
-    wheel.rotation.z = Math.PI / 2
-    group.add(wheel)
+    const wheelGroup = new THREE.Group()
+    wheelGroup.position.set(x, y, z)
+
+    const tire = new THREE.Mesh(wheelTireGeo, wheelMat)
+    tire.rotation.y = Math.PI / 2
+    wheelGroup.add(tire)
+
+    const hub = new THREE.Mesh(wheelHubGeo, wheelHubMat)
+    hub.rotation.z = Math.PI / 2
+    wheelGroup.add(hub)
+
+    const disc = new THREE.Mesh(wheelDiscGeo, wheelDiscMat)
+    disc.rotation.z = Math.PI / 2
+    disc.position.x = x < 0 ? -0.045 : x > 0 ? 0.045 : 0.045
+    wheelGroup.add(disc)
+
+    group.add(wheelGroup)
   })
 
   // [GFX] Additive tail-light bloom without a dynamic light.
