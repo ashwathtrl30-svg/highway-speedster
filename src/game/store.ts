@@ -204,7 +204,7 @@ export interface GameData {
   totalCoins: number
   runCoins: number
   inventory: PowerUpInventory
-  selectedPowerUps: PowerUpType[]
+  selectedPowerUps: Record<PowerUpType, number>
   playerLane: number
   targetLane: number
   playerX: number
@@ -373,7 +373,7 @@ let state: GameData = {
   totalCoins: savedProgress.totalCoins,
   runCoins: 0,
   inventory: { ...defaultInventory, ...savedProgress.inventory },
-  selectedPowerUps: [],
+  selectedPowerUps: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 },
   playerLane: 0,
   targetLane: 0,
   playerX: 0,
@@ -765,72 +765,89 @@ export const actions = {
     }
   },
 
-  togglePowerUp(powerUp: PowerUpType) {
-    if (state.inventory[powerUp] <= 0) return
+  setPowerUpQuantity(powerUp: PowerUpType, quantity: number) {
+    const owned = Math.max(0, Math.floor(state.inventory[powerUp]))
+    const currentQuantity = Math.max(0, Math.floor(state.selectedPowerUps[powerUp] || 0))
+    const requested = Math.max(0, Math.min(3, Math.floor(quantity)))
 
-    const alreadySelected = state.selectedPowerUps.includes(powerUp)
-    if (alreadySelected) {
-      setState({
-        selectedPowerUps: state.selectedPowerUps.filter((item) => item !== powerUp),
-      })
-      return
+    if (requested > currentQuantity) {
+      const selectedOthers = (Object.keys(state.selectedPowerUps) as PowerUpType[]).reduce(
+        (sum, item) => item === powerUp ? sum : sum + Math.max(0, Math.floor(state.selectedPowerUps[item] || 0)),
+        0
+      )
+      const maxForThisPowerUp = Math.min(owned, 3 - selectedOthers)
+      if (requested > maxForThisPowerUp) return
     }
 
-    // Up to three simultaneous power-ups can be equipped at the start of a run.
-    if (state.selectedPowerUps.length >= 3) return
+    // Keep alternate versions of the same effect mutually exclusive.
+    // Changing to one magnet variant clears the other magnet variant, and
+    // changing to one score multiplier clears the other multiplier variant.
+    const nextSelection = { ...state.selectedPowerUps }
+    if (requested === 0) {
+      nextSelection[powerUp] = 0
+    } else {
+      const isMagnetVariant = powerUp === 'magnet' || powerUp === 'magnet2x'
+      const isMultiplierVariant = powerUp === 'multiplier2x' || powerUp === 'multiplier4x'
+      if (isMagnetVariant) {
+        nextSelection.magnet = 0
+        nextSelection.magnet2x = 0
+      }
+      if (isMultiplierVariant) {
+        nextSelection.multiplier2x = 0
+        nextSelection.multiplier4x = 0
+      }
+      nextSelection[powerUp] = Math.min(requested, owned, 3)
+    }
 
-    // Keep alternate versions of the same effect mutually exclusive:
-    // one magnet variant and one score-multiplier variant per run.
-    const isMagnetVariant = powerUp === 'magnet' || powerUp === 'magnet2x'
-    const isMultiplierVariant = powerUp === 'multiplier2x' || powerUp === 'multiplier4x'
-
-    const nextSelection = state.selectedPowerUps.filter((item) => {
-      const sameMagnetFamily =
-        isMagnetVariant && (item === 'magnet' || item === 'magnet2x')
-      const sameMultiplierFamily =
-        isMultiplierVariant && (item === 'multiplier2x' || item === 'multiplier4x')
-      return !sameMagnetFamily && !sameMultiplierFamily
-    })
-
-    setState({ selectedPowerUps: [...nextSelection, powerUp] })
+    setState({ selectedPowerUps: nextSelection })
   },
 
   useSelectedPowerUps() {
-    if (state.selectedPowerUps.length === 0) return
+    const selectedPowerUps = (Object.keys(state.selectedPowerUps) as PowerUpType[]).filter(
+      (powerUp) => state.selectedPowerUps[powerUp] > 0 && state.inventory[powerUp] > 0
+    )
 
-    const selectedPowerUps = state.selectedPowerUps.filter((powerUp) => state.inventory[powerUp] > 0)
-    if (selectedPowerUps.length === 0) return
+    if (selectedPowerUps.length === 0) {
+      setState({ selectedPowerUps: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 } })
+      return
+    }
 
     const newInventory = { ...state.inventory }
     const updates: Partial<GameData> = {}
 
     selectedPowerUps.forEach((powerUp) => {
-      newInventory[powerUp] -= 1
+      const quantity = Math.min(
+        Math.max(0, Math.floor(state.selectedPowerUps[powerUp])),
+        Math.max(0, Math.floor(state.inventory[powerUp]))
+      )
+      if (quantity <= 0) return
+
+      newInventory[powerUp] -= quantity
 
       if (powerUp === 'magnet') {
         updates.magnetActive = true
-        updates.magnetTimer = 10
+        updates.magnetTimer = 10 * quantity
       } else if (powerUp === 'magnet2x') {
         updates.magnet2xActive = true
-        updates.magnet2xTimer = 10
+        updates.magnet2xTimer = 10 * quantity
       } else if (powerUp === 'multiplier2x') {
         updates.multiplierActive = true
-        updates.multiplierTimer = 10
+        updates.multiplierTimer = 10 * quantity
         updates.multiplier4x = false
       } else if (powerUp === 'multiplier4x') {
         updates.multiplierActive = true
-        updates.multiplierTimer = 10
+        updates.multiplierTimer = 10 * quantity
         updates.multiplier4x = true
       } else if (powerUp === 'shield') {
         updates.shieldActive = true
-        updates.shieldCount = 2
+        updates.shieldCount = 2 * quantity
       }
     })
 
     setState({
       ...updates,
       inventory: newInventory,
-      selectedPowerUps: [],
+      selectedPowerUps: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 },
     })
 
     saveProgress(
@@ -855,7 +872,7 @@ export const actions = {
       combo: 0,
       comboTimer: 0,
       runCoins: 0,
-      selectedPowerUps: [],
+      selectedPowerUps: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 },
       playerLane: 0,
       targetLane: 0,
       playerX: 0,
