@@ -785,7 +785,7 @@ void main() {
 
 function ShieldBubble({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
   const bubbleRef = useRef<THREE.Group>(null)
-  const radius = vehicleMode === 'car' ? 1.85 : 1.2
+  const radius = vehicleMode === 'car' ? 1.48 : 0.96
 
   useFrame((_, delta) => {
     if (!bubbleRef.current) return
@@ -990,7 +990,7 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
         {vehicleMode === 'car' ? renderCarModel() : renderBikeModel()}
         <VehicleLightingAccents vehicleMode={vehicleMode} />
         <PlayerWheelFaces vehicleMode={vehicleMode} carId={car.id} />
-        <ShieldBubble vehicleMode={vehicleMode} />
+        {shieldActive && <ShieldBubble vehicleMode={vehicleMode} />}
       </group>
     </group>
   )
