@@ -603,44 +603,21 @@ export function MainMenu() {
         .hs-menu-enter-delay-3 { animation-delay: 280ms; }
       `}</style>
 
-      {/* Live visual backdrop: no external asset loading and no blocking screen. */}
+      {/* Static highway backdrop: restrained metallic tones with no continuous background motion. */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(244,185,74,.16),transparent_28%),linear-gradient(180deg,#151c23_0%,#0d1318_45%,#080a0d_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_18%,rgba(216,154,62,.18),transparent_24%),radial-gradient(circle_at_18%_72%,rgba(54,86,103,.18),transparent_30%),linear-gradient(145deg,#10161b_0%,#182129_42%,#0c1014_72%,#07090b_100%)]" />
+        <div className="absolute inset-x-0 top-[28%] h-px bg-gradient-to-r from-transparent via-slate-400/20 to-transparent" />
+        <div className="absolute left-[7%] top-[30%] h-[48%] w-px bg-gradient-to-b from-transparent via-amber-300/18 to-transparent" />
+        <div className="absolute right-[12%] top-[22%] h-[58%] w-px bg-gradient-to-b from-transparent via-white/10 to-transparent" />
         <div
-          className="absolute -inset-x-20 top-[40%] h-[68%]"
+          className="absolute bottom-[-10%] left-1/2 h-[58%] w-[120%] -translate-x-1/2"
           style={{
-            background: 'linear-gradient(165deg, transparent 0 38%, rgba(17,21,24,.95) 38.2% 39.1%, transparent 39.3% 100%), repeating-linear-gradient(90deg, transparent 0 74px, rgba(229,195,116,.13) 75px 76px, transparent 77px 150px)',
-            transform: 'perspective(520px) rotateX(61deg)',
+            background: 'linear-gradient(176deg, transparent 0 48%, rgba(4,7,9,.96) 48.5% 49.2%, transparent 49.7% 100%), linear-gradient(90deg, transparent 0 23%, rgba(224,178,87,.12) 23.2% 23.5%, transparent 23.7% 76.3%, rgba(224,178,87,.12) 76.5% 76.8%, transparent 77% 100%)',
+            transform: 'perspective(700px) rotateX(58deg)',
             transformOrigin: 'top center',
-            animation: 'hsMenuRoad 4.8s ease-in-out infinite',
           }}
         />
-
-        <div
-          className="absolute left-0 right-0 top-[34%] h-28 opacity-70"
-          style={{
-            background: 'linear-gradient(to top, rgba(8,10,13,.95), transparent), repeating-linear-gradient(90deg, rgba(36,46,53,.78) 0 16px, transparent 16px 28px, rgba(48,58,63,.58) 28px 42px, transparent 42px 58px)',
-            clipPath: 'polygon(0 58%, 6% 44%, 11% 57%, 18% 36%, 25% 55%, 34% 41%, 43% 58%, 51% 30%, 60% 52%, 68% 42%, 76% 56%, 83% 36%, 91% 51%, 100% 39%, 100% 100%, 0 100%)',
-            animation: 'hsMenuSkyline 12s ease-in-out infinite',
-          }}
-        />
-
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <span
-            key={i}
-            className="absolute top-[14%] h-1 rounded-full bg-white/20 blur-[1px]"
-            style={{
-              left: `${8 + i * 16}%`,
-              width: `${28 + (i % 3) * 18}px`,
-              animation: `hsMenuStreak ${2.2 + (i % 3) * 0.4}s linear ${i * 0.24}s infinite`,
-            }}
-          />
-        ))}
-
-        <div
-          className="absolute left-1/2 top-[50%] h-[190px] w-[190px] -translate-x-1/2 rounded-full bg-amber-300/10 blur-3xl"
-          style={{ animation: 'hsMenuGlow 4.5s ease-in-out infinite' }}
-        />
+        <div className="absolute inset-x-0 bottom-0 h-[34%] bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
       </div>
 
       {/* Existing username flow remains in the same place/function. */}
@@ -689,7 +666,7 @@ export function MainMenu() {
             >
               <div
                 className="relative h-[125px] w-[225px] sm:h-[155px] sm:w-[285px]"
-                style={{ animation: 'hsMenuBikeFloat 4.6s ease-in-out infinite' }}
+                style={{ animation: 'hsMenuEntrance 300ms ease-out both' }}
               >
                 {isCar ? <CarIcon car={state.selectedCar} /> : <BikeIcon bike={state.selectedBike} />}
               </div>
@@ -926,9 +903,18 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
   const [section, setSection] = useState<'bikes' | 'cars'>('bikes')
 
   return (
-    <div className="hs-screen hs-screen-enter absolute inset-0 flex flex-col bg-[#07080a] overflow-y-auto">
+    <div className="hs-screen hs-screen-enter absolute inset-0 flex flex-col overflow-y-auto bg-[#0a0f13]">
+      {/* Static garage environment. Selected vehicle is visible in the background, offset from labels. */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_22%,rgba(211,157,71,.14),transparent_27%),radial-gradient(circle_at_16%_65%,rgba(48,81,99,.17),transparent_34%),linear-gradient(135deg,#0c1217_0%,#17212a_50%,#080b0e_100%)]" />
+        <div className="absolute right-[-6%] top-[15%] h-44 w-[42%] max-w-[360px] opacity-[0.13] saturate-50 sm:right-[2%] sm:top-[13%] sm:h-56 sm:w-[34%]">
+          {section === 'bikes' ? <BikeIcon bike={state.selectedBike} /> : <CarIcon car={state.selectedCar} />}
+        </div>
+        <div className="absolute inset-x-0 top-[8.5rem] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-[44%] bg-gradient-to-t from-black/55 to-transparent" />
+      </div>
       {/* Header */}
-      <div className="sticky top-0 z-20 flex items-center p-3 sm:p-4 border-b border-white/10 bg-[#07080a]/90 backdrop-blur-xl">
+      <div className="sticky top-0 z-20 flex items-center p-3 sm:p-4 border-b border-white/10 bg-[#0a0f13]/88 backdrop-blur-xl">
         <button
           onClick={onBack}
           className="hs-btn hs-btn-secondary text-white text-xl sm:text-2xl active:scale-90 transition-transform w-8 h-8 flex items-center justify-center rounded-lg"
@@ -1283,9 +1269,23 @@ function Store({ onBack }: { onBack: () => void }) {
   const state = useGameStore()
 
   return (
-    <div className="absolute inset-0 flex flex-col bg-gradient-to-b from-gray-900 via-gray-950 to-black overflow-y-auto">
+    <div className="absolute inset-0 flex flex-col overflow-y-auto bg-[#0b1015]">
+      {/* Static performance-store backdrop: steel, road-night and restrained amber accents. */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_18%,rgba(63,98,117,.18),transparent_28%),radial-gradient(circle_at_20%_72%,rgba(211,157,71,.11),transparent_30%),linear-gradient(145deg,#0d1419_0%,#17232b_48%,#090c10_100%)]" />
+        <div className="absolute right-[-12%] top-[18%] h-52 w-1/2 max-w-[420px] opacity-[0.08]">
+          <svg viewBox="0 0 100 60" className="h-full w-full" aria-hidden="true">
+            <path d="M5 43 15 36 28 33 41 23 58 18 70 22 81 30 91 35 95 43Z" fill="#cbd5dc" />
+            <path d="M35 31 44 24 58 19 69 24 77 30Z" fill="#0b1116" />
+            <circle cx="18" cy="46" r="8" fill="#07090b" stroke="#64717a" strokeWidth="2" />
+            <circle cx="82" cy="46" r="8" fill="#07090b" stroke="#64717a" strokeWidth="2" />
+          </svg>
+        </div>
+        <div className="absolute inset-x-0 top-[8.5rem] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-black/58 to-transparent" />
+      </div>
       {/* Header */}
-      <div className="flex items-center p-3 sm:p-4 border-b border-white/5">
+      <div className="relative z-10 flex items-center p-3 sm:p-4 border-b border-white/10 bg-[#0b1015]/78 backdrop-blur-xl">
         <button
           onClick={onBack}
           className="text-white text-xl sm:text-2xl active:scale-90 transition-transform w-8 h-8 flex items-center justify-center rounded-lg bg-white/5"
@@ -1296,7 +1296,7 @@ function Store({ onBack }: { onBack: () => void }) {
       </div>
 
       {/* Total Coins */}
-      <div className="p-4 sm:p-6 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-b border-yellow-500/20">
+      <div className="relative z-10 p-4 sm:p-6 bg-gradient-to-r from-amber-500/10 to-slate-400/5 border-b border-amber-500/15 backdrop-blur-sm">
         <div className="text-center">
           <p className="text-gray-400 text-xs sm:text-sm uppercase tracking-wider mb-1">Total Coins Collected</p>
           <p className="text-yellow-400 font-black text-3xl sm:text-4xl tabular-nums flex items-center justify-center gap-2">
@@ -1307,7 +1307,7 @@ function Store({ onBack }: { onBack: () => void }) {
       </div>
 
       {/* Power-ups Section */}
-      <div className="flex-1 px-3 sm:px-4 py-4 sm:py-6">
+      <div className="relative z-10 flex-1 px-3 sm:px-4 py-4 sm:py-6">
         <h3 className="text-white font-bold text-base sm:text-lg mb-4">Power-Ups</h3>
         
         <div className="space-y-3">
@@ -1331,18 +1331,18 @@ function Store({ onBack }: { onBack: () => void }) {
           </div>
 
           {/* 4x Score - 350 coins */}
-          <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-4 border border-purple-500/30">
+          <div className="bg-gradient-to-r from-slate-500/10 to-blue-500/10 rounded-xl p-4 border border-slate-400/20">
             <div className="flex items-center gap-3">
               <div className="text-4xl">💎</div>
               <div className="flex-1">
                 <h4 className="text-white font-bold text-base">4× Score</h4>
                 <p className="text-gray-400 text-xs mt-0.5">Quadruple your score for 10 seconds</p>
-                <p className="text-purple-400 text-xs mt-1 font-semibold">Owned: {state.inventory.multiplier4x}</p>
+                <p className="text-sky-300 text-xs mt-1 font-semibold">Owned: {state.inventory.multiplier4x}</p>
               </div>
               <button
                 onClick={() => actions.buyMultiplier4x()}
                 disabled={state.totalCoins < 350}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-sm px-4 py-2 rounded-lg active:scale-95 transition-all shadow-lg shadow-purple-500/25"
+                className="bg-gradient-to-r from-slate-500 to-blue-600 hover:from-slate-400 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-sm px-4 py-2 rounded-lg active:scale-95 transition-all shadow-lg shadow-purple-500/25"
               >
                 🪙 350
               </button>
