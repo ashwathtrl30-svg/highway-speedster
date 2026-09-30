@@ -1772,7 +1772,7 @@ function TrafficSystem() {
 
   const vehicleColors = useMemo(() => [
     '#e74c3c', '#3498db', '#27ae60', '#f39c12', '#8e44ad',
-    '#1abc9c', '#e67e22', '#ecf0f1', '#2c3e50', '#d35400',
+    '#1abc9c', '#e67e22', '#ecf0f1', '#f5f5f5', '#d35400',
     '#c0392b', '#16a085', '#f1c40f', '#7f8c8d', '#2980b9',
   ], [])
 
@@ -1936,6 +1936,22 @@ function TrafficSystem() {
   )
 }
 
+function getPlayerVisualLength(state: ReturnType<typeof getState>): number {
+  if (state.vehicleMode === 'car') {
+    switch (state.selectedCar.id) {
+      case 'kanto-zip': return 3.2 * 0.95
+      case 'goliath-titan': return 4.6 * 1.08
+      case 'saber-swift': return 4.2
+      case 'kaiser-monarch': return 4.7
+      case 'scuderia-fury': return 4.4
+      default: return 4.2
+    }
+  }
+  // The five selectable bikes occupy essentially the same longitudinal
+  // envelope in the gameplay scene; use a single reference length.
+  return 2.1
+}
+
 function TrafficRenderer({ vehiclesRef, getDimensions }: {
   vehiclesRef: React.MutableRefObject<TrafficVehicle[]>
   getDimensions: (type: string) => [number, number, number]
@@ -1955,10 +1971,23 @@ function TrafficRenderer({ vehiclesRef, getDimensions }: {
       let mesh = meshCacheRef.current.get(v.id)
       if (!mesh) {
         mesh = createVehicleMesh(v.type, v.color, getDimensions)
+
+        // Visual-only normalization: every traffic vehicle is scaled so its
+        // longitudinal size matches the currently ridden player vehicle.
+        // Collision dimensions and gameplay calculations remain unchanged.
+        const targetLength = getPlayerVisualLength(getState())
+        const trafficLength = Math.max(getDimensions(v.type)[2], 0.01)
+        mesh.scale.setScalar(targetLength / trafficLength)
+
         meshCacheRef.current.set(v.id, mesh)
         groupRef.current!.add(mesh)
       }
-      
+      const targetLength = getPlayerVisualLength(getState())
+      const trafficLength = Math.max(getDimensions(v.type)[2], 0.01)
+      const normalizedScale = targetLength / trafficLength
+      if (Math.abs(mesh.scale.x - normalizedScale) > 0.001) {
+        mesh.scale.setScalar(normalizedScale)
+      }
       mesh.position.set(v.lane * LANE_WIDTH, 0, v.z)
     })
 
@@ -3772,7 +3801,7 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
           scale: 0.78 + seed(i * 5 + 4) * (0.45 + zone * 0.18),
           rotation: (seed(i * 5 + 5) - 0.5) * 0.2,
           variant: i % 3,
-          tint: new THREE.Color(zone > 0.58 ? '#63a954' : '#579b4c'),
+          tint: new THREE.Color('#ffffff'),
         })
       }
 
@@ -3783,7 +3812,7 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
           scale: 0.75 + seed(i * 11 + 7) * (0.5 + zone * 0.16),
           rotation: (seed(i * 11 + 8) - 0.5) * 0.2,
           variant: (i + 1) % 3,
-          tint: new THREE.Color(zone > 0.58 ? '#67ad58' : '#5a9e50'),
+          tint: new THREE.Color('#ffffff'),
         })
       }
 
@@ -3839,25 +3868,25 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
     ]
     const canopyMats = [
       new THREE.MeshStandardMaterial({
-        color: '#69a95d',
+        color: '#39a852',
         roughness: 0.88,
         vertexColors: true,
-        emissive: '#163b18',
-        emissiveIntensity: 0.07,
+        emissive: '#123d1b',
+        emissiveIntensity: 0.08,
       }),
       new THREE.MeshStandardMaterial({
-        color: '#72ad63',
+        color: '#39a852',
         roughness: 0.88,
         vertexColors: true,
-        emissive: '#163b18',
-        emissiveIntensity: 0.07,
+        emissive: '#123d1b',
+        emissiveIntensity: 0.08,
       }),
       new THREE.MeshStandardMaterial({
-        color: '#5e9d55',
+        color: '#39a852',
         roughness: 0.88,
         vertexColors: true,
-        emissive: '#153916',
-        emissiveIntensity: 0.07,
+        emissive: '#123d1b',
+        emissiveIntensity: 0.08,
       }),
     ]
     const variantCounts = [0, 0, 0]
