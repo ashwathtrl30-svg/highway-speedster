@@ -822,7 +822,43 @@ function GarageShowroomPreview({
   const isBike = section === 'bikes'
   const vehicle = isBike ? state.selectedBike : state.selectedCar
   const vehicleId = vehicle.id
-  const vehicleName = vehicle.name
+
+  type GarageVehicleSnapshot = {
+    section: 'bikes' | 'cars'
+    vehicle: Bike | Car
+    id: string
+  }
+
+  const previousVehicleRef = useRef<GarageVehicleSnapshot>({
+    section,
+    vehicle,
+    id: vehicleId,
+  })
+  const switchNonceRef = useRef(0)
+  const [switchFx, setSwitchFx] = useState<GarageVehicleSnapshot | null>(null)
+
+  useEffect(() => {
+    const previous = previousVehicleRef.current
+    const changed = previous.section !== section || previous.id !== vehicleId
+
+    if (!changed) return
+
+    const nonce = ++switchNonceRef.current
+    setSwitchFx(previous)
+    previousVehicleRef.current = {
+      section,
+      vehicle,
+      id: vehicleId,
+    }
+
+    const timer = window.setTimeout(() => {
+      if (switchNonceRef.current === nonce) {
+        setSwitchFx(null)
+      }
+    }, 470)
+
+    return () => window.clearTimeout(timer)
+  }, [section, vehicleId])
 
   return (
     <div className="mx-3 sm:mx-4 mt-3 sm:mt-4">
@@ -835,6 +871,7 @@ function GarageShowroomPreview({
             transform: perspective(900px) rotateY(9deg) rotateX(-1deg) translateY(-4px);
           }
         }
+
         @keyframes hsGarageVehicleIn {
           0% {
             opacity: 0;
@@ -845,6 +882,133 @@ function GarageShowroomPreview({
             transform: translateX(0) scale(1);
           }
         }
+
+        @keyframes hsGarageSwitchOld {
+          0% {
+            opacity: 1;
+            transform: perspective(900px) translate3d(0, 0, 0) scale(1) rotateY(0deg);
+            filter: blur(0);
+          }
+          42% {
+            opacity: .94;
+            transform: perspective(900px) translate3d(-16px, -2px, 36px) scale(1.02) rotateY(-4deg);
+            filter: blur(.1px);
+          }
+          100% {
+            opacity: 0;
+            transform: perspective(900px) translate3d(-150px, -12px, 72px) scale(.82) rotateY(-14deg);
+            filter: blur(2px);
+          }
+        }
+
+        @keyframes hsGarageSwitchNew {
+          0% {
+            opacity: 0;
+            transform: perspective(900px) translate3d(150px, 12px, 72px) scale(.82) rotateY(14deg);
+            filter: blur(2px);
+          }
+          34% {
+            opacity: .9;
+            transform: perspective(900px) translate3d(18px, 2px, 28px) scale(1.03) rotateY(4deg);
+            filter: blur(.25px);
+          }
+          70% {
+            opacity: 1;
+            transform: perspective(900px) translate3d(-2px, 0, 0) scale(1.005) rotateY(-1deg);
+            filter: blur(0);
+          }
+          100% {
+            opacity: 1;
+            transform: perspective(900px) translate3d(0, 0, 0) scale(1) rotateY(0deg);
+            filter: blur(0);
+          }
+        }
+
+        @keyframes hsGarageSwitchBurst {
+          0% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(.35);
+          }
+          18% {
+            opacity: .9;
+          }
+          58% {
+            opacity: .42;
+            transform: translate(-50%, -50%) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(1.48);
+          }
+        }
+
+        @keyframes hsGarageSwitchRing {
+          0% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(.52) rotateX(64deg);
+          }
+          18% {
+            opacity: .75;
+          }
+          70% {
+            opacity: .22;
+          }
+          100% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(1.65) rotateX(64deg);
+          }
+        }
+
+        @keyframes hsGarageSwitchStreak {
+          0% {
+            opacity: 0;
+            transform: translate3d(0, 34px, 0) scaleX(.25);
+          }
+          20% {
+            opacity: .72;
+          }
+          100% {
+            opacity: 0;
+            transform: translate3d(0, -38px, 0) scaleX(1.15);
+          }
+        }
+
+        @keyframes hsGarageSwitchSpark {
+          0% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) scale(.35);
+          }
+          24% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+            transform: translate3d(var(--dx), var(--dy), 0) scale(0);
+          }
+        }
+
+        @keyframes hsGarageSwitchFlash {
+          0% {
+            opacity: 0;
+          }
+          16% {
+            opacity: .34;
+          }
+          45% {
+            opacity: .08;
+          }
+          100% {
+            opacity: 0;
+          }
+        }
+
+        .hs-garage-switch-reduced {
+          @media (prefers-reduced-motion: reduce) {
+            animation-duration: 1ms !important;
+            animation-iteration-count: 1 !important;
+          }
+        }
+
         @keyframes hsGarageFloorGlow {
           0%, 100% { transform: scaleX(.94); opacity: .34; }
           50% { transform: scaleX(1.04); opacity: .5; }
@@ -864,12 +1028,93 @@ function GarageShowroomPreview({
         />
         <div className="absolute left-1/2 bottom-10 h-5 w-36 sm:w-48 -translate-x-1/2 rounded-[50%] border border-white/[0.08] bg-black/25" />
 
-        {/* Vehicle turntable */}
+        {switchFx && (
+          <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
+            <div
+              className="absolute inset-0 bg-[radial-gradient(circle_at_50%_54%,rgba(255,255,255,.22),transparent_20%),linear-gradient(90deg,transparent,rgba(255,210,120,.10),transparent)]"
+              style={{ animation: 'hsGarageSwitchFlash 470ms ease-out both' }}
+            />
+
+            <div
+              className="absolute left-1/2 top-[58%] h-24 w-40 sm:h-28 sm:w-52 rounded-full border border-white/25 bg-white/[0.025] blur-[1px]"
+              style={{
+                color: vehicle.accentColor,
+                borderColor: `color-mix(in srgb, currentColor 48%, white 20%)`,
+                boxShadow: `0 0 38px color-mix(in srgb, currentColor 28%, transparent)`,
+                animation: 'hsGarageSwitchRing 470ms cubic-bezier(.16,.8,.18,1) both',
+              }}
+            />
+
+            <div
+              className="absolute left-1/2 top-[52%] h-16 w-16 rounded-full border-2 border-white/25"
+              style={{
+                color: vehicle.color,
+                boxShadow: `0 0 40px 10px color-mix(in srgb, currentColor 24%, transparent)`,
+                animation: 'hsGarageSwitchBurst 470ms cubic-bezier(.16,.8,.18,1) both',
+              }}
+            />
+
+            <div
+              className="absolute left-1/2 top-[57%] h-1 w-[62%] rounded-full bg-gradient-to-r from-transparent via-white/70 to-transparent blur-[1px]"
+              style={{ animation: 'hsGarageSwitchStreak 420ms cubic-bezier(.2,.75,.2,1) 25ms both' }}
+            />
+
+            {[
+              { dx: '-68px', dy: '-42px', left: '39%', top: '55%', delay: '0ms' },
+              { dx: '76px', dy: '-34px', left: '61%', top: '55%', delay: '20ms' },
+              { dx: '-92px', dy: '24px', left: '42%', top: '58%', delay: '42ms' },
+              { dx: '98px', dy: '18px', left: '58%', top: '59%', delay: '58ms' },
+              { dx: '-44px', dy: '58px', left: '46%', top: '56%', delay: '78ms' },
+              { dx: '48px', dy: '56px', left: '54%', top: '56%', delay: '92ms' },
+            ].map((spark, index) => (
+              <span
+                key={index}
+                className="absolute h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_14px_rgba(255,255,255,.9)]"
+                style={{
+                  left: spark.left,
+                  top: spark.top,
+                  ['--dx' as string]: spark.dx,
+                  ['--dy' as string]: spark.dy,
+                  animation: 'hsGarageSwitchSpark 430ms cubic-bezier(.16,.8,.18,1) both',
+                  animationDelay: spark.delay,
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Previous vehicle leaves through the same racing-stage while the new one arrives. */}
+        {switchFx && (
+          <div
+            className="absolute left-1/2 bottom-14 z-[21] h-[138px] w-[210px] sm:h-[164px] sm:w-[260px] -translate-x-1/2 pointer-events-none"
+            style={{ perspective: '900px', animation: 'hsGarageSwitchOld 470ms cubic-bezier(.18,.78,.2,1) both' }}
+          >
+            <div className="absolute inset-0 flex items-center justify-center" style={{ transformStyle: 'preserve-3d' }}>
+              <div
+                className="h-[104px] w-[178px] sm:h-[126px] sm:w-[218px] rounded-2xl flex items-center justify-center"
+                style={{
+                  background: `linear-gradient(145deg, ${switchFx.vehicle.color}26, ${switchFx.vehicle.accentColor}16)`,
+                  boxShadow: `0 16px 42px ${switchFx.vehicle.color}1a`,
+                }}
+              >
+                <div className="h-[88px] w-[168px] sm:h-[112px] sm:w-[208px]">
+                  {switchFx.section === 'bikes'
+                    ? <BikeIcon bike={switchFx.vehicle as Bike} />
+                    : <CarIcon car={switchFx.vehicle as Car} />}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Vehicle turntable / arrival stage */}
         <div
-          key={`${section}-${vehicleId}`}
-          className="absolute left-1/2 bottom-14 h-[138px] w-[210px] sm:h-[164px] sm:w-[260px] -translate-x-1/2"
+          key={`garage-vehicle-${section}-${vehicleId}-${switchNonceRef.current}`}
+          className="absolute left-1/2 bottom-14 z-[22] h-[138px] w-[210px] sm:h-[164px] sm:w-[260px] -translate-x-1/2"
           style={{
-            animation: 'hsGarageVehicleIn 240ms ease-out',
+            animation: switchFx
+              ? 'hsGarageSwitchNew 470ms cubic-bezier(.16,.8,.18,1) both'
+              : 'hsGarageVehicleIn 240ms ease-out',
             perspective: '900px',
           }}
         >
@@ -894,14 +1139,13 @@ function GarageShowroomPreview({
           </div>
         </div>
 
-        {/* Showroom metadata — uses only existing vehicle fields */}
+        {/* Showroom metadata */}
         <div className="absolute left-4 top-4 sm:left-5 sm:top-5">
           <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.24em] text-white/40 font-semibold">
             {isBike ? 'Bike Showroom' : 'Car Showroom'}
           </p>
-          <p className="mt-1 text-sm sm:text-base font-black text-white">{vehicleName}</p>
+          <p className="mt-1 text-sm sm:text-base font-black text-white">{vehicle.name}</p>
         </div>
-
       </div>
     </div>
   )
