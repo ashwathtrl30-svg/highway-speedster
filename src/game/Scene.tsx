@@ -3866,27 +3866,25 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
       new THREE.ConeGeometry(1.35, 2.6, 8),
       new THREE.SphereGeometry(1.05, 7, 5),
     ]
+    // Lush foliage: darker and more saturated than the muted roadside grass (#53664a).
     const canopyMats = [
       new THREE.MeshStandardMaterial({
-        color: '#39a852',
+        color: '#1f6b2b',
         roughness: 0.88,
-        vertexColors: true,
-        emissive: '#123d1b',
-        emissiveIntensity: 0.08,
+        emissive: '#08260e',
+        emissiveIntensity: 0.02,
       }),
       new THREE.MeshStandardMaterial({
-        color: '#39a852',
+        color: '#1f6b2b',
         roughness: 0.88,
-        vertexColors: true,
-        emissive: '#123d1b',
-        emissiveIntensity: 0.08,
+        emissive: '#08260e',
+        emissiveIntensity: 0.02,
       }),
       new THREE.MeshStandardMaterial({
-        color: '#39a852',
+        color: '#1f6b2b',
         roughness: 0.88,
-        vertexColors: true,
-        emissive: '#123d1b',
-        emissiveIntensity: 0.08,
+        emissive: '#08260e',
+        emissiveIntensity: 0.02,
       }),
     ]
     const variantCounts = [0, 0, 0]
@@ -3913,7 +3911,7 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
       dummy.scale.setScalar(tree.scale)
       dummy.updateMatrix()
       canopyMesh.setMatrixAt(canopyIndex, dummy.matrix)
-      canopyMesh.setColorAt(canopyIndex, tree.tint)
+      // Fixed material color keeps all foliage consistently lush green.
     })
 
     trunkMesh.instanceMatrix.needsUpdate = true
