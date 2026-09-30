@@ -256,9 +256,9 @@ function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHig
       const carHighScore = typeof data.carHighScore === 'number' ? Math.max(0, data.carHighScore) : 0
       const highScore = Math.max(legacyHighScore, bikeHighScore, carHighScore)
 
-      const savedUnlockedBikes = [...new Set(
-        (data.unlockedBikes || ['blitz'])
-          .map(migrate)
+      const savedUnlockedBikes = [...new Set<string>(
+        (Array.isArray(data.unlockedBikes) ? data.unlockedBikes : ['blitz'])
+          .map((id: unknown) => migrate(String(id)))
           .filter((id: string) => BIKES.some((bike) => bike.id === id))
       )]
       const unlockedBikes = [...new Set<string>([
