@@ -176,6 +176,8 @@ export interface PowerUpInventory {
   shield: number
 }
 
+export type PowerUpType = 'magnet' | 'magnet2x' | 'multiplier2x' | 'multiplier4x' | 'shield'
+
 export interface PlaytimeEntry {
   date: string // YYYY-MM-DD format
   seconds: number
@@ -202,7 +204,7 @@ export interface GameData {
   totalCoins: number
   runCoins: number
   inventory: PowerUpInventory
-  selectedPowerUp: 'magnet' | 'magnet2x' | 'multiplier2x' | 'multiplier4x' | 'shield' | null
+  selectedPowerUps: PowerUpType[]
   playerLane: number
   targetLane: number
   playerX: number
@@ -371,7 +373,7 @@ let state: GameData = {
   totalCoins: savedProgress.totalCoins,
   runCoins: 0,
   inventory: { ...defaultInventory, ...savedProgress.inventory },
-  selectedPowerUp: null,
+  selectedPowerUps: [],
   playerLane: 0,
   targetLane: 0,
   playerX: 0,
@@ -763,31 +765,85 @@ export const actions = {
     }
   },
 
-  selectPowerUp(powerUp: 'magnet' | 'magnet2x' | 'multiplier2x' | 'multiplier4x' | 'shield' | null) {
-    setState({ selectedPowerUp: powerUp as any })
+  togglePowerUp(powerUp: PowerUpType) {
+    if (state.inventory[powerUp] <= 0) return
+
+    const alreadySelected = state.selectedPowerUps.includes(powerUp)
+    if (alreadySelected) {
+      setState({
+        selectedPowerUps: state.selectedPowerUps.filter((item) => item !== powerUp),
+      })
+      return
+    }
+
+    // Up to three simultaneous power-ups can be equipped at the start of a run.
+    if (state.selectedPowerUps.length >= 3) return
+
+    // Keep alternate versions of the same effect mutually exclusive:
+    // one magnet variant and one score-multiplier variant per run.
+    const isMagnetVariant = powerUp === 'magnet' || powerUp === 'magnet2x'
+    const isMultiplierVariant = powerUp === 'multiplier2x' || powerUp === 'multiplier4x'
+
+    const nextSelection = state.selectedPowerUps.filter((item) => {
+      const sameMagnetFamily =
+        isMagnetVariant && (item === 'magnet' || item === 'magnet2x')
+      const sameMultiplierFamily =
+        isMultiplierVariant && (item === 'multiplier2x' || item === 'multiplier4x')
+      return !sameMagnetFamily && !sameMultiplierFamily
+    })
+
+    setState({ selectedPowerUps: [...nextSelection, powerUp] })
   },
 
-  useSelectedPowerUp() {
-    if (state.selectedPowerUp) {
-      const powerUp = state.selectedPowerUp as 'magnet' | 'magnet2x' | 'multiplier2x' | 'multiplier4x' | 'shield'
-      if (state.inventory[powerUp] > 0) {
-        const newInventory = { ...state.inventory, [powerUp]: state.inventory[powerUp] - 1 }
-        
-        if (powerUp === 'magnet') {
-          setState({ magnetActive: true, magnetTimer: 10, inventory: newInventory })
-        } else if (powerUp === 'magnet2x') {
-          setState({ magnet2xActive: true, magnet2xTimer: 10, inventory: newInventory })
-        } else if (powerUp === 'multiplier2x') {
-          setState({ multiplierActive: true, multiplierTimer: 10, multiplier4x: false, inventory: newInventory })
-        } else if (powerUp === 'multiplier4x') {
-          setState({ multiplierActive: true, multiplierTimer: 10, multiplier4x: true, inventory: newInventory })
-        } else if (powerUp === 'shield') {
-          setState({ shieldActive: true, shieldCount: 2, inventory: newInventory })
-        }
-        
-        saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, newInventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
+  useSelectedPowerUps() {
+    if (state.selectedPowerUps.length === 0) return
+
+    const selectedPowerUps = state.selectedPowerUps.filter((powerUp) => state.inventory[powerUp] > 0)
+    if (selectedPowerUps.length === 0) return
+
+    const newInventory = { ...state.inventory }
+    const updates: Partial<GameData> = {}
+
+    selectedPowerUps.forEach((powerUp) => {
+      newInventory[powerUp] -= 1
+
+      if (powerUp === 'magnet') {
+        updates.magnetActive = true
+        updates.magnetTimer = 10
+      } else if (powerUp === 'magnet2x') {
+        updates.magnet2xActive = true
+        updates.magnet2xTimer = 10
+      } else if (powerUp === 'multiplier2x') {
+        updates.multiplierActive = true
+        updates.multiplierTimer = 10
+        updates.multiplier4x = false
+      } else if (powerUp === 'multiplier4x') {
+        updates.multiplierActive = true
+        updates.multiplierTimer = 10
+        updates.multiplier4x = true
+      } else if (powerUp === 'shield') {
+        updates.shieldActive = true
+        updates.shieldCount = 2
       }
-    }
+    })
+
+    setState({
+      ...updates,
+      inventory: newInventory,
+      selectedPowerUps: [],
+    })
+
+    saveProgress(
+      state.highScore,
+      state.unlockedBikes,
+      state.bikeSkins,
+      state.totalCoins,
+      newInventory,
+      state.username,
+      state.totalPlaytime,
+      state.userPlaytime,
+      state.playtimeHistory
+    )
   },
 
   resetGame() {
@@ -799,6 +855,7 @@ export const actions = {
       combo: 0,
       comboTimer: 0,
       runCoins: 0,
+      selectedPowerUps: [],
       playerLane: 0,
       targetLane: 0,
       playerX: 0,
