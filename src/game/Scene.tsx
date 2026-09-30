@@ -2312,6 +2312,8 @@ function TrafficRenderer({ vehiclesRef, getDimensions }: {
       let mesh = meshCacheRef.current.get(v.id)
       if (!mesh) {
         mesh = createVehicleMesh(v.type, v.color, getDimensions)
+        // Match the larger apparent traffic-vehicle size from the previous-night presentation.
+        mesh.scale.setScalar(1.14)
         mesh.traverse((object) => {
           if (object instanceof THREE.Mesh && !(object.material instanceof THREE.SpriteMaterial)) {
             object.castShadow = true
