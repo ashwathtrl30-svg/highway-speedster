@@ -3121,9 +3121,9 @@ function CoinSystem() {
   )
   const coinGlintMaterial = useMemo(
     () => new THREE.MeshBasicMaterial({
-      color: '#fff6d2',
+      color: '#ffffff',
       transparent: true,
-      opacity: 0.0,
+      opacity: 0.12,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     }),
@@ -3740,7 +3740,7 @@ function createPowerUpMesh(type: 'magnet' | 'multiplier' | 'shield'): THREE.Grou
       metalness: 0.9, 
       roughness: 0.1,
       emissive: '#f59e0b',
-      emissiveIntensity: 0.9,
+      emissiveIntensity: 1.10,
     })
     const ring = new THREE.Mesh(ringGeo, ringMat)
     group.add(ring)
@@ -3752,7 +3752,7 @@ function createPowerUpMesh(type: 'magnet' | 'multiplier' | 'shield'): THREE.Grou
       metalness: 0.8, 
       roughness: 0.2,
       emissive: '#fbbf24',
-      emissiveIntensity: 0.8,
+      emissiveIntensity: 1.05,
     })
     const star = new THREE.Mesh(starGeo, starMat)
     group.add(star)
@@ -3762,7 +3762,7 @@ function createPowerUpMesh(type: 'magnet' | 'multiplier' | 'shield'): THREE.Grou
     const glowMat = new THREE.MeshBasicMaterial({ 
       color: '#fbbf24', 
       transparent: true, 
-      opacity: 0.35,
+      opacity: 0.46,
     })
     const glow = new THREE.Mesh(glowGeo, glowMat)
     group.add(glow)
@@ -4300,8 +4300,6 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
     }
 
     const trees: TreeInstance[] = []
-    const guardrailRails: Array<{ x: number; z: number }> = []
-    const guardrailPosts: Array<{ x: number; z: number }> = []
     const lamps: Array<{ x: number; z: number; scale: number }> = []
     const signs: Array<{ x: number; z: number; scale: number }> = []
     const props: Array<{ x: number; z: number; rotation: number; scale: number }> = []
@@ -4332,16 +4330,6 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
           variant: (i + 1) % 3,
           tint: new THREE.Color(zone > 0.58 ? '#447f46' : '#386f45'),
         })
-      }
-
-      // Safety barriers occupy only the shoulder/outside corridor.
-      if (i % 2 === 1 || i % 5 === 0) {
-        const side = i % 4 === 1 ? -1 : 1
-        const x = side * (ROAD_WIDTH / 2 + 1.8)
-        const z = segmentZ + (side === -1 ? -4 : 4)
-        guardrailRails.push({ x, z })
-        guardrailPosts.push({ x, z: z - 1.8 })
-        guardrailPosts.push({ x, z: z + 1.8 })
       }
 
       // Sparse lamps.
@@ -4434,36 +4422,6 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
     })
     trunkMesh.frustumCulled = false
 
-    const railGeo = new THREE.BoxGeometry(0.12, 0.58, 4.4)
-    const railMat = new THREE.MeshStandardMaterial({ color: '#aeb1b2', metalness: 0.58, roughness: 0.36 })
-    const railMesh = new THREE.InstancedMesh(railGeo, railMat, guardrailRails.length)
-    railMesh.castShadow = true
-    railMesh.receiveShadow = true
-    const postGeo = new THREE.BoxGeometry(0.18, 0.56, 0.18)
-    const postMat = new THREE.MeshStandardMaterial({ color: '#656b6f', metalness: 0.45, roughness: 0.5 })
-    const postMesh = new THREE.InstancedMesh(postGeo, postMat, guardrailPosts.length)
-    postMesh.castShadow = true
-    postMesh.receiveShadow = true
-
-    guardrailRails.forEach((item, idx) => {
-      dummy.position.set(item.x, 0.52, item.z)
-      dummy.rotation.set(0, 0, 0)
-      dummy.scale.set(1, 1, 1)
-      dummy.updateMatrix()
-      railMesh.setMatrixAt(idx, dummy.matrix)
-    })
-    guardrailPosts.forEach((item, idx) => {
-      dummy.position.set(item.x, 0.28, item.z)
-      dummy.rotation.set(0, 0, 0)
-      dummy.scale.set(1, 1, 1)
-      dummy.updateMatrix()
-      postMesh.setMatrixAt(idx, dummy.matrix)
-    })
-    railMesh.instanceMatrix.needsUpdate = true
-    postMesh.instanceMatrix.needsUpdate = true
-    railMesh.frustumCulled = false
-    postMesh.frustumCulled = false
-
     const poleGeo = new THREE.CylinderGeometry(0.045, 0.07, 6.2, 6)
     const poleMat = new THREE.MeshStandardMaterial({ color: '#62686c', metalness: 0.7, roughness: 0.28 })
     const poleMesh = new THREE.InstancedMesh(poleGeo, poleMat, lamps.length)
@@ -4472,7 +4430,7 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
     const lampMat = new THREE.MeshStandardMaterial({
       color: '#fff6d5',
       emissive: '#ffe8a6',
-      emissiveIntensity: 0.7,
+      emissiveIntensity: 0.90,
       roughness: 0.32,
     })
     const lampMesh = new THREE.InstancedMesh(lampGeo, lampMat, lamps.length)
@@ -4593,9 +4551,7 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
     root.add(
       trunkMesh,
       ...canopyMeshes,
-      railMesh,
-      postMesh,
-      poleMesh,
+            poleMesh,
       lampMesh,
       ...boardMeshes,
       boardPosts,
@@ -4606,9 +4562,7 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
       root.remove(
         trunkMesh,
         ...canopyMeshes,
-        railMesh,
-        postMesh,
-        poleMesh,
+              poleMesh,
         lampMesh,
         ...boardMeshes,
         boardPosts,
@@ -4619,11 +4573,6 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
       trunkMat.dispose()
       canopyGeos.forEach((geo) => geo.dispose())
       canopyMats.forEach((mat) => mat.dispose())
-
-      railGeo.dispose()
-      railMat.dispose()
-      postGeo.dispose()
-      postMat.dispose()
 
       poleGeo.dispose()
       poleMat.dispose()
@@ -5150,7 +5099,6 @@ export function GameScene() {
       <PowerUpSystem />
       <SpeedLines />
       <SpeedEdgeStreaks />
-      <SpeedVignette />
       <CollisionFeedback />
       <CollisionScreenEffect />
       <GameCamera />
