@@ -302,6 +302,18 @@ function Highway() {
               <RoadsidePole position={[ROAD_WIDTH / 2 + 1.8, 0, 0]} />
             </>
           )}
+          {i % 5 === 0 && (
+            <>
+              <RoadsideBarrier side={-1} z={-2.5} />
+              <RoadsideBarrier side={1} z={1.5} />
+            </>
+          )}
+          {i % 6 === 0 && (
+            <>
+              <RoadsideSign side={i % 12 === 0 ? -1 : 1} z={-1.5} variant={i / 6} />
+              <RoadsideUtilityCabinet side={i % 12 === 0 ? 1 : -1} z={4} />
+            </>
+          )}
           {i % 7 === 0 && (
             <>
               <RoadsideBush position={[-ROAD_WIDTH / 2 - 2.5, 0, 5]} />
@@ -2195,7 +2207,178 @@ function GameCamera() {
 }
 
 // ============== ENVIRONMENT ==============
+// Reusable low-poly environment pieces keep the scene populated while
+// avoiding large numbers of unique models or external texture downloads.
+function RoadsideBarrier({ side, z }: { side: 1 | -1; z: number }) {
+  const x = side * (ROAD_WIDTH / 2 + 1.65)
+  return (
+    <group position={[x, 0, z]}>
+      <mesh position={[0, 0.48, 0]}>
+        <boxGeometry args={[0.16, 0.7, 3.8]} />
+        <meshStandardMaterial color="#777b7f" metalness={0.55} roughness={0.38} />
+      </mesh>
+      <mesh position={[0, 0.92, 0]}>
+        <boxGeometry args={[0.12, 0.12, 3.9]} />
+        <meshStandardMaterial color="#c7c9ca" metalness={0.68} roughness={0.28} />
+      </mesh>
+      {[-1, 1].map((post) => (
+        <mesh key={post} position={[0, 0.28, post * 1.72]}>
+          <boxGeometry args={[0.2, 0.55, 0.18]} />
+          <meshStandardMaterial color="#5f6366" metalness={0.48} roughness={0.45} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+function RoadsideSign({ side, z, variant }: { side: 1 | -1; z: number; variant: number }) {
+  const x = side * (ROAD_WIDTH / 2 + 2.9)
+  const signScale = 0.92 + (variant % 3) * 0.06
+  return (
+    <group position={[x, 0, z]} scale={signScale}>
+      <mesh position={[0, 1.35, 0]}>
+        <cylinderGeometry args={[0.035, 0.055, 2.7, 7]} />
+        <meshStandardMaterial color="#5e6469" metalness={0.65} roughness={0.3} />
+      </mesh>
+      <mesh position={[0, 2.45, 0]}>
+        <boxGeometry args={[1.0, 0.62, 0.08]} />
+        <meshStandardMaterial
+          color={variant % 2 === 0 ? '#2f5870' : '#556b55'}
+          metalness={0.18}
+          roughness={0.46}
+        />
+      </mesh>
+      <mesh position={[0, 2.45, -0.045]}>
+        <boxGeometry args={[0.78, 0.035, 0.02]} />
+        <meshBasicMaterial color="#e8ecef" transparent opacity={0.72} />
+      </mesh>
+    </group>
+  )
+}
+
+function RoadsideUtilityCabinet({ side, z }: { side: 1 | -1; z: number }) {
+  const x = side * (ROAD_WIDTH / 2 + 2.45)
+  return (
+    <group position={[x, 0, z]}>
+      <mesh position={[0, 0.52, 0]}>
+        <boxGeometry args={[0.65, 1.05, 0.5]} />
+        <meshStandardMaterial color="#6b716d" metalness={0.32} roughness={0.7} />
+      </mesh>
+      <mesh position={[0, 0.78, side * -0.28]}>
+        <boxGeometry args={[0.42, 0.18, 0.025]} />
+        <meshStandardMaterial color="#8f9798" metalness={0.18} roughness={0.52} />
+      </mesh>
+    </group>
+  )
+}
+
+function DistantBuilding({ position, variant }: {
+  position: [number, number, number]
+  variant: number
+}) {
+  const width = 8 + (variant % 3) * 2
+  const height = 7 + (variant % 4) * 2
+  const depth = 5 + (variant % 2) * 2
+  const bodyColor = variant % 2 === 0 ? '#71818a' : '#7f887f'
+
+  return (
+    <group position={position}>
+      <mesh position={[0, height / 2, 0]}>
+        <boxGeometry args={[width, height, depth]} />
+        <meshStandardMaterial color={bodyColor} roughness={0.8} metalness={0.06} />
+      </mesh>
+      {[-1, 0, 1].map((row) =>
+        [-1, 1].map((col) => (
+          <mesh
+            key={`${row}-${col}`}
+            position={[
+              col * (width * 0.22),
+              height * 0.28 + (row + 1) * height * 0.19,
+              -depth / 2 - 0.01,
+            ]}
+          >
+            <boxGeometry args={[width * 0.16, height * 0.09, 0.025]} />
+            <meshStandardMaterial
+              color="#a9b6bb"
+              emissive="#8ea3ac"
+              emissiveIntensity={0.08}
+              roughness={0.45}
+              metalness={0.1}
+            />
+          </mesh>
+        ))
+      )}
+      <mesh position={[0, height + 0.5, 0]}>
+        <boxGeometry args={[width * 0.58, 0.35, depth * 0.68]} />
+        <meshStandardMaterial color="#59656a" roughness={0.74} metalness={0.08} />
+      </mesh>
+    </group>
+  )
+}
+
+function DistantTower({ position, variant }: {
+  position: [number, number, number]
+  variant: number
+}) {
+  const height = 18 + (variant % 3) * 5
+  return (
+    <group position={position}>
+      <mesh position={[0, height / 2, 0]}>
+        <boxGeometry args={[4.5, height, 4.5]} />
+        <meshStandardMaterial color="#67747c" roughness={0.82} metalness={0.08} />
+      </mesh>
+      <mesh position={[0, height + 0.9, 0]}>
+        <cylinderGeometry args={[0.16, 0.16, 1.8, 7]} />
+        <meshStandardMaterial color="#78858c" metalness={0.55} roughness={0.35} />
+      </mesh>
+    </group>
+  )
+}
+
+function TerrainMound({ position, scale }: {
+  position: [number, number, number]
+  scale: [number, number, number]
+}) {
+  return (
+    <mesh position={position} scale={scale}>
+      <sphereGeometry args={[1, 10, 6]} />
+      <meshStandardMaterial color="#537052" roughness={1} />
+    </mesh>
+  )
+}
+
 function Environment() {
+  const roadsideBuildings = useMemo(
+    () => [
+      { position: [-30, 0, -95] as [number, number, number], variant: 0 },
+      { position: [31, 0, -118] as [number, number, number], variant: 1 },
+      { position: [-39, 0, -148] as [number, number, number], variant: 2 },
+      { position: [40, 0, -168] as [number, number, number], variant: 3 },
+      { position: [-47, 0, -210] as [number, number, number], variant: 4 },
+      { position: [48, 0, -232] as [number, number, number], variant: 5 },
+    ],
+    []
+  )
+
+  const towers = useMemo(
+    () => [
+      { position: [-72, 0, -245] as [number, number, number], variant: 0 },
+      { position: [74, 0, -285] as [number, number, number], variant: 1 },
+      { position: [-88, 0, -330] as [number, number, number], variant: 2 },
+    ],
+    []
+  )
+
+  const mounds = useMemo(
+    () => [
+      { position: [-32, 1.8, -92] as [number, number, number], scale: [10, 2.2, 15] as [number, number, number] },
+      { position: [35, 1.5, -125] as [number, number, number], scale: [14, 1.8, 18] as [number, number, number] },
+      { position: [-47, 2.2, -175] as [number, number, number], scale: [18, 2.5, 22] as [number, number, number] },
+      { position: [52, 2.5, -225] as [number, number, number], scale: [22, 2.8, 28] as [number, number, number] },
+    ],
+    []
+  )
+
   return (
     <>
       {/* Sky dome */}
@@ -2203,7 +2386,7 @@ function Environment() {
         <sphereGeometry args={[450, 16, 16]} />
         <meshBasicMaterial color="#6bb3d9" side={THREE.BackSide} />
       </mesh>
-      
+
       {/* Sun glow */}
       <mesh position={[40, 70, -250]}>
         <sphereGeometry args={[20, 12, 12]} />
@@ -2214,23 +2397,40 @@ function Environment() {
         <meshBasicMaterial color="#fff8dc" transparent opacity={0.15} />
       </mesh>
 
-      {/* Ground */}
+      {/* Broad terrain base */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, -150]}>
         <planeGeometry args={[300, 800]} />
         <meshStandardMaterial color="#5a8a4a" roughness={1} />
       </mesh>
 
-      {/* Distant hills */}
+      {/* Layered terrain close to and beyond the road */}
+      {mounds.map((mound, i) => (
+        <TerrainMound
+          key={i}
+          position={mound.position}
+          scale={mound.scale}
+        />
+      ))}
+
+      {/* Existing distant hills, retained as the far silhouette */}
       {Array.from({ length: 12 }, (_, i) => {
         const x = -150 + i * 28 + (Math.sin(i * 2.5) * 10)
         const height = 12 + Math.sin(i * 1.7) * 8
         return (
-          <mesh key={i} position={[x, height * 0.4, -300]}>
+          <mesh key={`hill-${i}`} position={[x, height * 0.4, -300]}>
             <coneGeometry args={[height * 0.8, height, 4]} />
-            <meshStandardMaterial color={i % 2 === 0 ? '#4a6741' : '#5a7a51'} />
+            <meshStandardMaterial color={i % 2 === 0 ? '#4a6741' : '#5a7a51'} roughness={1} />
           </mesh>
         )
       })}
+
+      {/* Mid/far structures establish a believable settlement horizon */}
+      {roadsideBuildings.map((building, i) => (
+        <DistantBuilding key={`building-${i}`} {...building} />
+      ))}
+      {towers.map((tower, i) => (
+        <DistantTower key={`tower-${i}`} {...tower} />
+      ))}
 
       {/* Lighting */}
       <ambientLight intensity={0.55} color="#e8e0d0" />
@@ -2244,15 +2444,15 @@ function Environment() {
         intensity={0.25}
         color="#b3d9ff"
       />
-      {/* Fill light from below for better visibility */}
       <hemisphereLight
         color="#87ceeb"
         groundColor="#4a7c3f"
         intensity={0.4}
       />
-      
-      {/* Fog - hides distant vehicles */}
-      <fog attach="fog" args={['#a8c8d8', 20, 85]} />
+
+      {/* Layered atmospheric depth: near detail stays crisp while distant
+          structures merge naturally into the horizon. */}
+      <fog attach="fog" args={['#a8c8d8', 32, 155]} />
     </>
   )
 }
