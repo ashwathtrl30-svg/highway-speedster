@@ -2405,13 +2405,15 @@ function TrafficSystem() {
       if (collisionX && collisionZ && v.z > PLAYER_Z - 2) {
         // Check if shield is active
         if (state.shieldActive) {
-          // [GFX] Cosmetic impact marker after collision has already been detected.
+          // [GFX] Cosmetic-only collision feedback; gameplay remains unchanged.
           emitShieldImpact(new THREE.Vector3(vehicleX, 0.85, v.z))
+          emitCollisionImpact(new THREE.Vector3(vehicleX, 0.72, v.z), true)
           actions.useShield()
           // Remove the vehicle that would have caused crash
           vehicles.splice(i, 1)
           continue
         }
+        emitCollisionImpact(new THREE.Vector3(vehicleX, 0.72, v.z), false)
         actions.setGameState('gameover')
         actions.setSpeed(0)
         return
@@ -3823,6 +3825,387 @@ function NearMissSpeedEffect() {
   )
 }
 
+// [GFX] Collision feedback is event-driven and purely cosmetic.
+// Gameplay emits this marker only after collision has already been detected.
+type CollisionImpactVisual = {
+  id: number
+  position: THREE.Vector3
+  absorbed: boolean
+}
+
+let collisionImpactVisual: CollisionImpactVisual | null = null
+
+function emitCollisionImpact(
+  position: THREE.Vector3,
+  absorbed = false
+) {
+  collisionImpactVisual = {
+    id: (collisionImpactVisual?.id ?? 0) + 1,
+    position: position.clone(),
+    absorbed,
+  }
+}
+
+type CollisionBurst = {
+  group: THREE.Group
+  sparks: THREE.Points
+  sparkPositions: Float32Array
+  sparkAttribute: THREE.BufferAttribute
+  sparkVelocity: THREE.Vector3[]
+  debris: THREE.Points
+  debrisPositions: Float32Array
+  debrisAttribute: THREE.BufferAttribute
+  debrisVelocity: THREE.Vector3[]
+  smoke: THREE.Sprite
+  flash: THREE.Sprite
+  startedAt: number
+  active: boolean
+}
+
+let collisionBurstTexture: THREE.CanvasTexture | null = null
+
+function getCollisionBurstTexture() {
+  if (collisionBurstTexture) return collisionBurstTexture
+
+  const canvas = document.createElement('canvas')
+  canvas.width = 64
+  canvas.height = 64
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Unable to create collision burst texture')
+
+  const gradient = ctx.createRadialGradient(32, 32, 2, 32, 32, 31)
+  gradient.addColorStop(0, 'rgba(255,250,228,0.95)')
+  gradient.addColorStop(0.2, 'rgba(255,210,126,0.76)')
+  gradient.addColorStop(0.48, 'rgba(255,122,70,0.3)')
+  gradient.addColorStop(0.78, 'rgba(125,87,68,0.12)')
+  gradient.addColorStop(1, 'rgba(60,45,38,0)')
+
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, 64, 64)
+
+  collisionBurstTexture = new THREE.CanvasTexture(canvas)
+  collisionBurstTexture.colorSpace = THREE.SRGBColorSpace
+  collisionBurstTexture.minFilter = THREE.LinearFilter
+  collisionBurstTexture.magFilter = THREE.LinearFilter
+  collisionBurstTexture.needsUpdate = true
+  return collisionBurstTexture
+}
+
+function createCollisionBurst(): CollisionBurst {
+  const group = new THREE.Group()
+
+  const sparkPositions = new Float32Array(14 * 3)
+  const sparkAttribute = new THREE.BufferAttribute(sparkPositions, 3)
+  const sparkGeometry = new THREE.BufferGeometry()
+  sparkGeometry.setAttribute('position', sparkAttribute)
+  const sparkMaterial = new THREE.PointsMaterial({
+    color: '#ffe5a7',
+    size: 0.07,
+    transparent: true,
+    opacity: 0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true,
+  })
+  const sparks = new THREE.Points(sparkGeometry, sparkMaterial)
+  group.add(sparks)
+
+  const debrisPositions = new Float32Array(8 * 3)
+  const debrisAttribute = new THREE.BufferAttribute(debrisPositions, 3)
+  const debrisGeometry = new THREE.BufferGeometry()
+  debrisGeometry.setAttribute('position', debrisAttribute)
+  const debrisMaterial = new THREE.PointsMaterial({
+    color: '#9ca2a6',
+    size: 0.045,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    sizeAttenuation: true,
+  })
+  const debris = new THREE.Points(debrisGeometry, debrisMaterial)
+  group.add(debris)
+
+  const makeSprite = (opacity: number) => {
+    const material = new THREE.SpriteMaterial({
+      map: getCollisionBurstTexture(),
+      color: '#ffffff',
+      transparent: true,
+      opacity,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      depthTest: false,
+    })
+    return new THREE.Sprite(material)
+  }
+
+  const smoke = makeSprite(0)
+  const flash = makeSprite(0)
+  group.add(smoke, flash)
+
+  return {
+    group,
+    sparks,
+    sparkPositions,
+    sparkAttribute,
+    sparkVelocity: Array.from({ length: 14 }, () => new THREE.Vector3()),
+    debris,
+    debrisPositions,
+    debrisAttribute,
+    debrisVelocity: Array.from({ length: 8 }, () => new THREE.Vector3()),
+    smoke,
+    flash,
+    startedAt: 0,
+    active: false,
+  }
+}
+
+function CollisionFeedback() {
+  const groupRef = useRef<THREE.Group>(null)
+  const poolRef = useRef<CollisionBurst[]>([])
+  const cursorRef = useRef(0)
+  const lastEventIdRef = useRef(0)
+  const lastFlashAtRef = useRef(0)
+  const reducedRef = useRef(false)
+
+  useEffect(() => {
+    reducedRef.current = areSpeedEffectsReduced()
+    if (!groupRef.current) return
+
+    const pool = Array.from({ length: 4 }, () => {
+      const burst = createCollisionBurst()
+      burst.group.visible = false
+      groupRef.current!.add(burst.group)
+      return burst
+    })
+    poolRef.current = pool
+
+    return () => {
+      pool.forEach((burst) => {
+        groupRef.current?.remove(burst.group)
+        const sparkMaterial = burst.sparks.material as THREE.Material
+        const debrisMaterial = burst.debris.material as THREE.Material
+        const smokeMaterial = burst.smoke.material as THREE.SpriteMaterial
+        const flashMaterial = burst.flash.material as THREE.SpriteMaterial
+        burst.sparks.geometry.dispose()
+        burst.debris.geometry.dispose()
+        sparkMaterial.dispose()
+        debrisMaterial.dispose()
+        smokeMaterial.dispose()
+        flashMaterial.dispose()
+      })
+      poolRef.current = []
+    }
+  }, [])
+
+  useFrame((_, delta) => {
+    const now = performance.now()
+    const event = collisionImpactVisual
+
+    if (event && event.id !== lastEventIdRef.current) {
+      lastEventIdRef.current = event.id
+
+      const startIndex = cursorRef.current % Math.max(1, poolRef.current.length)
+      let burst = poolRef.current[startIndex]
+      for (let i = 0; i < poolRef.current.length; i++) {
+        const candidate = poolRef.current[(startIndex + i) % poolRef.current.length]
+        if (!candidate.active) {
+          burst = candidate
+          break
+        }
+      }
+      cursorRef.current = poolRef.current.length
+        ? (startIndex + 1) % poolRef.current.length
+        : 0
+
+      if (burst) {
+        const reduced = reducedRef.current
+        const absorbed = event.absorbed
+        const sparkScale = reduced
+          ? (absorbed ? 0.48 : 0.7)
+          : (absorbed ? 0.72 : 1.0)
+
+        burst.active = true
+        burst.startedAt = now
+        burst.group.visible = true
+        burst.group.position.copy(event.position)
+
+        burst.smoke.material.opacity = reduced
+          ? (absorbed ? 0.04 : 0.07)
+          : (absorbed ? 0.07 : 0.12)
+        burst.flash.material.opacity =
+          now - lastFlashAtRef.current >= 333
+            ? (reduced ? 0.04 : (absorbed ? 0.06 : 0.11))
+            : 0
+
+        if (burst.flash.material.opacity > 0) {
+          lastFlashAtRef.current = now
+        }
+
+        burst.sparkVelocity.forEach((velocity, i) => {
+          const angle = (i / burst.sparkVelocity.length) * Math.PI * 2 + now * 0.0004
+          const radial = (0.9 + (i % 4) * 0.2) * sparkScale
+          velocity.set(
+            Math.cos(angle) * radial,
+            (0.8 + (i % 3) * 0.25) * sparkScale,
+            Math.sin(angle) * radial
+          )
+          const base = i * 3
+          burst.sparkPositions[base] = 0
+          burst.sparkPositions[base + 1] = 0.45
+          burst.sparkPositions[base + 2] = 0
+        })
+        burst.sparkAttribute.needsUpdate = true
+
+        burst.debrisVelocity.forEach((velocity, i) => {
+          const angle = (i / burst.debrisVelocity.length) * Math.PI * 2 + 0.35
+          const radial = (0.55 + (i % 3) * 0.16) * sparkScale
+          velocity.set(
+            Math.cos(angle) * radial,
+            (0.45 + (i % 2) * 0.18) * sparkScale,
+            Math.sin(angle) * radial
+          )
+          const base = i * 3
+          burst.debrisPositions[base] = 0
+          burst.debrisPositions[base + 1] = 0.28
+          burst.debrisPositions[base + 2] = 0
+        })
+        burst.debrisAttribute.needsUpdate = true
+
+        burst.smoke.scale.setScalar(absorbed ? 0.7 : 0.9)
+        burst.flash.scale.setScalar(absorbed ? 0.45 : 0.62)
+      }
+    }
+
+    poolRef.current.forEach((burst) => {
+      if (!burst.active) return
+
+      const t = Math.min((now - burst.startedAt) / 420, 1)
+      const fade = 1 - t
+      const sparkFade = Math.pow(fade, 0.8)
+
+      burst.sparks.material.opacity = sparkFade * (reducedRef.current ? 0.32 : 0.62)
+      burst.debris.material.opacity = fade * 0.42
+      burst.smoke.material.opacity *= 0.985
+      burst.smoke.material.opacity = Math.max(0, burst.smoke.material.opacity - delta * 0.12)
+      burst.flash.material.opacity = Math.max(
+        0,
+        burst.flash.material.opacity - delta * 1.9
+      )
+
+      for (let i = 0; i < burst.sparkVelocity.length; i++) {
+        const velocity = burst.sparkVelocity[i]
+        const base = i * 3
+        burst.sparkPositions[base] = velocity.x * t
+        burst.sparkPositions[base + 1] =
+          0.45 + velocity.y * t - 1.8 * t * t
+        burst.sparkPositions[base + 2] = velocity.z * t
+      }
+      burst.sparkAttribute.needsUpdate = true
+
+      for (let i = 0; i < burst.debrisVelocity.length; i++) {
+        const velocity = burst.debrisVelocity[i]
+        const base = i * 3
+        burst.debrisPositions[base] = velocity.x * t
+        burst.debrisPositions[base + 1] =
+          0.28 + velocity.y * t - 1.55 * t * t
+        burst.debrisPositions[base + 2] = velocity.z * t
+      }
+      burst.debrisAttribute.needsUpdate = true
+
+      burst.smoke.position.y = 0.2 + t * 0.55
+      burst.smoke.scale.multiplyScalar(1 + delta * 1.6)
+      burst.flash.scale.multiplyScalar(1 + delta * 3.0)
+
+      if (t >= 1) {
+        burst.active = false
+        burst.group.visible = false
+        burst.sparks.material.opacity = 0
+        burst.debris.material.opacity = 0
+        burst.smoke.material.opacity = 0
+        burst.flash.material.opacity = 0
+      }
+    })
+  })
+
+  return <group ref={groupRef} />
+}
+
+function CollisionScreenEffect() {
+  const { camera } = useThree()
+  const spriteRef = useRef<THREE.Sprite>(null)
+  const materialRef = useRef<THREE.SpriteMaterial>(null)
+  const lastEventIdRef = useRef(0)
+  const effectRef = useRef(0)
+  const reducedRef = useRef(false)
+
+  const texture = useMemo(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 128
+    canvas.height = 128
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('Unable to create collision screen effect')
+
+    const gradient = ctx.createRadialGradient(64, 64, 18, 64, 64, 72)
+    gradient.addColorStop(0, 'rgba(115,20,20,0)')
+    gradient.addColorStop(0.63, 'rgba(155,25,25,0.02)')
+    gradient.addColorStop(0.82, 'rgba(185,35,35,0.12)')
+    gradient.addColorStop(1, 'rgba(185,35,35,0.3)')
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, 128, 128)
+
+    const map = new THREE.CanvasTexture(canvas)
+    map.colorSpace = THREE.SRGBColorSpace
+    map.minFilter = THREE.LinearFilter
+    map.magFilter = THREE.LinearFilter
+    map.needsUpdate = true
+    return map
+  }, [])
+
+  useEffect(() => {
+    reducedRef.current = areSpeedEffectsReduced()
+    return () => texture.dispose()
+  }, [texture])
+
+  useFrame((_, delta) => {
+    const event = collisionImpactVisual
+    if (event && event.id !== lastEventIdRef.current) {
+      lastEventIdRef.current = event.id
+      effectRef.current = reducedRef.current
+        ? (event.absorbed ? 0.18 : 0.24)
+        : (event.absorbed ? 0.28 : 0.42)
+    }
+
+    effectRef.current = Math.max(0, effectRef.current - delta * 2.6)
+
+    if (spriteRef.current) {
+      spriteRef.current.position.copy(camera.position)
+      spriteRef.current.quaternion.copy(camera.quaternion)
+      spriteRef.current.position.z -= 0.9
+      spriteRef.current.visible = effectRef.current > 0.01
+    }
+    if (materialRef.current) {
+      materialRef.current.opacity = effectRef.current
+    }
+  })
+
+  return (
+    <sprite
+      ref={spriteRef}
+      scale={[8.2, 8.2, 1]}
+      material={useMemo(
+        () => new THREE.SpriteMaterial({
+          map: texture,
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
+          depthTest: false,
+        }),
+        [texture]
+      )}
+    />
+  )
+}
+
 // ============== CAMERA ==============
 function GameCamera() {
   const { camera } = useThree()
@@ -3832,6 +4215,7 @@ function GameCamera() {
   const lastNearMissRef = useRef(0)
   const nearMissKickRef = useRef(0)
   const reducedRef = useRef(false)
+  const lastCollisionIdRef = useRef(0)
 
   useEffect(() => {
     reducedRef.current = areSpeedEffectsReduced()
@@ -3840,6 +4224,17 @@ function GameCamera() {
   useFrame((_, delta) => {
     const state = getState()
     const playerX = state.playerX
+
+    if (
+      collisionImpactVisual &&
+      collisionImpactVisual.id !== lastCollisionIdRef.current
+    ) {
+      lastCollisionIdRef.current = collisionImpactVisual.id
+      // [GFX] Strictly capped cosmetic camera feedback; never pauses logic.
+      shakeRef.current = reducedRef.current
+        ? 0.55
+        : (collisionImpactVisual.absorbed ? 0.62 : 1.0)
+    }
 
     if (state.nearMisses > lastNearMissRef.current) {
       lastNearMissRef.current = state.nearMisses
@@ -3871,7 +4266,10 @@ function GameCamera() {
     let shakeX = 0, shakeY = 0
     if (shakeRef.current > 0) {
       shakeRef.current -= delta * 5
-      const intensity = Math.min(shakeRef.current * 0.025, 0.006)
+      const intensity = Math.min(
+        shakeRef.current * 0.028,
+        reducedRef.current ? 0.012 : 0.03
+      )
       shakeX = (Math.random() - 0.5) * intensity
       shakeY = (Math.random() - 0.5) * intensity
     }
@@ -4596,6 +4994,8 @@ export function GameScene() {
       <SpeedEdgeStreaks />
       <SpeedVignette />
       <NearMissSpeedEffect />
+      <CollisionFeedback />
+      <CollisionScreenEffect />
       <GameCamera />
     </Canvas>
   )
