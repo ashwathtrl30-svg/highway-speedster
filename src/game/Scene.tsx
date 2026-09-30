@@ -3373,6 +3373,7 @@ function CoinSystem() {
     magnetGlowMaterialRef.opacity =
       state.magnetActive || state.magnet2xActive ? 0.14 : 0.0
 
+  })
 
   useEffect(() => {
     if (!groupRef.current) return
