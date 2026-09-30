@@ -2312,8 +2312,9 @@ function TrafficRenderer({ vehiclesRef, getDimensions }: {
       let mesh = meshCacheRef.current.get(v.id)
       if (!mesh) {
         mesh = createVehicleMesh(v.type, v.color, getDimensions)
-        // Match the larger apparent traffic-vehicle size from the previous-night presentation.
-        mesh.scale.setScalar(1.14)
+        // Make traffic visually proportionate to the player's vehicle without
+        // changing collision dimensions, lanes, or gameplay calculations.
+        mesh.scale.setScalar(1.30)
         mesh.traverse((object) => {
           if (object instanceof THREE.Mesh && !(object.material instanceof THREE.SpriteMaterial)) {
             object.castShadow = true
@@ -2339,18 +2340,29 @@ function TrafficRenderer({ vehiclesRef, getDimensions }: {
   return <group ref={groupRef} />
 }
 
+function getTrafficDisplayColor(hex: string): string {
+  const color = new THREE.Color(hex)
+  const hsl = { h: 0, s: 0, l: 0 }
+  color.getHSL(hsl)
+  // Keep the original hue/saturation, but prevent very dark traffic from
+  // visually disappearing into the asphalt at typical camera distances.
+  hsl.l = Math.max(hsl.l, 0.38)
+  return new THREE.Color().setHSL(hsl.h, hsl.s, hsl.l).getHexString()
+}
+
 function createVehicleMesh(type: string, color: string, getDimensions: (type: string) => [number, number, number]): THREE.Group {
   const group = new THREE.Group()
   const [w, h, l] = getDimensions(type)
 
   // Body
+  const displayColor = getTrafficDisplayColor(color)
   const bodyGeo = new RoundedBoxGeometry(w, h * 0.55, l, 0.045, 1)
   const bodyMat = new THREE.MeshStandardMaterial({
-    color,
+    color: displayColor,
     metalness: 0.5,
     roughness: 0.32,
-    emissive: new THREE.Color(color).multiplyScalar(0.10),
-    emissiveIntensity: 0.22,
+    emissive: new THREE.Color(displayColor).multiplyScalar(0.10),
+    emissiveIntensity: 0.32,
     envMapIntensity: 1.0,
   })
   const body = new THREE.Mesh(bodyGeo, bodyMat)
@@ -2360,7 +2372,7 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
   // Cabin/Roof
   if (type === 'car') {
     const roofGeo = new RoundedBoxGeometry(w * 0.82, h * 0.38, l * 0.45, 0.04, 1)
-    const roofMat = new THREE.MeshStandardMaterial({ color: '#22283a', metalness: 0.3, roughness: 0.35 })
+    const roofMat = new THREE.MeshStandardMaterial({ color: '#364154', metalness: 0.3, roughness: 0.35 })
     const roof = new THREE.Mesh(roofGeo, roofMat)
     roof.position.y = h * 0.65
     roof.position.z = -l * 0.05
@@ -2374,7 +2386,7 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
     group.add(roof)
   } else if (type === 'bike') {
     const frameGeo = new THREE.BoxGeometry(w * 0.28, h * 0.22, l * 0.55)
-    const frameMat = new THREE.MeshStandardMaterial({ color, metalness: 0.65, roughness: 0.3 })
+    const frameMat = new THREE.MeshStandardMaterial({ color: displayColor, metalness: 0.65, roughness: 0.3 })
     const frame = new THREE.Mesh(frameGeo, frameMat)
     frame.position.y = h * 0.42
     group.add(frame)
@@ -2388,10 +2400,10 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
     handle.position.set(0, h * 0.82, -l * 0.34)
     group.add(handle)
   } else if (type === 'scooter') {
-    const deck = new THREE.Mesh(new THREE.BoxGeometry(w * 0.55, h * 0.14, l * 0.5), new THREE.MeshStandardMaterial({ color, metalness: 0.5, roughness: 0.4 }))
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(w * 0.55, h * 0.14, l * 0.5), new THREE.MeshStandardMaterial({ color: displayColor, metalness: 0.5, roughness: 0.4 }))
     deck.position.y = h * 0.38
     group.add(deck)
-    const legShield = new THREE.Mesh(new THREE.BoxGeometry(w * 0.65, h * 0.52, l * 0.25), new THREE.MeshStandardMaterial({ color, metalness: 0.45, roughness: 0.35 }))
+    const legShield = new THREE.Mesh(new THREE.BoxGeometry(w * 0.65, h * 0.52, l * 0.25), new THREE.MeshStandardMaterial({ color: displayColor, metalness: 0.45, roughness: 0.35 }))
     legShield.position.set(0, h * 0.62, -l * 0.08)
     group.add(legShield)
     const handle = new THREE.Mesh(new THREE.BoxGeometry(w * 0.72, 0.05, 0.05), new THREE.MeshStandardMaterial({ color: '#555555', metalness: 0.8 }))
@@ -2400,14 +2412,14 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
   } else if (type === 'truck') {
     // Cabin
     const cabinGeo = new THREE.BoxGeometry(w * 0.88, h * 0.5, l * 0.22)
-    const cabinMat = new THREE.MeshStandardMaterial({ color: '#3b5266', metalness: 0.3, roughness: 0.45 })
+    const cabinMat = new THREE.MeshStandardMaterial({ color: '#49677f', metalness: 0.3, roughness: 0.45 })
     const cabin = new THREE.Mesh(cabinGeo, cabinMat)
     cabin.position.y = h * 0.6
     cabin.position.z = -l * 0.32
     group.add(cabin)
     // Cargo
     const cargoGeo = new RoundedBoxGeometry(w * 0.95, h * 0.7, l * 0.6, 0.045, 1)
-    const cargoMat = new THREE.MeshStandardMaterial({ color: '#705040', roughness: 0.72 })
+    const cargoMat = new THREE.MeshStandardMaterial({ color: '#8a614a', roughness: 0.68 })
     const cargo = new THREE.Mesh(cargoGeo, cargoMat)
     cargo.position.y = h * 0.5
     cargo.position.z = l * 0.1
@@ -2415,7 +2427,7 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
   } else if (type === 'bus') {
     // Bus body is taller
     const bodyGeo2 = new RoundedBoxGeometry(w * 0.95, h * 0.85, l * 0.95, 0.055, 1)
-    const bodyMat2 = new THREE.MeshStandardMaterial({ color, metalness: 0.3, roughness: 0.6 })
+    const bodyMat2 = new THREE.MeshStandardMaterial({ color: displayColor, metalness: 0.3, roughness: 0.6 })
     const body2 = new THREE.Mesh(bodyGeo2, bodyMat2)
     body2.position.y = h * 0.5
     group.add(body2)
