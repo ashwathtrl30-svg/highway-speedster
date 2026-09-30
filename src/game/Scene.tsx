@@ -62,8 +62,10 @@ interface PowerUp {
 }
 
 // ============== HIGHWAY ==============
-// Lightweight procedural asphalt textures keep the road detailed without
-// introducing external image assets or additional dependencies.
+// [GFX] Visual-only graphics master switch. Gameplay systems never read this flag.
+const GFX_UPGRADE_ENABLED = true
+
+// [GFX] Procedural, seam-safe asphalt generated once at startup.
 function createRoadTextures(anisotropy: number) {
   const width = 256
   const height = 512
@@ -72,102 +74,147 @@ function createRoadTextures(anisotropy: number) {
   colorCanvas.width = width
   colorCanvas.height = height
   const colorCtx = colorCanvas.getContext('2d')
-  if (!colorCtx) throw new Error('Unable to create road texture canvas')
-
-  const colorData = colorCtx.createImageData(width, height)
-  const colorPixels = colorData.data
+  if (!colorCtx) throw new Error('Unable to create road color texture')
 
   const roughCanvas = document.createElement('canvas')
   roughCanvas.width = width
   roughCanvas.height = height
   const roughCtx = roughCanvas.getContext('2d')
-  if (!roughCtx) throw new Error('Unable to create road roughness texture canvas')
+  if (!roughCtx) throw new Error('Unable to create road roughness texture')
 
+  const bumpCanvas = document.createElement('canvas')
+  bumpCanvas.width = width
+  bumpCanvas.height = height
+  const bumpCtx = bumpCanvas.getContext('2d')
+  if (!bumpCtx) throw new Error('Unable to create road bump texture')
+
+  const colorData = colorCtx.createImageData(width, height)
   const roughData = roughCtx.createImageData(width, height)
-  const roughPixels = roughData.data
+  const bumpData = bumpCtx.createImageData(width, height)
 
-  // Deterministic micro-variation gives the asphalt a believable aggregate
-  // pattern while avoiding animated/noisy pixels.
+  const hash = (n: number) => {
+    const value = Math.sin(n * 127.1 + 311.7) * 43758.5453
+    return value - Math.floor(value)
+  }
+
+  const gauss = (x: number, center: number, radius: number) => {
+    const d = (x - center) / radius
+    return Math.exp(-d * d)
+  }
+
+  const patchSeeds = Array.from({ length: 8 }, (_, i) => ({
+    x: 0.08 + hash(i * 7 + 1) * 0.84,
+    y: 0.1 + hash(i * 7 + 2) * 0.8,
+    size: 0.06 + hash(i * 7 + 3) * 0.14,
+    strength: 2.5 + hash(i * 7 + 4) * 4.5,
+  }))
+
   for (let y = 0; y < height; y++) {
+    const v = y / (height - 1)
+    const seamFade = 0.5 - 0.5 * Math.cos(v * Math.PI * 2)
+
     for (let x = 0; x < width; x++) {
+      const u = x / (width - 1)
+
+      // Periodic base pattern: texture borders meet cleanly when recycled.
+      const periodic =
+        Math.sin(u * Math.PI * 14) * 2.2 +
+        Math.sin(v * Math.PI * 18) * 1.9 +
+        Math.sin((u + v) * Math.PI * 9) * 1.3 +
+        Math.cos((u - v) * Math.PI * 13) * 1.1
+
+      // Deliberate, low-frequency tire wear rather than high-frequency noise.
+      const tireWear =
+        gauss(u, 0.29, 0.07) * 2.1 +
+        gauss(u, 0.71, 0.07) * 2.1 +
+        gauss(u, 0.50, 0.10) * 0.8
+
+      let patches = 0
+      for (const patch of patchSeeds) {
+        const dx = u - patch.x
+        const dy = v - patch.y
+        const d = Math.sqrt(dx * dx + dy * dy)
+        patches += Math.max(0, 1 - d / patch.size) * patch.strength * seamFade
+      }
+
+      const value = Math.max(31, Math.min(86, Math.round(56 + periodic - tireWear + patches)))
       const index = (y * width + x) * 4
-      const wave =
-        Math.sin(x * 0.19) * 4 +
-        Math.sin(y * 0.071 + x * 0.013) * 3 +
-        Math.sin((x + y) * 0.045) * 2
-      const grain = ((x * 17 + y * 31 + x * y * 7) % 29) - 14
-      const value = Math.max(32, Math.min(92, Math.round(57 + wave + grain)))
 
-      colorPixels[index] = value
-      colorPixels[index + 1] = value + 1
-      colorPixels[index + 2] = value + 3
-      colorPixels[index + 3] = 255
+      colorData.data[index] = value
+      colorData.data[index + 1] = Math.min(92, value + 2)
+      colorData.data[index + 2] = Math.min(96, value + 5)
+      colorData.data[index + 3] = 255
 
-      const roughness = Math.max(185, Math.min(245, Math.round(225 - wave * 1.5 - grain * 0.35)))
-      roughPixels[index] = roughness
-      roughPixels[index + 1] = roughness
-      roughPixels[index + 2] = roughness
-      roughPixels[index + 3] = 255
+      const roughnessValue = Math.max(
+        170,
+        Math.min(245, Math.round(224 - periodic * 2.8 + tireWear * 3 - patches * 1.5))
+      )
+      roughData.data[index] = roughnessValue
+      roughData.data[index + 1] = roughnessValue
+      roughData.data[index + 2] = roughnessValue
+      roughData.data[index + 3] = 255
+
+      const bumpValue = Math.max(
+        96,
+        Math.min(170, Math.round(132 + periodic * 4 - tireWear * 2 + patches))
+      )
+      bumpData.data[index] = bumpValue
+      bumpData.data[index + 1] = bumpValue
+      bumpData.data[index + 2] = bumpValue
+      bumpData.data[index + 3] = 255
     }
   }
 
   colorCtx.putImageData(colorData, 0, 0)
   roughCtx.putImageData(roughData, 0, 0)
+  bumpCtx.putImageData(bumpData, 0, 0)
 
-  // Long, low-contrast surface wear patches add scale and directionality.
-  const patchSeed = (n: number) => {
-    const value = Math.sin(n * 12.9898) * 43758.5453
-    return value - Math.floor(value)
+  // Sparse, deliberately faint cracks positioned away from tile boundaries.
+  colorCtx.save()
+  colorCtx.strokeStyle = 'rgba(180, 184, 188, 0.085)'
+  colorCtx.lineWidth = 1
+  for (let i = 0; i < 5; i++) {
+    const y = 72 + hash(i + 40) * (height - 144)
+    const x = 24 + hash(i + 70) * (width - 48)
+    colorCtx.beginPath()
+    colorCtx.moveTo(x, y)
+    colorCtx.lineTo(
+      x + 22 + hash(i + 90) * 46,
+      y + 4 + hash(i + 100) * 12
+    )
+    colorCtx.stroke()
   }
+  colorCtx.restore()
 
-  for (let i = 0; i < 14; i++) {
-    const x = 20 + patchSeed(i + 1) * (width - 40)
-    const y = patchSeed(i + 20) * height
-    const patchWidth = 18 + patchSeed(i + 40) * 44
-    const patchHeight = 5 + patchSeed(i + 60) * 22
-
-    colorCtx.save()
-    colorCtx.globalAlpha = 0.055
-    colorCtx.fillStyle = '#b9bdc1'
-    colorCtx.translate(x, y)
-    colorCtx.rotate((patchSeed(i + 80) - 0.5) * 0.18)
-    colorCtx.fillRect(-patchWidth * 0.5, -patchHeight * 0.5, patchWidth, patchHeight)
-    colorCtx.restore()
-
-    roughCtx.save()
-    roughCtx.globalAlpha = 0.13
-    roughCtx.fillStyle = '#a8a8a8'
-    roughCtx.translate(x, y)
-    roughCtx.rotate((patchSeed(i + 80) - 0.5) * 0.18)
-    roughCtx.fillRect(-patchWidth * 0.5, -patchHeight * 0.5, patchWidth, patchHeight)
-    roughCtx.restore()
+  const configure = (texture: THREE.CanvasTexture, sRGB = false) => {
+    texture.wrapS = THREE.RepeatWrapping
+    texture.wrapT = THREE.RepeatWrapping
+    texture.anisotropy = anisotropy
+    texture.minFilter = THREE.LinearMipmapLinearFilter
+    texture.magFilter = THREE.LinearFilter
+    if (sRGB) texture.colorSpace = THREE.SRGBColorSpace
+    texture.needsUpdate = true
   }
 
   const colorMap = new THREE.CanvasTexture(colorCanvas)
-  colorMap.wrapS = THREE.RepeatWrapping
-  colorMap.wrapT = THREE.RepeatWrapping
-  colorMap.repeat.set(1, 1)
-  colorMap.anisotropy = anisotropy
-  colorMap.colorSpace = THREE.SRGBColorSpace
-  colorMap.needsUpdate = true
-
   const roughnessMap = new THREE.CanvasTexture(roughCanvas)
-  roughnessMap.wrapS = THREE.RepeatWrapping
-  roughnessMap.wrapT = THREE.RepeatWrapping
-  roughnessMap.repeat.set(1, 1)
-  roughnessMap.anisotropy = anisotropy
-  roughnessMap.needsUpdate = true
+  const bumpMap = new THREE.CanvasTexture(bumpCanvas)
 
-  return { colorMap, roughnessMap }
+  configure(colorMap, true)
+  configure(roughnessMap)
+  configure(bumpMap)
+
+  return { colorMap, roughnessMap, bumpMap }
 }
 
 function Highway() {
   const segmentsRef = useRef<THREE.Group>(null)
   const offsetRef = useRef(0)
+  const textureScrollRef = useRef(0)
   const { gl } = useThree()
 
   const roadTextures = useMemo(
-    () => createRoadTextures(Math.min(4, gl.capabilities.getMaxAnisotropy())),
+    () => createRoadTextures(Math.min(8, gl.capabilities.getMaxAnisotropy())),
     [gl]
   )
 
@@ -175,6 +222,7 @@ function Highway() {
     return () => {
       roadTextures.colorMap.dispose()
       roadTextures.roughnessMap.dispose()
+      roadTextures.bumpMap.dispose()
     }
   }, [roadTextures])
 
@@ -184,6 +232,14 @@ function Highway() {
 
     const speed = state.speed
     offsetRef.current += speed * delta * 0.5
+
+    if (GFX_UPGRADE_ENABLED) {
+      // [GFX] Read-only use of the existing speed value.
+      textureScrollRef.current = (textureScrollRef.current + speed * delta * 0.0018) % 1
+      roadTextures.colorMap.offset.y = textureScrollRef.current
+      roadTextures.roughnessMap.offset.y = textureScrollRef.current * 0.94
+      roadTextures.bumpMap.offset.y = textureScrollRef.current * 0.96
+    }
 
     if (segmentsRef.current) {
       segmentsRef.current.position.z = (offsetRef.current % SEGMENT_LENGTH)
@@ -198,225 +254,144 @@ function Highway() {
     return segs
   }, [])
 
-  const roadTints = ['#ffffff', '#f4f5f6', '#fafafa', '#f1f2f3']
-
   return (
     <group ref={segmentsRef}>
-      {segments.map((z, i) => (
-        <group key={i} position={[0, 0, z]}>
-          {/* Textured asphalt surface */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
-            <planeGeometry args={[ROAD_WIDTH, SEGMENT_LENGTH]} />
-            <meshStandardMaterial
-              map={roadTextures.colorMap}
-              roughnessMap={roadTextures.roughnessMap}
-              color={roadTints[i % roadTints.length]}
-              metalness={0.035}
-              roughness={0.82}
-            />
-          </mesh>
+      {segments.map((z, i) => {
+        const zone = 0.5 + 0.5 * Math.sin((i * SEGMENT_LENGTH) / 135)
+        const roadTint = new THREE.Color('#2f3437').lerp(
+          new THREE.Color('#343b38'),
+          zone * 0.32
+        )
 
-          {/* Narrow asphalt shoulder transition before the gravel */}
-          {[-1, 1].map((side) => (
-            <mesh
-              key={`asphalt-shoulder-${side}`}
-              rotation={[-Math.PI / 2, 0, 0]}
-              position={[side * (ROAD_WIDTH / 2 + 0.38), -0.006, 0]}
-            >
-              <planeGeometry args={[0.76, SEGMENT_LENGTH]} />
-              <meshStandardMaterial
-                color={i % 2 === 0 ? '#4a4d50' : '#474a4d'}
-                roughness={0.9}
-                metalness={0.01}
-              />
+        return (
+          <group key={i} position={[0, 0, z]}>
+            {/* [GFX] Road geometry dimensions are intentionally unchanged. */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
+              <planeGeometry args={[ROAD_WIDTH, SEGMENT_LENGTH]} />
+              {GFX_UPGRADE_ENABLED ? (
+                <meshStandardMaterial
+                  map={roadTextures.colorMap}
+                  roughnessMap={roadTextures.roughnessMap}
+                  bumpMap={roadTextures.bumpMap}
+                  bumpScale={0.035}
+                  color={roadTint}
+                  metalness={0.09}
+                  roughness={0.76}
+                />
+              ) : (
+                <meshStandardMaterial color="#2a2a2a" roughness={0.95} />
+              )}
             </mesh>
-          ))}
 
-          {/* Road edge paint — slightly softer than pure white to avoid a flat look */}
-          {[-ROAD_WIDTH / 2 + 0.3, ROAD_WIDTH / 2 - 0.3].map((x, li) => (
-            <mesh
-              key={`edge-${li}`}
-              rotation={[-Math.PI / 2, 0, 0]}
-              position={[x, 0.014, 0]}
-              renderOrder={2}
-            >
-              <planeGeometry args={[0.18, SEGMENT_LENGTH]} />
-              <meshStandardMaterial
-                color="#e7e9eb"
-                roughness={0.5}
-                metalness={0.02}
-              />
-            </mesh>
-          ))}
+            {/* [GFX] Narrow asphalt shoulder transition. */}
+            {[-1, 1].map((side) => (
+              <mesh
+                key={`asphalt-shoulder-${side}`}
+                rotation={[-Math.PI / 2, 0, 0]}
+                position={[side * (ROAD_WIDTH / 2 + 0.38), -0.006, 0]}
+              >
+                <planeGeometry args={[0.76, SEGMENT_LENGTH]} />
+                <meshStandardMaterial
+                  color={zone > 0.55 ? '#4d5052' : '#494c4f'}
+                  roughness={0.88}
+                  metalness={0.02}
+                />
+              </mesh>
+            ))}
 
-          {/* Lane divider dashes — clean, readable, with a restrained satin finish */}
-          {[-LANE_WIDTH, 0, LANE_WIDTH].map((x, li) => (
-            <group key={`dash-${li}`}>
-              {Array.from({ length: 5 }, (_, di) => (
-                <mesh
-                  key={di}
-                  rotation={[-Math.PI / 2, 0, 0]}
-                  position={[
-                    x,
-                    0.016,
-                    -SEGMENT_LENGTH / 2 + di * (SEGMENT_LENGTH / 5) + SEGMENT_LENGTH / 10,
-                  ]}
-                  renderOrder={2}
-                >
-                  <planeGeometry args={[0.12, SEGMENT_LENGTH / 7]} />
-                  <meshStandardMaterial
-                    color="#e1b61a"
-                    roughness={0.42}
-                    metalness={0.02}
-                  />
-                </mesh>
-              ))}
-            </group>
-          ))}
+            {/* [GFX] Crisp edge paint. */}
+            {[-ROAD_WIDTH / 2 + 0.3, ROAD_WIDTH / 2 - 0.3].map((x, li) => (
+              <mesh
+                key={`edge-${li}`}
+                rotation={[-Math.PI / 2, 0, 0]}
+                position={[x, 0.014, 0]}
+                renderOrder={2}
+              >
+                <planeGeometry args={[0.18, SEGMENT_LENGTH]} />
+                <meshStandardMaterial
+                  color="#e6e8e9"
+                  roughness={0.48}
+                  metalness={0.02}
+                  polygonOffset
+                  polygonOffsetFactor={-2}
+                  polygonOffsetUnits={-2}
+                />
+              </mesh>
+            ))}
 
-          {/* Road shoulders (gravel) */}
-          {[-ROAD_WIDTH / 2 - 1, ROAD_WIDTH / 2 + 1].map((x, si) => (
-            <mesh
-              key={`shoulder-${si}`}
-              rotation={[-Math.PI / 2, 0, 0]}
-              position={[x, -0.005, 0]}
-            >
-              <planeGeometry args={[2, SEGMENT_LENGTH]} />
-              <meshStandardMaterial
-                color={i % 2 === 0 ? '#5a554f' : '#5e5952'}
-                roughness={1}
-              />
-            </mesh>
-          ))}
+            {/* [GFX] Lane markings. */}
+            {[-LANE_WIDTH, 0, LANE_WIDTH].map((x, li) => (
+              <group key={`dash-${li}`}>
+                {Array.from({ length: 5 }, (_, di) => (
+                  <mesh
+                    key={di}
+                    rotation={[-Math.PI / 2, 0, 0]}
+                    position={[
+                      x,
+                      0.016,
+                      -SEGMENT_LENGTH / 2 + di * (SEGMENT_LENGTH / 5) + SEGMENT_LENGTH / 10,
+                    ]}
+                    renderOrder={2}
+                  >
+                    <planeGeometry args={[0.12, SEGMENT_LENGTH / 7]} />
+                    <meshStandardMaterial
+                      color="#e2bb32"
+                      roughness={0.4}
+                      metalness={0.02}
+                      polygonOffset
+                      polygonOffsetFactor={-2}
+                      polygonOffsetUnits={-2}
+                    />
+                  </mesh>
+                ))}
+              </group>
+            ))}
 
-          {/* Roadside elements */}
-          {i % 3 === 0 && (
-            <>
-              <RoadsideTree position={[-ROAD_WIDTH / 2 - 4 - (i * 0.37) % 3, 0, (i * 0.73) % 10 - 5]} />
-              <RoadsideTree position={[ROAD_WIDTH / 2 + 4 + (i * 0.41) % 3, 0, (i * 0.67) % 10 - 5]} />
-            </>
-          )}
-          {i % 4 === 0 && (
-            <>
-              <RoadsidePole position={[-ROAD_WIDTH / 2 - 1.8, 0, 0]} />
-              <RoadsidePole position={[ROAD_WIDTH / 2 + 1.8, 0, 0]} />
-            </>
-          )}
-          {i % 5 === 0 && (
-            <>
-              <RoadsideBarrier side={-1} z={-2.5} />
-              <RoadsideBarrier side={1} z={1.5} />
-            </>
-          )}
-          {i % 6 === 0 && (
-            <>
-              <RoadsideSign side={i % 12 === 0 ? -1 : 1} z={-1.5} variant={i / 6} />
-              <RoadsideUtilityCabinet side={i % 12 === 0 ? 1 : -1} z={4} />
-            </>
-          )}
-          {i % 7 === 0 && (
-            <>
-              <RoadsideBush position={[-ROAD_WIDTH / 2 - 2.5, 0, 5]} />
-              <RoadsideBush position={[ROAD_WIDTH / 2 + 2.5, 0, -3]} />
-            </>
-          )}
-        </group>
-      ))}
-    </group>
-  )
-}
+            {/* [GFX] Restrained rumble strips outside the gameplay lanes. */}
+            {[-1, 1].map((side) => (
+              <group key={`rumble-${side}`}>
+                {Array.from({ length: 10 }, (_, ri) => (
+                  <mesh
+                    key={ri}
+                    rotation={[-Math.PI / 2, 0, side * 0.05]}
+                    position={[
+                      side * (ROAD_WIDTH / 2 + 0.78),
+                      0.006,
+                      -SEGMENT_LENGTH / 2 + ri * 2 + 1,
+                    ]}
+                  >
+                    <planeGeometry args={[0.16, 0.9]} />
+                    <meshStandardMaterial
+                      color="#777473"
+                      roughness={0.85}
+                      metalness={0.01}
+                    />
+                  </mesh>
+                ))}
+              </group>
+            ))}
 
-function RoadsideTree({ position }: { position: [number, number, number] }) {
-  const scale = useMemo(() => 0.8 + (position[0] * 0.13 + position[2] * 0.17) % 0.6, [position])
-  return (
-    <group position={position} scale={scale}>
-      {/* Trunk - tapered cylinder */}
-      <mesh position={[0, 1.5, 0]}>
-        <cylinderGeometry args={[0.08, 0.2, 3, 6]} />
-        <meshStandardMaterial color="#3e2723" roughness={0.9} />
-      </mesh>
-      
-      {/* Main foliage cluster - bottom layer */}
-      <mesh position={[0, 3.2, 0]}>
-        <sphereGeometry args={[1.3, 8, 6]} />
-        <meshStandardMaterial color="#2e7d32" roughness={0.8} />
-      </mesh>
-      
-      {/* Middle foliage */}
-      <mesh position={[0.5, 3.8, 0.3]}>
-        <sphereGeometry args={[1.0, 7, 5]} />
-        <meshStandardMaterial color="#388e3c" roughness={0.8} />
-      </mesh>
-      <mesh position={[-0.4, 3.6, -0.3]}>
-        <sphereGeometry args={[0.9, 7, 5]} />
-        <meshStandardMaterial color="#1b5e20" roughness={0.8} />
-      </mesh>
-      
-      {/* Top foliage */}
-      <mesh position={[0.2, 4.5, 0.1]}>
-        <sphereGeometry args={[0.8, 6, 5]} />
-        <meshStandardMaterial color="#43a047" roughness={0.8} />
-      </mesh>
-      <mesh position={[-0.3, 4.3, 0.2]}>
-        <sphereGeometry args={[0.7, 6, 5]} />
-        <meshStandardMaterial color="#2e7d32" roughness={0.8} />
-      </mesh>
-      
-      {/* Small detail clusters */}
-      <mesh position={[0.7, 3.3, -0.2]}>
-        <sphereGeometry args={[0.5, 5, 4]} />
-        <meshStandardMaterial color="#388e3c" roughness={0.8} />
-      </mesh>
-      <mesh position={[-0.6, 4.0, 0.4]}>
-        <sphereGeometry args={[0.4, 5, 4]} />
-        <meshStandardMaterial color="#43a047" roughness={0.8} />
-      </mesh>
-    </group>
-  )
-}
+            {/* [GFX] Gravel/dirt border. */}
+            {[-ROAD_WIDTH / 2 - 1, ROAD_WIDTH / 2 + 1].map((x, si) => (
+              <mesh
+                key={`shoulder-${si}`}
+                rotation={[-Math.PI / 2, 0, 0]}
+                position={[x, -0.005, 0]}
+              >
+                <planeGeometry args={[2, SEGMENT_LENGTH]} />
+                <meshStandardMaterial
+                  color={zone > 0.55 ? '#5b5650' : '#615a52'}
+                  roughness={1}
+                />
+              </mesh>
+            ))}
+          </group>
+        )
+      })}
 
-function RoadsidePole({ position }: { position: [number, number, number] }) {
-  return (
-    <group position={position}>
-      <mesh position={[0, 3, 0]}>
-        <cylinderGeometry args={[0.04, 0.06, 6, 6]} />
-        <meshStandardMaterial color="#616161" metalness={0.5} />
-      </mesh>
-      <mesh position={[0, 6, 0]}>
-        <sphereGeometry args={[0.12, 6, 6]} />
-        <meshStandardMaterial color="#fff9c4" emissive="#fff176" emissiveIntensity={0.5} />
-      </mesh>
-      {/* Arm */}
-      <mesh position={[position[0] > 0 ? -0.4 : 0.4, 5.8, 0]} rotation={[0, 0, position[0] > 0 ? 0.5 : -0.5]}>
-        <boxGeometry args={[0.8, 0.04, 0.04]} />
-        <meshStandardMaterial color="#616161" metalness={0.5} />
-      </mesh>
-    </group>
-  )
-}
-
-function RoadsideBush({ position }: { position: [number, number, number] }) {
-  return (
-    <group position={position}>
-      {/* Main bush body */}
-      <mesh position={[0, 0.35, 0]}>
-        <sphereGeometry args={[0.55, 6, 5]} />
-        <meshStandardMaterial color="#2e7d32" roughness={0.9} />
-      </mesh>
-      
-      {/* Bush detail clusters */}
-      <mesh position={[0.3, 0.3, 0.2]}>
-        <sphereGeometry args={[0.4, 5, 4]} />
-        <meshStandardMaterial color="#388e3c" roughness={0.9} />
-      </mesh>
-      <mesh position={[-0.25, 0.28, -0.15]}>
-        <sphereGeometry args={[0.35, 5, 4]} />
-        <meshStandardMaterial color="#1b5e20" roughness={0.9} />
-      </mesh>
-      <mesh position={[0.1, 0.45, 0.1]}>
-        <sphereGeometry args={[0.3, 5, 4]} />
-        <meshStandardMaterial color="#43a047" roughness={0.9} />
-      </mesh>
+      {/* [GFX] Reusable roadside environment follows the existing segment
+          recycling transform and is fully visual-only. */}
+      {GFX_UPGRADE_ENABLED && <RoadsideVisualInstances segmentOffsets={segments} />}
     </group>
   )
 }
@@ -2204,6 +2179,366 @@ function GameCamera() {
   })
 
   return null
+}
+
+// [GFX] Reusable roadside scenery. Repeats are instanced and intentionally
+// placed outside the road corridor, while the parent inherits Highway recycling.
+function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] }) {
+  const groupRef = useRef<THREE.Group>(null)
+
+  useEffect(() => {
+    const root = groupRef.current
+    if (!root) return
+
+    const seed = (n: number) => {
+      const value = Math.sin(n * 91.713 + 17.21) * 43758.5453
+      return value - Math.floor(value)
+    }
+
+    type TreeInstance = {
+      x: number
+      z: number
+      scale: number
+      rotation: number
+      variant: number
+      tint: THREE.Color
+    }
+
+    const trees: TreeInstance[] = []
+    const guardrailRails: Array<{ x: number; z: number }> = []
+    const guardrailPosts: Array<{ x: number; z: number }> = []
+    const lamps: Array<{ x: number; z: number; scale: number }> = []
+    const signs: Array<{ x: number; z: number; scale: number }> = []
+    const props: Array<{ x: number; z: number; rotation: number; scale: number }> = []
+
+    segmentOffsets.forEach((segmentZ, i) => {
+      // Zone weighting changes density/tint gradually along the route.
+      const zone = 0.5 + 0.5 * Math.sin((segmentZ + 100) / 150)
+      const near = i < 8
+      const treeChance = near ? 0.82 : (zone > 0.55 ? 0.42 : 0.28)
+
+      if (seed(i * 5 + 1) < treeChance) {
+        trees.push({
+          x: -(ROAD_WIDTH / 2 + 4.2 + seed(i * 5 + 2) * 2.4),
+          z: segmentZ + (seed(i * 5 + 3) - 0.5) * 9,
+          scale: 0.78 + seed(i * 5 + 4) * (0.45 + zone * 0.18),
+          rotation: (seed(i * 5 + 5) - 0.5) * 0.2,
+          variant: i % 3,
+          tint: new THREE.Color(zone > 0.58 ? '#3f7d43' : '#356f43'),
+        })
+      }
+
+      if (seed(i * 11 + 4) < treeChance * 0.88) {
+        trees.push({
+          x: ROAD_WIDTH / 2 + 4.2 + seed(i * 11 + 5) * 2.6,
+          z: segmentZ + (seed(i * 11 + 6) - 0.5) * 9,
+          scale: 0.75 + seed(i * 11 + 7) * (0.5 + zone * 0.16),
+          rotation: (seed(i * 11 + 8) - 0.5) * 0.2,
+          variant: (i + 1) % 3,
+          tint: new THREE.Color(zone > 0.58 ? '#447f46' : '#386f45'),
+        })
+      }
+
+      // Safety barriers occupy only the shoulder/outside corridor.
+      if (i % 2 === 1 || i % 5 === 0) {
+        const side = i % 4 === 1 ? -1 : 1
+        const x = side * (ROAD_WIDTH / 2 + 1.8)
+        const z = segmentZ + (side === -1 ? -4 : 4)
+        guardrailRails.push({ x, z })
+        guardrailPosts.push({ x, z: z - 1.8 })
+        guardrailPosts.push({ x, z: z + 1.8 })
+      }
+
+      // Sparse lamps.
+      if (i % 5 === 0) {
+        const side = i % 10 === 0 ? -1 : 1
+        lamps.push({
+          x: side * (ROAD_WIDTH / 2 + 3.0),
+          z: segmentZ + (side === -1 ? -5 : 5),
+          scale: 0.9 + seed(i * 17 + 1) * 0.14,
+        })
+      }
+
+      // Fictional signage/billboards only.
+      if (i % 6 === 0) {
+        const side = i % 12 === 0 ? -1 : 1
+        signs.push({
+          x: side * (ROAD_WIDTH / 2 + 4.2),
+          z: segmentZ + 1.5,
+          scale: 0.88 + seed(i * 13 + 2) * 0.2,
+        })
+      }
+
+      // Small utility props.
+      if (i % 3 === 0 && (near || zone > 0.44)) {
+        const side = i % 2 === 0 ? -1 : 1
+        props.push({
+          x: side * (ROAD_WIDTH / 2 + 2.5),
+          z: segmentZ + 4,
+          rotation: (seed(i * 23 + 3) - 0.5) * 0.08,
+          scale: 0.82 + seed(i * 23 + 4) * 0.2,
+        })
+      }
+    })
+
+    const dummy = new THREE.Object3D()
+
+    // Shared tree geometry: three visibly different, low-poly variants.
+    const trunkGeo = new THREE.CylinderGeometry(0.11, 0.22, 2.7, 6)
+    const trunkMat = new THREE.MeshStandardMaterial({
+      color: '#3d2d24',
+      roughness: 0.95,
+      vertexColors: true,
+    })
+    const trunkMesh = new THREE.InstancedMesh(trunkGeo, trunkMat, trees.length)
+
+    const canopyGeos = [
+      new THREE.SphereGeometry(1.25, 8, 6),
+      new THREE.ConeGeometry(1.35, 2.6, 8),
+      new THREE.SphereGeometry(1.05, 7, 5),
+    ]
+    const canopyMats = [
+      new THREE.MeshStandardMaterial({ color: '#3f7d43', roughness: 0.9, vertexColors: true }),
+      new THREE.MeshStandardMaterial({ color: '#447e49', roughness: 0.9, vertexColors: true }),
+      new THREE.MeshStandardMaterial({ color: '#356f43', roughness: 0.9, vertexColors: true }),
+    ]
+    const variantCounts = [0, 0, 0]
+    trees.forEach((tree) => { variantCounts[tree.variant]++ })
+
+    const canopyMeshes = canopyGeos.map((geo, idx) =>
+      new THREE.InstancedMesh(geo, canopyMats[idx], variantCounts[idx])
+    )
+
+    const variantCounters = [0, 0, 0]
+    trees.forEach((tree, index) => {
+      dummy.position.set(tree.x, 1.35 * tree.scale, tree.z)
+      dummy.rotation.set(0, tree.rotation, 0)
+      dummy.scale.setScalar(tree.scale)
+      dummy.updateMatrix()
+      trunkMesh.setMatrixAt(index, dummy.matrix)
+      trunkMesh.setColorAt(index, tree.tint.clone().lerp(new THREE.Color('#2f4a35'), 0.35))
+
+      const canopyIndex = variantCounters[tree.variant]++
+      const canopyY = tree.variant === 1 ? 3.25 * tree.scale : 3.0 * tree.scale
+      const canopyMesh = canopyMeshes[tree.variant]
+      dummy.position.set(tree.x, canopyY, tree.z)
+      dummy.rotation.set(0, tree.rotation, 0)
+      dummy.scale.setScalar(tree.scale)
+      dummy.updateMatrix()
+      canopyMesh.setMatrixAt(canopyIndex, dummy.matrix)
+      canopyMesh.setColorAt(canopyIndex, tree.tint)
+    })
+
+    trunkMesh.instanceMatrix.needsUpdate = true
+    if (trunkMesh.instanceColor) trunkMesh.instanceColor.needsUpdate = true
+    canopyMeshes.forEach((mesh) => {
+      mesh.frustumCulled = false
+      mesh.instanceMatrix.needsUpdate = true
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
+    })
+    trunkMesh.frustumCulled = false
+
+    const railGeo = new THREE.BoxGeometry(0.12, 0.58, 4.4)
+    const railMat = new THREE.MeshStandardMaterial({ color: '#aeb1b2', metalness: 0.58, roughness: 0.36 })
+    const railMesh = new THREE.InstancedMesh(railGeo, railMat, guardrailRails.length)
+    const postGeo = new THREE.BoxGeometry(0.18, 0.56, 0.18)
+    const postMat = new THREE.MeshStandardMaterial({ color: '#656b6f', metalness: 0.45, roughness: 0.5 })
+    const postMesh = new THREE.InstancedMesh(postGeo, postMat, guardrailPosts.length)
+
+    guardrailRails.forEach((item, idx) => {
+      dummy.position.set(item.x, 0.52, item.z)
+      dummy.rotation.set(0, 0, 0)
+      dummy.scale.set(1, 1, 1)
+      dummy.updateMatrix()
+      railMesh.setMatrixAt(idx, dummy.matrix)
+    })
+    guardrailPosts.forEach((item, idx) => {
+      dummy.position.set(item.x, 0.28, item.z)
+      dummy.rotation.set(0, 0, 0)
+      dummy.scale.set(1, 1, 1)
+      dummy.updateMatrix()
+      postMesh.setMatrixAt(idx, dummy.matrix)
+    })
+    railMesh.instanceMatrix.needsUpdate = true
+    postMesh.instanceMatrix.needsUpdate = true
+    railMesh.frustumCulled = false
+    postMesh.frustumCulled = false
+
+    const poleGeo = new THREE.CylinderGeometry(0.045, 0.07, 6.2, 6)
+    const poleMat = new THREE.MeshStandardMaterial({ color: '#62686c', metalness: 0.7, roughness: 0.28 })
+    const poleMesh = new THREE.InstancedMesh(poleGeo, poleMat, lamps.length)
+    const lampGeo = new THREE.SphereGeometry(0.12, 7, 6)
+    const lampMat = new THREE.MeshStandardMaterial({
+      color: '#fff6d5',
+      emissive: '#ffe8a6',
+      emissiveIntensity: 0.7,
+      roughness: 0.32,
+    })
+    const lampMesh = new THREE.InstancedMesh(lampGeo, lampMat, lamps.length)
+
+    lamps.forEach((item, idx) => {
+      dummy.position.set(item.x, 3.1 * item.scale, item.z)
+      dummy.rotation.set(0, 0, 0)
+      dummy.scale.setScalar(item.scale)
+      dummy.updateMatrix()
+      poleMesh.setMatrixAt(idx, dummy.matrix)
+
+      dummy.position.set(
+        item.x + (item.x > 0 ? -0.35 : 0.35) * item.scale,
+        6.05 * item.scale,
+        item.z
+      )
+      dummy.scale.setScalar(item.scale)
+      dummy.updateMatrix()
+      lampMesh.setMatrixAt(idx, dummy.matrix)
+    })
+    poleMesh.instanceMatrix.needsUpdate = true
+    lampMesh.instanceMatrix.needsUpdate = true
+    poleMesh.frustumCulled = false
+    lampMesh.frustumCulled = false
+
+    const makeBillboardTexture = (headline: string, subline: string, fill: string) => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 256
+      canvas.height = 112
+      const ctx = canvas.getContext('2d')
+      if (!ctx) throw new Error('Unable to create billboard texture')
+      ctx.fillStyle = fill
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.fillStyle = '#ffffff'
+      ctx.font = '900 25px Arial'
+      ctx.fillText(headline, 16, 42)
+      ctx.font = '700 14px Arial'
+      ctx.fillStyle = '#d9e1e5'
+      ctx.fillText(subline, 16, 70)
+      ctx.fillStyle = '#f7c84a'
+      ctx.fillRect(16, 86, 92, 5)
+
+      const texture = new THREE.CanvasTexture(canvas)
+      texture.colorSpace = THREE.SRGBColorSpace
+      texture.anisotropy = 4
+      texture.minFilter = THREE.LinearMipmapLinearFilter
+      texture.magFilter = THREE.LinearFilter
+      texture.needsUpdate = true
+      return texture
+    }
+
+    const boardTextures = [
+      makeBillboardTexture('HIGHWAY SPEEDSTER', 'RIDE SMART. GO FAR.', '#24313a'),
+      makeBillboardTexture('DRIVE SMART', 'ENJOY THE OPEN ROAD.', '#3d5847'),
+    ]
+
+    const boardGeo = new THREE.PlaneGeometry(2.9, 1.27)
+    const boardMeshes = boardTextures.map((texture) => {
+      const material = new THREE.MeshStandardMaterial({
+        map: texture,
+        roughness: 0.56,
+        metalness: 0.05,
+        side: THREE.DoubleSide,
+      })
+      return new THREE.InstancedMesh(
+        boardGeo,
+        material,
+        Math.max(1, Math.ceil(signs.length / 2))
+      )
+    })
+
+    const boardPostGeo = new THREE.CylinderGeometry(0.04, 0.06, 2.9, 6)
+    const boardPostMat = new THREE.MeshStandardMaterial({
+      color: '#5e6469',
+      metalness: 0.62,
+      roughness: 0.34,
+    })
+    const boardPosts = new THREE.InstancedMesh(boardPostGeo, boardPostMat, signs.length)
+
+    signs.forEach((item, idx) => {
+      dummy.position.set(item.x, 2.55 * item.scale, item.z)
+      dummy.rotation.set(0, 0, 0)
+      dummy.scale.setScalar(item.scale)
+      dummy.updateMatrix()
+      boardMeshes[idx % 2].setMatrixAt(Math.floor(idx / 2), dummy.matrix)
+
+      dummy.position.set(item.x, 1.35 * item.scale, item.z)
+      dummy.scale.setScalar(item.scale)
+      dummy.updateMatrix()
+      boardPosts.setMatrixAt(idx, dummy.matrix)
+    })
+    boardMeshes.forEach((mesh) => {
+      mesh.frustumCulled = false
+      mesh.instanceMatrix.needsUpdate = true
+    })
+    boardPosts.frustumCulled = false
+    boardPosts.instanceMatrix.needsUpdate = true
+
+    const propGeo = new THREE.BoxGeometry(0.7, 1.1, 0.52)
+    const propMat = new THREE.MeshStandardMaterial({
+      color: '#6d726e',
+      metalness: 0.28,
+      roughness: 0.72,
+    })
+    const propMesh = new THREE.InstancedMesh(propGeo, propMat, props.length)
+    props.forEach((item, idx) => {
+      dummy.position.set(item.x, 0.56 * item.scale, item.z)
+      dummy.rotation.set(0, item.rotation, 0)
+      dummy.scale.setScalar(item.scale)
+      dummy.updateMatrix()
+      propMesh.setMatrixAt(idx, dummy.matrix)
+    })
+    propMesh.frustumCulled = false
+    propMesh.instanceMatrix.needsUpdate = true
+
+    root.add(
+      trunkMesh,
+      ...canopyMeshes,
+      railMesh,
+      postMesh,
+      poleMesh,
+      lampMesh,
+      ...boardMeshes,
+      boardPosts,
+      propMesh
+    )
+
+    return () => {
+      root.remove(
+        trunkMesh,
+        ...canopyMeshes,
+        railMesh,
+        postMesh,
+        poleMesh,
+        lampMesh,
+        ...boardMeshes,
+        boardPosts,
+        propMesh
+      )
+
+      trunkGeo.dispose()
+      trunkMat.dispose()
+      canopyGeos.forEach((geo) => geo.dispose())
+      canopyMats.forEach((mat) => mat.dispose())
+
+      railGeo.dispose()
+      railMat.dispose()
+      postGeo.dispose()
+      postMat.dispose()
+
+      poleGeo.dispose()
+      poleMat.dispose()
+      lampGeo.dispose()
+      lampMat.dispose()
+
+      boardGeo.dispose()
+      boardTextures.forEach((texture) => texture.dispose())
+      boardMeshes.forEach((mesh) => (mesh.material as THREE.Material).dispose())
+      boardPostGeo.dispose()
+      boardPostMat.dispose()
+
+      propGeo.dispose()
+      propMat.dispose()
+    }
+  }, [segmentOffsets])
+
+  return <group ref={groupRef} />
 }
 
 // ============== ENVIRONMENT ==============
