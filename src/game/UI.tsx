@@ -407,7 +407,7 @@ export function MainMenu() {
   const tapCountRef = useRef(0)
   const lastTapTimeRef = useRef(0)
 
-  // Secret keyboard shortcut for admin analytics (Ctrl+Shift+S or Cmd+Shift+S)
+  // Secret keyboard shortcut for admin analytics (preserved).
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'S' || e.key === 's')) {
@@ -420,20 +420,18 @@ export function MainMenu() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [showStats])
 
-  // Secret mobile tap gesture (5 quick taps)
+  // Secret mobile tap gesture (preserved).
   const handleSecretTap = () => {
     const now = Date.now()
     const timeSinceLastTap = now - lastTapTimeRef.current
-    
-    // Reset if too much time has passed (more than 2 seconds)
+
     if (timeSinceLastTap > 2000) {
       tapCountRef.current = 0
     }
-    
+
     tapCountRef.current += 1
     lastTapTimeRef.current = now
-    
-    // If 5 taps in quick succession, show stats
+
     if (tapCountRef.current >= 5) {
       setShowStats(true)
       tapCountRef.current = 0
@@ -442,7 +440,6 @@ export function MainMenu() {
 
   if (state.gameState !== 'menu') return null
 
-  // Show stats screen if accessed via secret shortcut
   if (showStats) {
     return <StatsScreen onBack={() => setShowStats(false)} />
   }
@@ -456,122 +453,232 @@ export function MainMenu() {
   }
 
   if (showPowerUpSelection) {
-    return <PowerUpSelection onBack={() => setShowPowerUpSelection(false)} onStart={() => {
-      actions.useSelectedPowerUp()
-      actions.setGameState('playing')
-    }} />
+    return (
+      <PowerUpSelection
+        onBack={() => setShowPowerUpSelection(false)}
+        onStart={() => {
+          actions.useSelectedPowerUp()
+          actions.setGameState('playing')
+        }}
+      />
+    )
   }
 
+  const isCar = state.vehicleMode === 'car'
+  const heroVehicle = isCar ? state.selectedCar : state.selectedBike
+
   return (
-    <div 
-      className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-indigo-950/95 via-purple-950/95 to-black/95 backdrop-blur-sm"
+    <div
+      className="absolute inset-0 overflow-hidden bg-[#080a0d] text-white"
       onClick={handleSecretTap}
     >
-      {/* Username Input (shows if no username set) */}
-      <UsernameInput />
-      
-      {/* Animated road lines background */}
-      <div className="absolute inset-0 overflow-hidden opacity-20">
-        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-yellow-500 to-transparent animate-pulse" />
-        <div className="absolute left-[45%] top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white/50 to-transparent" style={{ animationDelay: '0.5s' }} />
-        <div className="absolute left-[55%] top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white/50 to-transparent" style={{ animationDelay: '1s' }} />
+      <style>{`
+        @keyframes hsMenuEntrance {
+          0% { opacity: 0; transform: translateY(18px) scale(.985); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes hsMenuRoad {
+          0% { transform: translateY(0); opacity: .14; }
+          50% { opacity: .21; }
+          100% { transform: translateY(24px); opacity: .14; }
+        }
+        @keyframes hsMenuSkyline {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(-10px); }
+        }
+        @keyframes hsMenuBikeFloat {
+          0%, 100% { transform: translateY(0) rotate(-1deg); }
+          50% { transform: translateY(-7px) rotate(1deg); }
+        }
+        @keyframes hsMenuGlow {
+          0%, 100% { opacity: .18; transform: scale(.94); }
+          50% { opacity: .34; transform: scale(1.04); }
+        }
+        @keyframes hsMenuStreak {
+          0% { transform: translateY(-40px); opacity: 0; }
+          18% { opacity: .28; }
+          100% { transform: translateY(140px); opacity: 0; }
+        }
+        .hs-menu-enter { animation: hsMenuEntrance 720ms cubic-bezier(.2,.72,.2,1) both; }
+        .hs-menu-enter-delay { animation-delay: 110ms; }
+        .hs-menu-enter-delay-2 { animation-delay: 190ms; }
+        .hs-menu-enter-delay-3 { animation-delay: 280ms; }
+      `}</style>
+
+      {/* Live visual backdrop: no external asset loading and no blocking screen. */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(244,185,74,.16),transparent_28%),linear-gradient(180deg,#151c23_0%,#0d1318_45%,#080a0d_100%)]" />
+        <div
+          className="absolute -inset-x-20 top-[40%] h-[68%]"
+          style={{
+            background: 'linear-gradient(165deg, transparent 0 38%, rgba(17,21,24,.95) 38.2% 39.1%, transparent 39.3% 100%), repeating-linear-gradient(90deg, transparent 0 74px, rgba(229,195,116,.13) 75px 76px, transparent 77px 150px)',
+            transform: 'perspective(520px) rotateX(61deg)',
+            transformOrigin: 'top center',
+            animation: 'hsMenuRoad 4.8s ease-in-out infinite',
+          }}
+        />
+
+        <div
+          className="absolute left-0 right-0 top-[34%] h-28 opacity-70"
+          style={{
+            background: 'linear-gradient(to top, rgba(8,10,13,.95), transparent), repeating-linear-gradient(90deg, rgba(36,46,53,.78) 0 16px, transparent 16px 28px, rgba(48,58,63,.58) 28px 42px, transparent 42px 58px)',
+            clipPath: 'polygon(0 58%, 6% 44%, 11% 57%, 18% 36%, 25% 55%, 34% 41%, 43% 58%, 51% 30%, 60% 52%, 68% 42%, 76% 56%, 83% 36%, 91% 51%, 100% 39%, 100% 100%, 0 100%)',
+            animation: 'hsMenuSkyline 12s ease-in-out infinite',
+          }}
+        />
+
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <span
+            key={i}
+            className="absolute top-[14%] h-1 rounded-full bg-white/20 blur-[1px]"
+            style={{
+              left: `${8 + i * 16}%`,
+              width: `${28 + (i % 3) * 18}px`,
+              animation: `hsMenuStreak ${2.2 + (i % 3) * 0.4}s linear ${i * 0.24}s infinite`,
+            }}
+          />
+        ))}
+
+        <div
+          className="absolute left-1/2 top-[50%] h-[190px] w-[190px] -translate-x-1/2 rounded-full bg-amber-300/10 blur-3xl"
+          style={{ animation: 'hsMenuGlow 4.5s ease-in-out infinite' }}
+        />
       </div>
 
-      {state.username && <PlaytimeRankCard username={state.username} />}
+      {/* Existing username flow remains in the same place/function. */}
+      <div className="relative z-20">
+        <UsernameInput />
+      </div>
 
-      {/* Username Display */}
       {state.username && (
-        <div className="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 z-10">
-          <div className="bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
-            <p className="text-white font-bold text-sm sm:text-base">
-              👤 {state.username}
-            </p>
+        <div className="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 z-30">
+          <div className="rounded-full border border-white/10 bg-black/25 px-4 py-2 backdrop-blur-xl shadow-lg">
+            <p className="text-white font-bold text-sm sm:text-base">👤 {state.username}</p>
           </div>
         </div>
       )}
 
-      {/* Title */}
-      <div className="relative z-10 text-center mb-6 sm:mb-10 mt-12">
-        <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-400 to-red-500">
-          HIGHWAY
-        </h1>
-        <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-pink-500 -mt-1 sm:-mt-2">
-          SPEEDSTER
-        </h1>
-      </div>
+      <div className="relative z-10 flex min-h-full flex-col items-center justify-center px-4 py-8 sm:py-10">
+        <div className="hs-menu-enter relative w-full max-w-3xl text-center">
+          {/* Strong title treatment */}
+          <div className="mb-4 sm:mb-5">
+            <p className="mb-2 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.38em] text-amber-200/55">
+              Fast Indian Highway Arcade
+            </p>
+            <h1 className="text-5xl sm:text-7xl md:text-8xl font-black leading-[0.82] tracking-[-0.06em] text-white">
+              HIGHWAY
+            </h1>
+            <div className="mt-1 flex items-center justify-center gap-2 sm:gap-3">
+              <span className="h-px w-8 sm:w-12 bg-gradient-to-r from-transparent to-amber-300/80" />
+              <h2 className="text-4xl sm:text-6xl md:text-7xl font-black leading-none tracking-[-0.05em] text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-orange-400 to-red-500">
+                SPEEDSTER
+              </h2>
+              <span className="h-px w-8 sm:w-12 bg-gradient-to-l from-transparent to-red-400/80" />
+            </div>
+          </div>
 
-      {/* Current vehicle */}
-      <div className="relative z-10 mb-5 sm:mb-7">
-        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center border border-white/10 overflow-hidden"
-          style={{
-            background: state.vehicleMode === 'car'
-              ? `linear-gradient(135deg, ${state.selectedCar.color}30, ${state.selectedCar.accentColor}30)`
-              : `linear-gradient(135deg, ${state.selectedBike.color}30, ${state.selectedBike.accentColor}30)`,
-          }}>
-          {state.vehicleMode === 'car' ? <CarIcon car={state.selectedCar} /> : <BikeIcon bike={state.selectedBike} />}
+          {/* Hero vehicle stage — existing selected vehicle, no new ownership state. */}
+          <div className="hs-menu-enter hs-menu-enter-delay relative mx-auto mb-5 sm:mb-6 h-[170px] sm:h-[215px] w-full max-w-xl overflow-hidden rounded-[28px] border border-white/10 bg-black/20 backdrop-blur-[2px]">
+            <div className="absolute inset-x-10 bottom-5 h-10 rounded-[50%] border border-white/[0.08] bg-white/[0.025]" />
+            <div
+              className="absolute bottom-8 left-1/2 h-20 w-52 sm:w-64 -translate-x-1/2 rounded-[50%] bg-amber-300/10 blur-2xl"
+              style={{ animation: 'hsMenuGlow 3.7s ease-in-out infinite' }}
+            />
+            <div
+              key={heroVehicle.id}
+              className="absolute inset-0 flex items-center justify-center"
+              style={{ animation: 'hsMenuVehicleIn 320ms ease-out' }}
+            >
+              <div
+                className="relative h-[125px] w-[225px] sm:h-[155px] sm:w-[285px]"
+                style={{ animation: 'hsMenuBikeFloat 4.6s ease-in-out infinite' }}
+              >
+                {isCar ? <CarIcon car={state.selectedCar} /> : <BikeIcon bike={state.selectedBike} />}
+              </div>
+            </div>
+
+            <div className="absolute left-4 top-4 text-left">
+              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em] text-white/40">
+                Selected Ride
+              </p>
+              <p className="mt-1 text-sm sm:text-base font-black text-white">{heroVehicle.name}</p>
+            </div>
+
+            <div className="absolute right-4 top-4 rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-white/45">
+              {isCar ? 'CAR' : 'BIKE'}
+            </div>
+          </div>
+
+          {state.username && <div className="hs-menu-enter hs-menu-enter-delay-2 mb-3"><PlaytimeRankCard username={state.username} /></div>}
+
+          {state.highScore > 0 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                window.location.href = '/highscores'
+              }}
+              className="hs-menu-enter hs-menu-enter-delay-2 relative z-20 mb-4 rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-center backdrop-blur-md transition-all hover:border-amber-300/20 hover:bg-white/[0.045] active:scale-95"
+              aria-label="Open public high score leaderboard"
+            >
+              <p className="text-gray-400 text-[10px] uppercase tracking-[0.18em] font-semibold">
+                Your Highest Score Is Only
+              </p>
+              <p className="text-amber-300 font-black text-lg sm:text-xl tabular-nums">
+                {state.highScore.toLocaleString()}
+              </p>
+            </button>
+          )}
+
+          {/* One obvious primary action; existing handler is unchanged. */}
+          <div className="hs-menu-enter hs-menu-enter-delay-3 relative z-20 flex w-full max-w-sm flex-col gap-2.5 sm:gap-3 mx-auto">
+            <button
+              onClick={() => {
+                actions.resetGame()
+                const hasPowerUps =
+                  state.inventory.magnet > 0 ||
+                  state.inventory.magnet2x > 0 ||
+                  state.inventory.multiplier2x > 0 ||
+                  state.inventory.multiplier4x > 0 ||
+                  state.inventory.shield > 0
+
+                if (hasPowerUps) {
+                  setShowPowerUpSelection(true)
+                } else {
+                  actions.setGameState('playing')
+                }
+              }}
+              className="group relative overflow-hidden rounded-2xl border border-amber-200/30 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 py-3.5 sm:py-4 text-base sm:text-lg font-black tracking-wide text-black shadow-xl shadow-orange-500/20 transition-all hover:scale-[1.015] hover:shadow-orange-500/30 active:scale-[0.98]"
+            >
+              <span className="absolute inset-0 bg-white/20 opacity-0 transition-opacity group-hover:opacity-100" />
+              <span className="relative flex items-center justify-center gap-2">
+                <span className="text-lg sm:text-xl">🏁</span>
+                RIDE NOW
+              </span>
+            </button>
+
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+              <button
+                onClick={() => setShowBikes(true)}
+                className="rounded-2xl border border-white/12 bg-white/[0.055] py-3 sm:py-3.5 text-sm sm:text-base font-black text-white shadow-lg transition-all hover:bg-white/[0.09] hover:border-white/20 active:scale-[0.98]"
+              >
+                🏍️ GARAGE
+              </button>
+
+              <button
+                onClick={() => setShowStore(true)}
+                className="rounded-2xl border border-white/12 bg-white/[0.055] py-3 sm:py-3.5 text-sm sm:text-base font-black text-white shadow-lg transition-all hover:bg-white/[0.09] hover:border-white/20 active:scale-[0.98]"
+              >
+                🛒 STORE
+              </button>
+            </div>
+          </div>
         </div>
-        <p className="text-center text-white font-bold mt-2 text-sm sm:text-base">
-          {state.vehicleMode === 'car' ? state.selectedCar.name : state.selectedBike.name}
-        </p>
-      </div>
-
-      {/* High score */}
-      {state.highScore > 0 && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            window.location.href = '/highscores'
-          }}
-          className="relative z-10 mb-4 sm:mb-5 text-center cursor-pointer rounded-xl px-3 py-1 hover:bg-white/5 active:scale-95 transition-all"
-          aria-label="Open public high score leaderboard"
-        >
-          <p className="text-gray-500 text-[10px] uppercase tracking-wider font-medium">
-            Your Highest Score Is Only
-          </p>
-          <p className="text-yellow-400 font-bold text-lg sm:text-xl tabular-nums">
-            {state.highScore.toLocaleString()}
-          </p>
-        </button>
-      )}
-
-      {/* Buttons */}
-      <div className="relative z-10 flex flex-col gap-2.5 sm:gap-3 w-56 sm:w-64">
-        <button
-          onClick={() => { 
-            actions.resetGame()
-            // Check if user has any power-ups
-            const hasPowerUps = state.inventory.magnet > 0 || state.inventory.magnet2x > 0 || state.inventory.multiplier2x > 0 || state.inventory.multiplier4x > 0 || state.inventory.shield > 0
-            if (hasPowerUps) {
-              setShowPowerUpSelection(true)
-            } else {
-              actions.setGameState('playing')
-            }
-          }}
-          className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold text-base sm:text-lg py-3 sm:py-3.5 rounded-xl shadow-lg shadow-green-500/25 active:scale-95 transition-all border border-green-400/20"
-        >
-          🏁 RIDE NOW
-        </button>
-        
-        <button
-          onClick={() => setShowBikes(true)}
-          className="bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-600 text-white font-bold text-sm sm:text-base py-3 sm:py-3.5 rounded-xl shadow-lg shadow-purple-500/25 active:scale-95 transition-all border border-purple-400/20"
-        >
-          🏍️ GARAGE
-        </button>
-
-        <button
-          onClick={() => setShowStore(true)}
-          className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white font-bold text-sm sm:text-base py-3 sm:py-3.5 rounded-xl shadow-lg shadow-yellow-500/25 active:scale-95 transition-all border border-yellow-400/20"
-        >
-          🛒 STORE
-        </button>
       </div>
     </div>
   )
 }
 
-// ============== SKIN SELECTOR ==============
 function SkinSelector({ bikeId }: { bikeId: string }) {
   const state = useGameStore()
   const availableSkins = BIKE_SKINS[bikeId] || []
