@@ -1682,7 +1682,16 @@ function ZenithBike({ bike }: { bike: Bike }) {
 // ============== CARS ==============
 // Stylized, logo-free models inspired by the requested real-world proportions.
 
-function CarBase({ car, shape = 'sedan' }: { car: Car; shape?: 'hatch' | 'sedan' | 'suv' | 'gt' | 'exotic' }) {
+function CarBase({
+  car,
+  shape = 'sedan',
+}: {
+  car: Car
+  shape?: 'hatch' | 'sedan' | 'suv' | 'gt' | 'exotic'
+}) {
+  const { gl } = useThree()
+  const quality = getVehicleGfxQuality(gl)
+
   const dimensions = {
     hatch: [1.55, 1.0, 3.2],
     sedan: [1.65, 1.0, 4.2],
@@ -1690,63 +1699,259 @@ function CarBase({ car, shape = 'sedan' }: { car: Car; shape?: 'hatch' | 'sedan'
     gt: [1.85, 1.05, 4.7],
     exotic: [1.9, 0.9, 4.4],
   } as const
+
+  // [GFX] Gameplay collision dimensions remain exactly the same.
   const [w, h, l] = dimensions[shape]
   const wheelZ = l * 0.34
 
+  const bodyGeometry = useMemo(
+    () => new RoundedBoxGeometry(w, h * 0.48, l, 0.055, 2),
+    [w, h, l]
+  )
+  const upperBodyGeometry = useMemo(
+    () => new RoundedBoxGeometry(w * 0.78, h * 0.42, l * 0.48, 0.045, 2),
+    [w, h, l]
+  )
+  const glassGeometry = useMemo(
+    () => new RoundedBoxGeometry(w * 0.64, h * 0.25, l * 0.42, 0.035, 2),
+    [w, h, l]
+  )
+  const lowerTrimGeometry = useMemo(
+    () => new RoundedBoxGeometry(w * 0.82, h * 0.13, 0.08, 0.02, 1),
+    [w, h]
+  )
+  const wheelTireGeometry = useMemo(
+    () => new THREE.TorusGeometry(0.28, 0.075, 8, 16),
+    []
+  )
+  const wheelHubGeometry = useMemo(
+    () => new THREE.CylinderGeometry(0.14, 0.14, 0.08, 12),
+    []
+  )
+  const wheelDiscGeometry = useMemo(
+    () => new THREE.CylinderGeometry(0.095, 0.095, 0.025, 10),
+    []
+  )
+
+  const bodyMaterial = useMemo<THREE.Material>(() => {
+    if (quality === 'high') {
+      return new THREE.MeshPhysicalMaterial({
+        color: car.color,
+        metalness: 0.5,
+        roughness: 0.23,
+        clearcoat: 0.8,
+        clearcoatRoughness: 0.14,
+        envMapIntensity: 0.9,
+      })
+    }
+    return new THREE.MeshMatcapMaterial({
+      color: car.color,
+      matcap: getVehicleMatcapTexture(),
+    })
+  }, [quality, car.color])
+
+  const upperBodyMaterial = useMemo<THREE.Material>(() => {
+    if (quality === 'high') {
+      return new THREE.MeshPhysicalMaterial({
+        color: car.accentColor,
+        metalness: 0.66,
+        roughness: 0.2,
+        clearcoat: 0.65,
+        clearcoatRoughness: 0.15,
+        envMapIntensity: 0.85,
+      })
+    }
+    return new THREE.MeshMatcapMaterial({
+      color: car.accentColor,
+      matcap: getVehicleMatcapTexture(),
+    })
+  }, [quality, car.accentColor])
+
+  const wheelMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({
+      color: '#101010',
+      roughness: 0.88,
+      metalness: 0.04,
+    }),
+    []
+  )
+  const hubMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({
+      color: '#9ca3af',
+      metalness: 0.82,
+      roughness: 0.18,
+    }),
+    []
+  )
+  const discMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({
+      color: '#4e555a',
+      metalness: 0.9,
+      roughness: 0.16,
+    }),
+    []
+  )
+
+  useEffect(() => {
+    return () => {
+      bodyGeometry.dispose()
+      upperBodyGeometry.dispose()
+      glassGeometry.dispose()
+      lowerTrimGeometry.dispose()
+      wheelTireGeometry.dispose()
+      wheelHubGeometry.dispose()
+      wheelDiscGeometry.dispose()
+      bodyMaterial.dispose()
+      upperBodyMaterial.dispose()
+      wheelMaterial.dispose()
+      hubMaterial.dispose()
+      discMaterial.dispose()
+    }
+  }, [
+    bodyGeometry,
+    upperBodyGeometry,
+    glassGeometry,
+    lowerTrimGeometry,
+    wheelTireGeometry,
+    wheelHubGeometry,
+    wheelDiscGeometry,
+    bodyMaterial,
+    upperBodyMaterial,
+    wheelMaterial,
+    hubMaterial,
+    discMaterial,
+  ])
+
   return (
     <>
-      <mesh position={[0, h * 0.34, 0]}>
-        <boxGeometry args={[w, h * 0.48, l]} />
-        <meshStandardMaterial color={car.color} metalness={0.65} roughness={0.28} />
+      {/* [GFX] Rounded primary body shell. Same footprint as the protected box. */}
+      <mesh
+        geometry={bodyGeometry}
+        material={bodyMaterial}
+        position={[0, h * 0.34, 0]}
+        castShadow
+        receiveShadow
+      />
+
+      {/* [GFX] Car-specific upper paint mass preserves each roster identity. */}
+      <mesh
+        geometry={upperBodyGeometry}
+        material={upperBodyMaterial}
+        position={[0, h * 0.66, -l * 0.04]}
+        castShadow
+      />
+
+      {/* [GFX] Dark glass cockpit with a restrained reflective response. */}
+      <mesh
+        geometry={glassGeometry}
+        position={[0, h * 0.68, -l * 0.06]}
+        castShadow
+      >
+        {quality === 'high' ? (
+          <meshPhysicalMaterial
+            color="#17212b"
+            metalness={0.55}
+            roughness={0.16}
+            clearcoat={0.4}
+            clearcoatRoughness={0.16}
+            transparent
+            opacity={0.92}
+          />
+        ) : (
+          <meshMatcapMaterial
+            color="#17212b"
+            matcap={getVehicleMatcapTexture()}
+            transparent
+            opacity={0.9}
+          />
+        )}
       </mesh>
-      <mesh position={[0, h * 0.66, -l * 0.04]}>
-        <boxGeometry args={[w * 0.78, h * 0.42, l * 0.48]} />
-        <meshStandardMaterial color={car.accentColor} metalness={0.35} roughness={0.3} />
+
+      <mesh
+        geometry={lowerTrimGeometry}
+        position={[0, h * 0.29, -l * 0.48]}
+        castShadow
+      >
+        <meshStandardMaterial
+          color="#252525"
+          metalness={0.62}
+          roughness={0.22}
+        />
       </mesh>
-      <mesh position={[0, h * 0.68, -l * 0.06]}>
-        <boxGeometry args={[w * 0.64, h * 0.25, l * 0.42]} />
-        <meshStandardMaterial color="#17212b" metalness={0.55} roughness={0.18} transparent opacity={0.9} />
-      </mesh>
-      <mesh position={[0, h * 0.29, -l * 0.48]}>
-        <boxGeometry args={[w * 0.82, h * 0.13, 0.08]} />
-        <meshStandardMaterial color="#252525" metalness={0.5} roughness={0.25} />
-      </mesh>
+
+      {/* [GFX] Better wheel/tire presentation, including hub + brake-disc illusion.
+          The existing player-wheel name keeps the rotation entirely visual-only. */}
       {[-1, 1].map((side) => (
         <group key={side}>
           {[-wheelZ, wheelZ].map((z) => (
-            <group key={z} position={[side * w * 0.52, h * 0.24, z]}>
-              <mesh name="player-wheel" rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[0.27, 0.27, 0.22, 16]} />
-                <meshStandardMaterial color="#101010" roughness={0.82} metalness={0.05} />
+            <group
+              key={z}
+              position={[side * w * 0.52, h * 0.24, z]}
+            >
+              <mesh
+                name="player-wheel"
+                geometry={wheelTireGeometry}
+                rotation={[0, Math.PI / 2, 0]}
+                castShadow
+                receiveShadow
+              >
+                <primitive object={wheelMaterial} attach="material" />
               </mesh>
-              <mesh position={[side > 0 ? 0.115 : -0.115, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[0.13, 0.13, 0.025, 16]} />
-                <meshStandardMaterial color="#9ca3af" metalness={0.75} roughness={0.2} />
+              <mesh
+                name="player-wheel"
+                geometry={wheelHubGeometry}
+                rotation={[0, 0, Math.PI / 2]}
+                castShadow
+              >
+                <primitive object={hubMaterial} attach="material" />
+              </mesh>
+              <mesh
+                geometry={wheelDiscGeometry}
+                rotation={[0, 0, Math.PI / 2]}
+              >
+                <primitive object={discMaterial} attach="material" />
               </mesh>
             </group>
           ))}
         </group>
       ))}
+
+      {/* [GFX] Thin emissive light elements remain on the exact existing footprint. */}
       <mesh position={[-w * 0.3, h * 0.36, -l / 2 - 0.01]}>
         <boxGeometry args={[w * 0.2, h * 0.12, 0.05]} />
-        <meshStandardMaterial color="#ffffdc" emissive="#fff6b0" emissiveIntensity={1.2} />
+        <meshStandardMaterial
+          color="#ffffdc"
+          emissive="#fff4b8"
+          emissiveIntensity={2.1}
+        />
       </mesh>
       <mesh position={[w * 0.3, h * 0.36, -l / 2 - 0.01]}>
         <boxGeometry args={[w * 0.2, h * 0.12, 0.05]} />
-        <meshStandardMaterial color="#ffffdc" emissive="#fff6b0" emissiveIntensity={1.2} />
+        <meshStandardMaterial
+          color="#ffffdc"
+          emissive="#fff4b8"
+          emissiveIntensity={2.1}
+        />
       </mesh>
       <mesh position={[-w * 0.3, h * 0.36, l / 2 + 0.01]}>
         <boxGeometry args={[w * 0.18, h * 0.1, 0.05]} />
-        <meshStandardMaterial color="#ef3340" emissive="#ef3340" emissiveIntensity={0.7} />
+        <meshStandardMaterial
+          color="#ef3340"
+          emissive="#ef3340"
+          emissiveIntensity={1.25}
+        />
       </mesh>
       <mesh position={[w * 0.3, h * 0.36, l / 2 + 0.01]}>
         <boxGeometry args={[w * 0.18, h * 0.1, 0.05]} />
-        <meshStandardMaterial color="#ef3340" emissive="#ef3340" emissiveIntensity={0.7} />
+        <meshStandardMaterial
+          color="#ef3340"
+          emissive="#ef3340"
+          emissiveIntensity={1.25}
+        />
       </mesh>
     </>
   )
 }
-
 function KantoZipCar({ car }: { car: Car }) {
   return (
     <group scale={0.95}>
