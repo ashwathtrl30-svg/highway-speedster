@@ -783,197 +783,120 @@ void main() {
 }
 `
 
-function ShieldBubble({
-  vehicleMode,
-  active,
-}: {
-  vehicleMode: 'bike' | 'car'
-  active: boolean
-}) {
-  const groupRef = useRef<THREE.Group>(null)
-  const shellRef = useRef<THREE.Mesh>(null)
-  const innerRef = useRef<THREE.Mesh>(null)
-  const rippleRef = useRef<THREE.Mesh>(null)
-  const flashRef = useRef<THREE.Mesh>(null)
-  const lastActiveRef = useRef(false)
-  const transitionStartRef = useRef(0)
-  const lastImpactIdRef = useRef(0)
-  const impactRef = useRef(0)
-  const impactLocalRef = useRef(new THREE.Vector3())
-  const { camera } = useThree()
-
-  // [GFX] Existing shield footprint is unchanged.
+function ShieldBubble({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
+  const bubbleRef = useRef<THREE.Group>(null)
   const radius = vehicleMode === 'car' ? 1.85 : 1.2
 
-  const shellMaterial = useMemo(
-    () => new THREE.ShaderMaterial({
-      transparent: true,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending,
-      uniforms: {
-        uTime: { value: 0 },
-        uOpacity: { value: 0 },
-        uColor: { value: new THREE.Color('#66cfff') },
-      },
-      vertexShader: shellVS,
-      fragmentShader: shellFS,
-    }),
-    []
-  )
-
-  const innerMaterial = useMemo(
-    () => new THREE.ShaderMaterial({
-      transparent: true,
-      depthWrite: false,
-      side: THREE.BackSide,
-      blending: THREE.AdditiveBlending,
-      uniforms: {
-        uTime: { value: 0 },
-        uOpacity: { value: 0 },
-        uColor: { value: new THREE.Color('#d8f5ff') },
-      },
-      vertexShader: innerVS,
-      fragmentShader: innerFS,
-    }),
-    []
-  )
-
-  const rippleMaterial = useMemo(
-    () => new THREE.MeshBasicMaterial({
-      color: '#dff9ff',
-      transparent: true,
-      opacity: 0,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    }),
-    []
-  )
-
-  const flashMaterial = useMemo(
-    () => new THREE.MeshBasicMaterial({
-      color: '#ffffff',
-      transparent: true,
-      opacity: 0,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    }),
-    []
-  )
-
-  useEffect(() => {
-    return () => {
-      shellMaterial.dispose()
-      innerMaterial.dispose()
-      rippleMaterial.dispose()
-      flashMaterial.dispose()
-    }
-  }, [
-    shellMaterial,
-    innerMaterial,
-    rippleMaterial,
-    flashMaterial,
-  ])
-
   useFrame((_, delta) => {
-    const now = performance.now()
-    if (!groupRef.current) return
-
-    if (active !== lastActiveRef.current) {
-      lastActiveRef.current = active
-      transitionStartRef.current = now
-    }
-
-    const transition = Math.min((now - transitionStartRef.current) / 220, 1)
-    const progress = active
-      ? 1 - Math.pow(1 - transition, 3)
-      : Math.pow(1 - transition, 2)
-
-    const pulse = 1 + Math.sin(now * 0.0028) * 0.012
-    const visualAlpha = Math.max(0, progress) * pulse
-
-    groupRef.current.visible = active || transition < 1
-    groupRef.current.position.set(getState().playerX, 0.95, PLAYER_Z)
-    groupRef.current.scale.setScalar(THREE.MathUtils.lerp(0.88, 1.0, progress))
-
-    shellMaterial.uniforms.uTime.value = now * 0.001
-    shellMaterial.uniforms.uOpacity.value = visualAlpha
-    innerMaterial.uniforms.uTime.value = now * 0.001
-    innerMaterial.uniforms.uOpacity.value = visualAlpha * 0.68
-
-    if (shellRef.current) {
-      shellRef.current.scale.setScalar(1 + Math.sin(now * 0.0038) * 0.012)
-    }
-
-    if (innerRef.current) {
-      innerRef.current.rotation.y -= delta * 0.16
-      innerRef.current.scale.setScalar(1.006 + Math.sin(now * 0.0021) * 0.01)
-    }
-
-    if (
-      shieldImpactVisual &&
-      shieldImpactVisual.id !== lastImpactIdRef.current
-    ) {
-      lastImpactIdRef.current = shieldImpactVisual.id
-      impactRef.current = 1
-      impactLocalRef.current
-        .copy(shieldImpactVisual.position)
-        .sub(groupRef.current.position)
-    }
-
-    impactRef.current = Math.max(0, impactRef.current - delta * 5.0)
-
-    if (rippleRef.current && flashRef.current) {
-      const impact = impactRef.current
-      const local = impactLocalRef.current
-
-      rippleRef.current.position.set(
-        local.x * 0.92,
-        THREE.MathUtils.clamp(local.y, 0.15, 1.8),
-        local.z * 0.92
-      )
-      rippleRef.current.quaternion.copy(camera.quaternion)
-      rippleRef.current.scale.setScalar(0.12 + (1 - impact) * radius * 0.62)
-
-      flashRef.current.position.copy(rippleRef.current.position)
-      flashRef.current.scale.setScalar(0.12 + impact * 0.38)
-
-      rippleMaterial.opacity = impact * 0.5
-      flashMaterial.opacity = impact * 0.32
-      rippleRef.current.visible = impact > 0.02
-      flashRef.current.visible = impact > 0.02
-    }
-
-    if (!active && transition >= 1) {
-      groupRef.current.visible = false
-    }
+    if (!bubbleRef.current) return
+    bubbleRef.current.rotation.y += delta * 0.2
+    const pulse = 1 + Math.sin(performance.now() * 0.004) * 0.02
+    bubbleRef.current.scale.setScalar(pulse)
   })
 
   return (
-    <group ref={groupRef} position={[0, 0.95, PLAYER_Z]} visible={false}>
-      <mesh ref={shellRef}>
+    <group ref={bubbleRef} position={[0, 0.95, 0]}>
+      <mesh>
         <sphereGeometry args={[radius, 24, 16]} />
-        <primitive object={shellMaterial} attach="material" />
+        <meshStandardMaterial
+          color="#168cff"
+          emissive="#0077ff"
+          emissiveIntensity={0.65}
+          transparent
+          opacity={0.12}
+          depthWrite={false}
+          roughness={0.2}
+          metalness={0.1}
+        />
       </mesh>
-
-      <mesh ref={innerRef} scale={1.012}>
-        <sphereGeometry args={[radius, 20, 14]} />
-        <primitive object={innerMaterial} attach="material" />
-      </mesh>
-
-      <mesh ref={rippleRef}>
-        <torusGeometry args={[0.46, 0.032, 8, 24]} />
-        <primitive object={rippleMaterial} attach="material" />
-      </mesh>
-
-      <mesh ref={flashRef}>
-        <sphereGeometry args={[0.18, 8, 6]} />
-        <primitive object={flashMaterial} attach="material" />
+      <mesh scale={1.015}>
+        <sphereGeometry args={[radius, 16, 12]} />
+        <meshBasicMaterial
+          color="#39a7ff"
+          transparent
+          opacity={0.2}
+          wireframe
+          depthWrite={false}
+        />
       </mesh>
     </group>
   )
 }
 
+function PlayerWheelFaces({
+  vehicleMode,
+  carId,
+}: {
+  vehicleMode: 'bike' | 'car'
+  carId: string
+}) {
+  const carGeometry = {
+    'kanto-zip': { w: 1.55, l: 3.2, scale: 0.95 },
+    'saber-swift': { w: 1.65, l: 4.2, scale: 1 },
+    'goliath-titan': { w: 1.9, l: 4.6, scale: 1.08 },
+    'kaiser-monarch': { w: 1.85, l: 4.7, scale: 1 },
+    'scuderia-fury': { w: 1.9, l: 4.4, scale: 1.02 },
+  } as const
+  const car = carGeometry[carId as keyof typeof carGeometry] ?? carGeometry['kanto-zip']
+
+  if (vehicleMode === 'bike') {
+    return (
+      <group>
+        {[-0.98, 0.88].map((z) => (
+          <group key={z} position={[0, 0.25, z]} renderOrder={10}>
+            <mesh rotation={[0, 0, 0]} renderOrder={10}>
+              <torusGeometry args={[0.24, 0.055, 8, 16]} />
+              <meshStandardMaterial
+                color="#2b2f33"
+                roughness={0.82}
+                metalness={0.08}
+                depthTest={false}
+              />
+            </mesh>
+            <mesh renderOrder={11}>
+              <cylinderGeometry args={[0.13, 0.13, 0.045, 12]} />
+              <meshStandardMaterial
+                color="#b8c0c7"
+                roughness={0.18}
+                metalness={0.9}
+                depthTest={false}
+              />
+            </mesh>
+          </group>
+        ))}
+      </group>
+    )
+  }
+
+  const wheelZ = car.l * 0.34 * car.scale
+  const wheelX = car.w * 0.5 * car.scale
+  return (
+    <group>
+      {[-1, 1].map((side) => (
+        <group key={side} position={[side * wheelX, 0.24 * car.scale, wheelZ]} renderOrder={10}>
+          <mesh renderOrder={10}>
+            <torusGeometry args={[0.28 * car.scale, 0.07 * car.scale, 8, 16]} />
+            <meshStandardMaterial
+              color="#2b2f33"
+              roughness={0.82}
+              metalness={0.08}
+              depthTest={false}
+            />
+          </mesh>
+          <mesh renderOrder={11}>
+            <cylinderGeometry args={[0.14 * car.scale, 0.14 * car.scale, 0.055 * car.scale, 12]} />
+            <meshStandardMaterial
+              color="#b8c0c7"
+              roughness={0.18}
+              metalness={0.9}
+              depthTest={false}
+            />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  )
+}
 
 function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
   const meshRef = useRef<THREE.Group>(null)
@@ -1067,7 +990,8 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
       <group ref={visualRef}>
         {vehicleMode === 'car' ? renderCarModel() : renderBikeModel()}
         <VehicleLightingAccents vehicleMode={vehicleMode} />
-        <ShieldBubble vehicleMode={vehicleMode} active={shieldActive} />
+        <PlayerWheelFaces vehicleMode={vehicleMode} carId={car.id} />
+        <ShieldBubble vehicleMode={vehicleMode} />
       </group>
     </group>
   )
@@ -2441,7 +2365,7 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
 
   // Wheels
   const wheelGeo = new THREE.CylinderGeometry(0.22, 0.22, 0.12, 8)
-  const wheelMat = new THREE.MeshStandardMaterial({ color: '#111111', roughness: 0.9 })
+  const wheelMat = new THREE.MeshStandardMaterial({ color: '#24282c', roughness: 0.84, metalness: 0.05 })
   
   const wheelZ = type === 'bus' || type === 'truck' ? l * 0.35 : type === 'bike' || type === 'scooter' ? l * 0.38 : l * 0.3
   const wheelPositions = (type === 'bike' || type === 'scooter')
@@ -2465,6 +2389,55 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
     wheel.rotation.z = Math.PI / 2
     group.add(wheel)
   })
+
+  // Front-facing wheel presentation keeps approaching traffic readable from the
+  // fixed rear camera without changing the underlying wheel/collision geometry.
+  const frontWheelPositions = (type === 'bike' || type === 'scooter')
+    ? [[0, 0.24]]
+    : [[-w * 0.38, 0.24], [w * 0.38, 0.24]]
+  const visibleWheelTire = new THREE.TorusGeometry(
+    type === 'bike' || type === 'scooter' ? 0.24 : 0.28,
+    0.055,
+    8,
+    16
+  )
+  const visibleWheelHub = new THREE.CylinderGeometry(
+    type === 'bike' || type === 'scooter' ? 0.12 : 0.14,
+    type === 'bike' || type === 'scooter' ? 0.12 : 0.14,
+    0.045,
+    12
+  )
+  frontWheelPositions.forEach(([x, y]) => {
+    const tire = new THREE.Mesh(
+      visibleWheelTire,
+      new THREE.MeshStandardMaterial({
+        color: '#2b2f33',
+        roughness: 0.82,
+        metalness: 0.08,
+        depthTest: false,
+        depthWrite: false,
+      })
+    )
+    tire.position.set(x, y, -l * 0.39 - 0.01)
+    tire.renderOrder = 10
+    group.add(tire)
+
+    const hub = new THREE.Mesh(
+      visibleWheelHub,
+      new THREE.MeshStandardMaterial({
+        color: '#b8c0c7',
+        roughness: 0.18,
+        metalness: 0.9,
+        depthTest: false,
+        depthWrite: false,
+      })
+    )
+    hub.position.set(x, y, -l * 0.39 - 0.025)
+    hub.renderOrder = 11
+    group.add(hub)
+  })
+  visibleWheelTire.dispose()
+  visibleWheelHub.dispose()
 
   // [GFX] Additive tail-light bloom without a dynamic light.
   const tailGlowMaterial = new THREE.SpriteMaterial({
@@ -4184,7 +4157,7 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
           scale: 0.78 + seed(i * 5 + 4) * (0.45 + zone * 0.18),
           rotation: (seed(i * 5 + 5) - 0.5) * 0.2,
           variant: i % 3,
-          tint: new THREE.Color(zone > 0.58 ? '#3f7d43' : '#356f43'),
+          tint: new THREE.Color(zone > 0.58 ? '#63a954' : '#579b4c'),
         })
       }
 
@@ -4195,7 +4168,7 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
           scale: 0.75 + seed(i * 11 + 7) * (0.5 + zone * 0.16),
           rotation: (seed(i * 11 + 8) - 0.5) * 0.2,
           variant: (i + 1) % 3,
-          tint: new THREE.Color(zone > 0.58 ? '#447f46' : '#386f45'),
+          tint: new THREE.Color(zone > 0.58 ? '#67ad58' : '#5a9e50'),
         })
       }
 
@@ -4236,9 +4209,10 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
     // Shared tree geometry: three visibly different, low-poly variants.
     const trunkGeo = new THREE.CylinderGeometry(0.11, 0.22, 2.7, 6)
     const trunkMat = new THREE.MeshStandardMaterial({
-      color: '#3d2d24',
-      roughness: 0.95,
-      vertexColors: true,
+      color: '#7a4a2a',
+      roughness: 0.9,
+      emissive: '#24160d',
+      emissiveIntensity: 0.08,
     })
     const trunkMesh = new THREE.InstancedMesh(trunkGeo, trunkMat, trees.length)
     trunkMesh.castShadow = true
@@ -4249,9 +4223,27 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
       new THREE.SphereGeometry(1.05, 7, 5),
     ]
     const canopyMats = [
-      new THREE.MeshStandardMaterial({ color: '#3f7d43', roughness: 0.9, vertexColors: true }),
-      new THREE.MeshStandardMaterial({ color: '#447e49', roughness: 0.9, vertexColors: true }),
-      new THREE.MeshStandardMaterial({ color: '#356f43', roughness: 0.9, vertexColors: true }),
+      new THREE.MeshStandardMaterial({
+        color: '#69a95d',
+        roughness: 0.88,
+        vertexColors: true,
+        emissive: '#163b18',
+        emissiveIntensity: 0.07,
+      }),
+      new THREE.MeshStandardMaterial({
+        color: '#72ad63',
+        roughness: 0.88,
+        vertexColors: true,
+        emissive: '#163b18',
+        emissiveIntensity: 0.07,
+      }),
+      new THREE.MeshStandardMaterial({
+        color: '#5e9d55',
+        roughness: 0.88,
+        vertexColors: true,
+        emissive: '#153916',
+        emissiveIntensity: 0.07,
+      }),
     ]
     const variantCounts = [0, 0, 0]
     trees.forEach((tree) => { variantCounts[tree.variant]++ })
@@ -4267,7 +4259,7 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
       dummy.scale.setScalar(tree.scale)
       dummy.updateMatrix()
       trunkMesh.setMatrixAt(index, dummy.matrix)
-      trunkMesh.setColorAt(index, tree.tint.clone().lerp(new THREE.Color('#2f4a35'), 0.35))
+      // Trunks remain natural brown; per-instance green foliage tint never affects them.
 
       const canopyIndex = variantCounters[tree.variant]++
       const canopyY = tree.variant === 1 ? 3.25 * tree.scale : 3.0 * tree.scale
