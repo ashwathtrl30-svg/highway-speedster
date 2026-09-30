@@ -3101,21 +3101,21 @@ function CoinSystem() {
 
   const coinBodyMaterial = useMemo(
     () => new THREE.MeshStandardMaterial({
-      color: '#e1ad31',
-      metalness: 0.94,
-      roughness: 0.14,
-      emissive: '#a96a00',
-      emissiveIntensity: 0.22,
+      color: '#f6b82f',
+      metalness: 0.92,
+      roughness: 0.11,
+      emissive: '#f59e0b',
+      emissiveIntensity: 0.96,
     }),
     []
   )
   const coinFaceMaterial = useMemo(
     () => new THREE.MeshStandardMaterial({
-      color: '#fff0a3',
-      metalness: 0.86,
-      roughness: 0.12,
-      emissive: '#b97600',
-      emissiveIntensity: 0.22,
+      color: '#fbd35a',
+      metalness: 0.88,
+      roughness: 0.10,
+      emissive: '#fbbf24',
+      emissiveIntensity: 0.92,
     }),
     []
   )
