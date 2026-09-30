@@ -261,7 +261,7 @@ function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHig
           .map(migrate)
           .filter((id: string) => BIKES.some((bike) => bike.id === id))
       )]
-      const unlockedBikes = [...new Set([
+      const unlockedBikes = [...new Set<string>([
         'blitz',
         ...BIKES
           .filter((bike) => bike.unlockScore <= bikeHighScore)
@@ -271,7 +271,7 @@ function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHig
 
       // Every profile always owns the starter car.
       // Car progression is calculated only from the car high score.
-      const unlockedCars = [...new Set([
+      const unlockedCars = [...new Set<string>([
         'kanto-zip',
         ...CARS
           .filter((car) => car.unlockScore <= carHighScore)
