@@ -1296,6 +1296,13 @@ function Store({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="absolute inset-0 flex flex-col overflow-y-auto bg-[#0b1015]">
+      <style>{`
+        @keyframes hsStoreLaneFlow { from { background-position:0 0,0 0; } to { background-position:0 130px,-160px 0; } }
+        @keyframes hsStoreScanner { 0% { transform:translateX(-24vw); opacity:0; } 18% { opacity:.18; } 82% { opacity:.08; } 100% { transform:translateX(124vw); opacity:0; } }
+        @keyframes hsStoreSignal { 0%,100% { opacity:.20; transform:scaleY(.85); } 50% { opacity:.50; transform:scaleY(1); } }
+        @keyframes hsStoreBadgeFloat { 0%,100% { transform:translate3d(0,0,0); } 50% { transform:translate3d(-10px,5px,0); } }
+        .hs-store-floor-depth { background:repeating-linear-gradient(90deg,transparent 0 8%,rgba(214,178,93,.13) 8.2% 8.5%,transparent 8.8% 24%),repeating-linear-gradient(180deg,transparent 0 54px,rgba(142,165,177,.10) 55px 56px,transparent 57px 108px); background-size:100% 180px,100% 108px; animation:hsStoreLaneFlow 4.4s linear infinite; mask-image:linear-gradient(to bottom,transparent 0%,black 18%,black 100%); }
+      `}</style>
       {/* Static performance-store backdrop: steel, road-night and restrained amber accents. */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_18%,rgba(63,98,117,.18),transparent_28%),radial-gradient(circle_at_20%_72%,rgba(211,157,71,.11),transparent_30%),linear-gradient(145deg,#0d1419_0%,#17232b_48%,#090c10_100%)]" />
@@ -1308,6 +1315,14 @@ function Store({ onBack }: { onBack: () => void }) {
           </svg>
         </div>
         <div className="absolute inset-x-0 top-[8.5rem] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div className="absolute inset-x-0 bottom-[-8%] h-[60%] [perspective:700px]">
+          <div className="hs-store-floor-depth absolute inset-[-5%] [transform:rotateX(64deg)] [transform-origin:center_top]" />
+        </div>
+        <div className="absolute right-[8%] top-[31%] h-20 w-px bg-gradient-to-b from-transparent via-amber-300/25 to-transparent" style={{ animation: "hsStoreSignal 2.8s ease-in-out infinite" }} />
+        <div className="absolute left-[8%] top-[40%] h-14 w-px bg-gradient-to-b from-transparent via-slate-200/15 to-transparent" style={{ animation: "hsStoreSignal 3.5s ease-in-out -1s infinite" }} />
+        <div className="absolute top-[24%] left-[6%] h-px w-[34%] bg-gradient-to-r from-transparent via-sky-200/20 to-transparent" style={{ animation: "hsStoreScanner 5.5s linear infinite" }} />
+        <div className="absolute top-[28%] left-[37%] h-px w-[34%] bg-gradient-to-r from-transparent via-sky-200/20 to-transparent" style={{ animation: "hsStoreScanner 6.3s linear 1.1s infinite" }} />
+        <div className="absolute top-[22%] left-[68%] h-px w-[34%] bg-gradient-to-r from-transparent via-sky-200/20 to-transparent" style={{ animation: "hsStoreScanner 7.1s linear 2.2s infinite" }} />
         <div className="absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-black/58 to-transparent" />
       </div>
       {/* Header */}
