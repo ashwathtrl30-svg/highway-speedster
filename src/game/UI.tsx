@@ -1376,6 +1376,21 @@ function Store({ onBack }: { onBack: () => void }) {
 // ============== POWER-UP SELECTION ==============
 function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: () => void }) {
   const state = useGameStore()
+  const [editingPowerUp, setEditingPowerUp] = useState<PowerUpType | null>(null)
+  const [draftQuantity, setDraftQuantity] = useState('')
+
+  const beginQuantityEdit = (powerUp: PowerUpType, quantity: number) => {
+    setEditingPowerUp(powerUp)
+    setDraftQuantity(String(quantity))
+  }
+
+  const commitQuantityEdit = (powerUp: PowerUpType, owned: number) => {
+    const parsed = Number.parseInt(draftQuantity, 10)
+    const quantity = Number.isFinite(parsed) ? Math.max(0, Math.min(owned, parsed)) : 0
+    actions.setPowerUpQuantity(powerUp, quantity)
+    setEditingPowerUp(null)
+    setDraftQuantity('')
+  }
 
   const powerUps: Array<{
     type: PowerUpType
@@ -1503,12 +1518,40 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
                     >
                       −
                     </button>
-                    <div
-                      aria-label={quantity + ' ' + powerUp.title + ' selected'}
-                      className="flex h-9 min-w-9 sm:h-10 sm:min-w-10 items-center justify-center rounded-lg border border-white/20 bg-black/30 px-2 text-base sm:text-lg font-black text-white tabular-nums"
-                    >
-                      {quantity}
-                    </div>
+                    {editingPowerUp === powerUp.type ? (
+                      <input
+                        type="number"
+                        min="0"
+                        max={owned}
+                        step="1"
+                        inputMode="numeric"
+                        value={draftQuantity}
+                        onChange={(event) => setDraftQuantity(event.target.value)}
+                        onBlur={() => commitQuantityEdit(powerUp.type, owned)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            event.preventDefault()
+                            commitQuantityEdit(powerUp.type, owned)
+                          } else if (event.key === 'Escape') {
+                            event.preventDefault()
+                            setEditingPowerUp(null)
+                            setDraftQuantity('')
+                          }
+                        }}
+                        autoFocus
+                        aria-label={'Type quantity for ' + powerUp.title}
+                        className="h-9 w-16 sm:h-10 sm:w-20 rounded-lg border border-amber-300/50 bg-black/45 px-2 text-center text-base sm:text-lg font-black text-white tabular-nums outline-none focus:border-amber-300 focus:ring-1 focus:ring-amber-300/40"
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => beginQuantityEdit(powerUp.type, quantity)}
+                        aria-label={'Edit quantity: ' + quantity + ' ' + powerUp.title + ' selected'}
+                        className="h-9 min-w-9 sm:h-10 sm:min-w-10 rounded-lg border border-white/20 bg-black/30 px-2 text-base sm:text-lg font-black text-white tabular-nums transition-all hover:bg-white/10 active:scale-95"
+                      >
+                        {quantity}
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => actions.setPowerUpQuantity(powerUp.type, quantity + 1)}
