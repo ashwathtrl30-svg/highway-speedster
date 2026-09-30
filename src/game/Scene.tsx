@@ -1,6 +1,7 @@
 import { useRef, useMemo, useCallback, useEffect } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { getState, actions, useGameStore, type Bike, type Car } from './store'
 
 // Constants
@@ -10,6 +11,13 @@ const SEGMENT_LENGTH = 20
 const NUM_SEGMENTS = 30
 const VISIBLE_DISTANCE = 400
 const PLAYER_Z = 5
+
+// [GFX] Mobile vehicle rendering budgets: player bike <=8k triangles,
+// traffic vehicle <=4k triangles, vehicle set <=120 draw calls.
+// The visual additions below stay far below these per-vehicle geometry limits.
+const PLAYER_BIKE_TRIANGLE_BUDGET = 8000
+const TRAFFIC_VEHICLE_TRIANGLE_BUDGET = 4000
+const VEHICLE_DRAW_CALL_BUDGET = 120
 
 // Bike-specific spawn configurations
 const getSpawnConfig = (vehicleId: string) => {
@@ -560,6 +568,297 @@ function LightingRig() {
   )
 }
 
+// [GFX] Vehicle quality selection uses an optional safe localStorage override.
+// It never touches the game's persisted progress schema or gameplay state.
+type VehicleGfxQuality = 'high' | 'medium' | 'low'
+
+function getVehicleGfxQuality(gl: THREE.WebGLRenderer): VehicleGfxQuality {
+  try {
+    const stored = window.localStorage.getItem('hs_gfx_quality')
+    if (stored === 'high' || stored === 'medium' || stored === 'low') return stored
+  } catch {
+    // Storage access is optional; fall back to capability detection.
+  }
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  const highCapability =
+    gl.capabilities.getMaxAnisotropy() >= 4 &&
+    gl.capabilities.maxTextureSize >= 2048 &&
+    dpr <= 2
+
+  return highCapability ? 'high' : 'medium'
+}
+
+let vehicleMatcapTexture: THREE.CanvasTexture | null = null
+function getVehicleMatcapTexture() {
+  if (vehicleMatcapTexture) return vehicleMatcapTexture
+
+  const canvas = document.createElement('canvas')
+  canvas.width = 64
+  canvas.height = 64
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Unable to create vehicle matcap')
+
+  const gradient = ctx.createRadialGradient(22, 20, 3, 34, 38, 38)
+  gradient.addColorStop(0, '#fff7e3')
+  gradient.addColorStop(0.22, '#cbd4db')
+  gradient.addColorStop(0.52, '#66737d')
+  gradient.addColorStop(0.78, '#293038')
+  gradient.addColorStop(1, '#11161a')
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, 64, 64)
+
+  vehicleMatcapTexture = new THREE.CanvasTexture(canvas)
+  vehicleMatcapTexture.colorSpace = THREE.SRGBColorSpace
+  vehicleMatcapTexture.minFilter = THREE.LinearFilter
+  vehicleMatcapTexture.magFilter = THREE.LinearFilter
+  vehicleMatcapTexture.needsUpdate = true
+  return vehicleMatcapTexture
+}
+
+let contactShadowTexture: THREE.CanvasTexture | null = null
+function getContactShadowTexture() {
+  if (contactShadowTexture) return contactShadowTexture
+
+  const canvas = document.createElement('canvas')
+  canvas.width = 128
+  canvas.height = 64
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Unable to create contact shadow')
+
+  const gradient = ctx.createRadialGradient(64, 32, 2, 64, 32, 62)
+  gradient.addColorStop(0, 'rgba(18,22,24,0.38)')
+  gradient.addColorStop(0.5, 'rgba(18,22,24,0.16)')
+  gradient.addColorStop(1, 'rgba(18,22,24,0)')
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, 128, 64)
+
+  contactShadowTexture = new THREE.CanvasTexture(canvas)
+  contactShadowTexture.colorSpace = THREE.SRGBColorSpace
+  contactShadowTexture.minFilter = THREE.LinearFilter
+  contactShadowTexture.magFilter = THREE.LinearFilter
+  contactShadowTexture.needsUpdate = true
+  return contactShadowTexture
+}
+
+const PLAYER_FINISH_PROFILES: Record<string, {
+  body: [number, number, number]
+  bodyPosition: [number, number, number]
+  accent: [number, number, number]
+  accentPosition: [number, number, number]
+}> = {
+  blitz: {
+    body: [0.44, 0.24, 0.96],
+    bodyPosition: [0, 0.64, -0.02],
+    accent: [0.29, 0.055, 0.58],
+    accentPosition: [0, 0.78, -0.1],
+  },
+  apex: {
+    body: [0.58, 0.28, 1.05],
+    bodyPosition: [0, 0.66, -0.04],
+    accent: [0.36, 0.06, 0.65],
+    accentPosition: [0, 0.81, -0.12],
+  },
+  chronos: {
+    body: [0.52, 0.32, 1.06],
+    bodyPosition: [0, 0.68, -0.17],
+    accent: [0.30, 0.05, 0.58],
+    accentPosition: [0, 0.84, -0.32],
+  },
+  stratos: {
+    body: [0.50, 0.31, 1.06],
+    bodyPosition: [0, 0.66, -0.12],
+    accent: [0.29, 0.05, 0.58],
+    accentPosition: [0, 0.81, -0.26],
+  },
+  zenith: {
+    body: [0.52, 0.32, 1.08],
+    bodyPosition: [0, 0.64, -0.09],
+    accent: [0.29, 0.05, 0.59],
+    accentPosition: [0, 0.79, -0.24],
+  },
+}
+
+function PlayerVehicleFinish({
+  bike,
+  car,
+  quality,
+}: {
+  bike: Bike
+  car: Car
+  quality: VehicleGfxQuality
+}) {
+  const isCar = car.id !== 'none' && getState().vehicleMode === 'car'
+  const profile = PLAYER_FINISH_PROFILES[bike.id] ?? PLAYER_FINISH_PROFILES.blitz
+  const bodySize: [number, number, number] = isCar
+    ? [1.42, 0.26, 2.35]
+    : profile.body
+  const bodyPosition: [number, number, number] = isCar
+    ? [0, 0.59, 0]
+    : profile.bodyPosition
+  const accentSize: [number, number, number] = isCar
+    ? [0.86, 0.045, 1.15]
+    : profile.accent
+  const accentPosition: [number, number, number] = isCar
+    ? [0, 0.76, -0.36]
+    : profile.accentPosition
+
+  const bodyGeometry = useMemo(
+    () => new RoundedBoxGeometry(
+      bodySize[0],
+      bodySize[1],
+      bodySize[2],
+      0.055,
+      2
+    ),
+    [bodySize[0], bodySize[1], bodySize[2]]
+  )
+  const accentGeometry = useMemo(
+    () => new RoundedBoxGeometry(
+      accentSize[0],
+      accentSize[1],
+      accentSize[2],
+      0.018,
+      2
+    ),
+    [accentSize[0], accentSize[1], accentSize[2]]
+  )
+
+  const bodyMaterial = useMemo<THREE.Material>(() => {
+    if (quality === 'high') {
+      return new THREE.MeshPhysicalMaterial({
+        color: isCar ? car.color : bike.color,
+        metalness: 0.5,
+        roughness: 0.24,
+        clearcoat: 0.72,
+        clearcoatRoughness: 0.16,
+        envMapIntensity: 0.85,
+      })
+    }
+
+    return new THREE.MeshMatcapMaterial({
+      color: isCar ? car.color : bike.color,
+      matcap: getVehicleMatcapTexture(),
+    })
+  }, [quality, isCar, bike.color, car.color])
+
+  const accentMaterial = useMemo<THREE.Material>(() => {
+    if (quality === 'high') {
+      return new THREE.MeshPhysicalMaterial({
+        color: isCar ? car.accentColor : bike.accentColor,
+        metalness: 0.68,
+        roughness: 0.2,
+        clearcoat: 0.58,
+        clearcoatRoughness: 0.18,
+      })
+    }
+
+    return new THREE.MeshMatcapMaterial({
+      color: isCar ? car.accentColor : bike.accentColor,
+      matcap: getVehicleMatcapTexture(),
+    })
+  }, [quality, isCar, bike.accentColor, car.accentColor])
+
+  useEffect(() => {
+    return () => {
+      bodyGeometry.dispose()
+      accentGeometry.dispose()
+      bodyMaterial.dispose()
+      accentMaterial.dispose()
+    }
+  }, [bodyGeometry, accentGeometry, bodyMaterial, accentMaterial])
+
+  return (
+    <group>
+      <mesh
+        geometry={bodyGeometry}
+        material={bodyMaterial}
+        position={bodyPosition}
+        castShadow
+        receiveShadow
+      />
+      <mesh
+        geometry={accentGeometry}
+        material={accentMaterial}
+        position={accentPosition}
+        castShadow
+      />
+    </group>
+  )
+}
+
+function PlayerWheelEffects({ vehicleMode, speed }: { vehicleMode: 'bike' | 'car'; speed: number }) {
+  const blurFrontRef = useRef<THREE.Mesh>(null)
+  const blurRearRef = useRef<THREE.Mesh>(null)
+
+  useFrame(() => {
+    const intensity = THREE.MathUtils.clamp((speed - 60) / 70, 0, 1)
+    const opacity = 0.01 + intensity * 0.11
+    if (blurFrontRef.current) {
+      const material = blurFrontRef.current.material as THREE.MeshBasicMaterial
+      material.opacity = opacity
+      blurFrontRef.current.visible = intensity > 0.02
+    }
+    if (blurRearRef.current) {
+      const material = blurRearRef.current.material as THREE.MeshBasicMaterial
+      material.opacity = opacity
+      blurRearRef.current.visible = intensity > 0.02
+    }
+  })
+
+  const wheelZ = vehicleMode === 'car' ? 0.8 : 0.92
+  const radius = vehicleMode === 'car' ? 0.42 : 0.25
+
+  return (
+    <>
+      <mesh
+        ref={blurFrontRef}
+        position={[0, 0.25, -wheelZ]}
+        rotation={[0, 0, Math.PI / 2]}
+      >
+        <torusGeometry args={[radius, vehicleMode === 'car' ? 0.075 : 0.045, 8, 16]} />
+        <meshBasicMaterial
+          color="#e4e7e8"
+          transparent
+          opacity={0}
+          depthWrite={false}
+        />
+      </mesh>
+      <mesh
+        ref={blurRearRef}
+        position={[0, 0.25, wheelZ]}
+        rotation={[0, 0, Math.PI / 2]}
+      >
+        <torusGeometry args={[radius, vehicleMode === 'car' ? 0.075 : 0.05, 8, 16]} />
+        <meshBasicMaterial
+          color="#e4e7e8"
+          transparent
+          opacity={0}
+          depthWrite={false}
+        />
+      </mesh>
+    </>
+  )
+}
+
+function PlayerContactShadow({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
+  return (
+    <mesh
+      position={[0, 0.012, vehicleMode === 'car' ? 0.08 : 0.1]}
+      rotation={[-Math.PI / 2, 0, 0]}
+      renderOrder={1}
+    >
+      <planeGeometry args={vehicleMode === 'car' ? [2.2, 3.8] : [1.2, 2.35]} />
+      <meshBasicMaterial
+        map={getContactShadowTexture()}
+        transparent
+        opacity={0.48}
+        depthWrite={false}
+      />
+    </mesh>
+  )
+}
+
 // ============== MOTORCYCLE ==============
 function ShieldBubble({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
   const bubbleRef = useRef<THREE.Group>(null)
@@ -603,12 +902,15 @@ function ShieldBubble({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
 
 function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
   const meshRef = useRef<THREE.Group>(null)
+  const visualRef = useRef<THREE.Group>(null)
   const currentXRef = useRef(0)
   const tiltRef = useRef(0)
   const bikeRef = useRef(bike)
   const wheelSpinRef = useRef(0)
   const shieldActive = useGameStore((s) => s.shieldActive)
   const vehicleMode = useGameStore((s) => s.vehicleMode)
+  const { gl } = useThree()
+  const vehicleQuality = useMemo(() => getVehicleGfxQuality(gl), [gl])
 
   useEffect(() => { bikeRef.current = bike }, [bike])
 
@@ -634,6 +936,23 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
       meshRef.current.rotation.y = -tiltRef.current * 0.3
       // Slight bobbing at high speed
       meshRef.current.position.y = Math.sin(wheelSpinRef.current * 2) * 0.02 * (state.speed / 100)
+
+      // [GFX] Visual-only secondary lean and suspension compression.
+      if (visualRef.current) {
+        const speedNorm = THREE.MathUtils.clamp(state.speed / 100, 0, 1)
+        visualRef.current.rotation.z = tiltRef.current * 0.14
+        visualRef.current.rotation.y = -tiltRef.current * 0.05
+        visualRef.current.position.y =
+          Math.sin(wheelSpinRef.current * 1.4) * 0.008 * speedNorm
+        visualRef.current.scale.y = 1 - speedNorm * 0.018
+
+        // [GFX] Wheel rotation is visual-only and driven from existing speed.
+        visualRef.current.traverse((object) => {
+          if (object instanceof THREE.Mesh && object.name === 'player-wheel') {
+            object.rotation.x = wheelSpinRef.current
+          }
+        })
+      }
     }
   })
 
@@ -672,9 +991,14 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
 
   return (
     <group ref={meshRef} position={[0, 0, PLAYER_Z]}>
-      {vehicleMode === 'car' ? renderCarModel() : renderBikeModel()}
-      <VehicleLightingAccents vehicleMode={vehicleMode} />
-      {shieldActive && <ShieldBubble vehicleMode={vehicleMode} />}
+      <group ref={visualRef}>
+        {vehicleMode === 'car' ? renderCarModel() : renderBikeModel()}
+        <PlayerVehicleFinish bike={bike} car={car} quality={vehicleQuality} />
+        <VehicleLightingAccents vehicleMode={vehicleMode} />
+        <PlayerWheelEffects vehicleMode={vehicleMode} speed={0} />
+        <PlayerContactShadow vehicleMode={vehicleMode} />
+        {shieldActive && <ShieldBubble vehicleMode={vehicleMode} />}
+      </group>
     </group>
   )
 }
@@ -714,21 +1038,21 @@ function BlitzBike({ bike }: { bike: Bike }) {
       </mesh>
 
       {/* Front wheel */}
-      <mesh position={[0, 0.25, -0.92]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, -0.92]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.24, 0.07, 8, 16]} />
         <meshStandardMaterial color="#111111" roughness={0.9} />
       </mesh>
-      <mesh position={[0, 0.25, -0.92]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, -0.92]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.17, 0.17, 0.05, 8]} />
         <meshStandardMaterial color="#555555" metalness={0.8} />
       </mesh>
       
       {/* Rear wheel */}
-      <mesh position={[0, 0.25, 0.82]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.82]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.26, 0.09, 8, 16]} />
         <meshStandardMaterial color="#111111" roughness={0.9} />
       </mesh>
-      <mesh position={[0, 0.25, 0.82]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.82]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.19, 0.19, 0.1, 8]} />
         <meshStandardMaterial color="#555555" metalness={0.8} />
       </mesh>
@@ -854,21 +1178,21 @@ function ApexBike({ bike }: { bike: Bike }) {
       </mesh>
 
       {/* Front wheel */}
-      <mesh position={[0, 0.25, -0.95]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, -0.95]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.26, 0.09, 8, 16]} />
         <meshStandardMaterial color="#111111" roughness={0.9} />
       </mesh>
-      <mesh position={[0, 0.25, -0.95]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, -0.95]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.19, 0.19, 0.08, 8]} />
         <meshStandardMaterial color="#666666" metalness={0.85} />
       </mesh>
       
       {/* Rear wheel */}
-      <mesh position={[0, 0.25, 0.85]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.85]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.28, 0.11, 8, 16]} />
         <meshStandardMaterial color="#111111" roughness={0.9} />
       </mesh>
-      <mesh position={[0, 0.25, 0.85]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.85]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.21, 0.21, 0.14, 8]} />
         <meshStandardMaterial color="#666666" metalness={0.85} />
       </mesh>
@@ -993,21 +1317,21 @@ function ChronosBike({ bike }: { bike: Bike }) {
       </mesh>
 
       {/* Front wheel */}
-      <mesh position={[0, 0.25, -0.98]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, -0.98]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.25, 0.08, 8, 16]} />
         <meshStandardMaterial color="#111111" roughness={0.9} />
       </mesh>
-      <mesh position={[0, 0.25, -0.98]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, -0.98]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.18, 0.18, 0.06, 8]} />
         <meshStandardMaterial color="#555555" metalness={0.85} />
       </mesh>
       
       {/* Rear wheel - wider */}
-      <mesh position={[0, 0.25, 0.88]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.88]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.27, 0.12, 8, 16]} />
         <meshStandardMaterial color="#111111" roughness={0.9} />
       </mesh>
-      <mesh position={[0, 0.25, 0.88]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.88]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.2, 0.2, 0.15, 8]} />
         <meshStandardMaterial color="#555555" metalness={0.85} />
       </mesh>
@@ -1132,21 +1456,21 @@ function StratosBike({ bike }: { bike: Bike }) {
       </mesh>
 
       {/* Front wheel */}
-      <mesh position={[0, 0.25, -1.0]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, -1.0]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.24, 0.075, 8, 16]} />
         <meshStandardMaterial color="#111111" roughness={0.9} />
       </mesh>
-      <mesh position={[0, 0.25, -1.0]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, -1.0]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.17, 0.17, 0.055, 8]} />
         <meshStandardMaterial color="#666666" metalness={0.85} />
       </mesh>
       
       {/* Rear wheel */}
-      <mesh position={[0, 0.25, 0.9]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.9]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.26, 0.11, 8, 16]} />
         <meshStandardMaterial color="#111111" roughness={0.9} />
       </mesh>
-      <mesh position={[0, 0.25, 0.9]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.9]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.19, 0.19, 0.14, 8]} />
         <meshStandardMaterial color="#666666" metalness={0.85} />
       </mesh>
@@ -1263,21 +1587,21 @@ function ZenithBike({ bike }: { bike: Bike }) {
       </mesh>
 
       {/* Front wheel */}
-      <mesh position={[0, 0.25, -1.05]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, -1.05]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.24, 0.07, 8, 16]} />
         <meshStandardMaterial color="#0a0a0a" roughness={0.9} />
       </mesh>
-      <mesh position={[0, 0.25, -1.05]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, -1.05]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.17, 0.17, 0.05, 8]} />
         <meshStandardMaterial color="#777777" metalness={0.9} />
       </mesh>
       
       {/* Rear wheel - widest */}
-      <mesh position={[0, 0.25, 0.95]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.95]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.27, 0.13, 8, 16]} />
         <meshStandardMaterial color="#0a0a0a" roughness={0.9} />
       </mesh>
-      <mesh position={[0, 0.25, 0.95]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.95]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.2, 0.2, 0.16, 8]} />
         <meshStandardMaterial color="#777777" metalness={0.9} />
       </mesh>
@@ -1391,7 +1715,7 @@ function CarBase({ car, shape = 'sedan' }: { car: Car; shape?: 'hatch' | 'sedan'
         <group key={side}>
           {[-wheelZ, wheelZ].map((z) => (
             <group key={z} position={[side * w * 0.52, h * 0.24, z]}>
-              <mesh rotation={[0, 0, Math.PI / 2]}>
+              <mesh name="player-wheel" rotation={[0, 0, Math.PI / 2]}>
                 <cylinderGeometry args={[0.27, 0.27, 0.22, 16]} />
                 <meshStandardMaterial color="#101010" roughness={0.82} metalness={0.05} />
               </mesh>
@@ -1709,6 +2033,12 @@ function TrafficRenderer({ vehiclesRef, getDimensions }: {
       let mesh = meshCacheRef.current.get(v.id)
       if (!mesh) {
         mesh = createVehicleMesh(v.type, v.color, getDimensions)
+        mesh.traverse((object) => {
+          if (object instanceof THREE.Mesh && !(object.material instanceof THREE.SpriteMaterial)) {
+            object.castShadow = true
+            object.receiveShadow = true
+          }
+        })
         meshCacheRef.current.set(v.id, mesh)
         groupRef.current!.add(mesh)
       }
@@ -1733,15 +2063,20 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
   const [w, h, l] = getDimensions(type)
 
   // Body
-  const bodyGeo = new THREE.BoxGeometry(w, h * 0.55, l)
-  const bodyMat = new THREE.MeshStandardMaterial({ color, metalness: 0.4, roughness: 0.5 })
+  const bodyGeo = new RoundedBoxGeometry(w, h * 0.55, l, 0.045, 1)
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color,
+    metalness: 0.5,
+    roughness: 0.36,
+    envMapIntensity: 0.65,
+  })
   const body = new THREE.Mesh(bodyGeo, bodyMat)
   body.position.y = h * 0.35
   group.add(body)
 
   // Cabin/Roof
   if (type === 'car') {
-    const roofGeo = new THREE.BoxGeometry(w * 0.82, h * 0.38, l * 0.45)
+    const roofGeo = new RoundedBoxGeometry(w * 0.82, h * 0.38, l * 0.45, 0.04, 1)
     const roofMat = new THREE.MeshStandardMaterial({ color: '#1a1a2e', metalness: 0.3, roughness: 0.4 })
     const roof = new THREE.Mesh(roofGeo, roofMat)
     roof.position.y = h * 0.65
@@ -1749,7 +2084,7 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
     group.add(roof)
   } else if (type === 'auto') {
     // Auto-rickshaw style - open top with canopy
-    const roofGeo = new THREE.BoxGeometry(w * 0.9, h * 0.15, l * 0.7)
+    const roofGeo = new RoundedBoxGeometry(w * 0.9, h * 0.15, l * 0.7, 0.025, 1)
     const roofMat = new THREE.MeshStandardMaterial({ color: '#f1c40f', roughness: 0.6 })
     const roof = new THREE.Mesh(roofGeo, roofMat)
     roof.position.y = h * 0.7
@@ -1788,7 +2123,7 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
     cabin.position.z = -l * 0.32
     group.add(cabin)
     // Cargo
-    const cargoGeo = new THREE.BoxGeometry(w * 0.95, h * 0.7, l * 0.6)
+    const cargoGeo = new RoundedBoxGeometry(w * 0.95, h * 0.7, l * 0.6, 0.045, 1)
     const cargoMat = new THREE.MeshStandardMaterial({ color: '#5d4037', roughness: 0.8 })
     const cargo = new THREE.Mesh(cargoGeo, cargoMat)
     cargo.position.y = h * 0.5
@@ -1796,7 +2131,7 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
     group.add(cargo)
   } else if (type === 'bus') {
     // Bus body is taller
-    const bodyGeo2 = new THREE.BoxGeometry(w * 0.95, h * 0.85, l * 0.95)
+    const bodyGeo2 = new RoundedBoxGeometry(w * 0.95, h * 0.85, l * 0.95, 0.055, 1)
     const bodyMat2 = new THREE.MeshStandardMaterial({ color, metalness: 0.3, roughness: 0.6 })
     const body2 = new THREE.Mesh(bodyGeo2, bodyMat2)
     body2.position.y = h * 0.5
