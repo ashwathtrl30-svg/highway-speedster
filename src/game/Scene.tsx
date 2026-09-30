@@ -145,7 +145,7 @@ function createRoadTextures(anisotropy: number) {
         patches += Math.max(0, 1 - d / patch.size) * patch.strength * seamFade
       }
 
-      const value = Math.max(31, Math.min(86, Math.round(56 + periodic - tireWear + patches)))
+      const value = Math.max(36, Math.min(98, Math.round(64 + periodic - tireWear + patches)))
       const index = (y * width + x) * 4
 
       colorData.data[index] = value
@@ -266,8 +266,8 @@ function Highway() {
     <group ref={segmentsRef}>
       {segments.map((z, i) => {
         const zone = 0.5 + 0.5 * Math.sin((i * SEGMENT_LENGTH) / 135)
-        const roadTint = new THREE.Color('#2f3437').lerp(
-          new THREE.Color('#343b38'),
+        const roadTint = new THREE.Color('#3a4144').lerp(
+          new THREE.Color('#424b47'),
           zone * 0.32
         )
 
@@ -543,14 +543,14 @@ function LightingRig() {
       <hemisphereLight
         color="#b9d9ec"
         groundColor="#53664a"
-        intensity={0.78}
+        intensity={0.96}
       />
-      <ambientLight intensity={0.16} color="#e9e2d5" />
+      <ambientLight intensity={0.25} color="#f0e9dc" />
       <directionalLight
         ref={keyRef}
         position={[18, 28, PLAYER_Z + 18]}
         color="#ffd9ad"
-        intensity={1.55}
+        intensity={1.82}
         castShadow
         shadow-mapSize-width={512}
         shadow-mapSize-height={512}
@@ -3101,21 +3101,21 @@ function CoinSystem() {
 
   const coinBodyMaterial = useMemo(
     () => new THREE.MeshStandardMaterial({
-      color: '#d8a92f',
-      metalness: 0.9,
-      roughness: 0.2,
-      emissive: '#7b5200',
-      emissiveIntensity: 0.12,
+      color: '#e1ad31',
+      metalness: 0.94,
+      roughness: 0.14,
+      emissive: '#a96a00',
+      emissiveIntensity: 0.22,
     }),
     []
   )
   const coinFaceMaterial = useMemo(
     () => new THREE.MeshStandardMaterial({
-      color: '#ffe08a',
-      metalness: 0.82,
-      roughness: 0.16,
-      emissive: '#8e6100',
-      emissiveIntensity: 0.16,
+      color: '#fff0a3',
+      metalness: 0.86,
+      roughness: 0.12,
+      emissive: '#b97600',
+      emissiveIntensity: 0.22,
     }),
     []
   )
@@ -3132,7 +3132,7 @@ function CoinSystem() {
 
   const magnetGlowMaterial = useMemo(
     () => new THREE.MeshBasicMaterial({
-      color: '#ffe08a',
+      color: '#fff1a8',
       transparent: true,
       opacity: 0.0,
       blending: THREE.AdditiveBlending,
@@ -3424,7 +3424,7 @@ function CoinSystem() {
     magnetGlowMeshRef.current!.instanceMatrix.needsUpdate = true
     const magnetGlowMaterialRef = magnetGlowMeshRef.current!.material as THREE.MeshBasicMaterial
     magnetGlowMaterialRef.opacity =
-      state.magnetActive || state.magnet2xActive ? 0.14 : 0.0
+      state.magnetActive || state.magnet2xActive ? 0.18 : 0.0
 
   })
 
@@ -3695,11 +3695,11 @@ function createPowerUpMesh(type: 'magnet' | 'multiplier' | 'shield'): THREE.Grou
     // Blue horseshoe magnet - BIGGER
     const magnetGeo = new THREE.TorusGeometry(0.6, 0.18, 8, 16, Math.PI)
     const magnetMat = new THREE.MeshStandardMaterial({ 
-      color: '#3b82f6', 
-      metalness: 0.7, 
-      roughness: 0.3,
-      emissive: '#1e40af',
-      emissiveIntensity: 0.8,
+      color: '#4ea1ff',
+      metalness: 0.72,
+      roughness: 0.24,
+      emissive: '#2563d8',
+      emissiveIntensity: 0.95,
     })
     const magnet = new THREE.Mesh(magnetGeo, magnetMat)
     magnet.rotation.x = Math.PI / 2
@@ -3708,11 +3708,11 @@ function createPowerUpMesh(type: 'magnet' | 'multiplier' | 'shield'): THREE.Grou
     // Red tips - BIGGER
     const tipGeo = new THREE.BoxGeometry(0.22, 0.38, 0.22)
     const tipMat = new THREE.MeshStandardMaterial({ 
-      color: '#ef4444', 
-      metalness: 0.6, 
-      roughness: 0.4,
-      emissive: '#dc2626',
-      emissiveIntensity: 0.6,
+      color: '#ff5550',
+      metalness: 0.62,
+      roughness: 0.34,
+      emissive: '#e62f2a',
+      emissiveIntensity: 0.72,
     })
     const tip1 = new THREE.Mesh(tipGeo, tipMat)
     tip1.position.set(-0.6, 0, 0)
@@ -3724,9 +3724,9 @@ function createPowerUpMesh(type: 'magnet' | 'multiplier' | 'shield'): THREE.Grou
     // Glow - BIGGER
     const glowGeo = new THREE.SphereGeometry(0.8, 8, 8)
     const glowMat = new THREE.MeshBasicMaterial({ 
-      color: '#3b82f6', 
-      transparent: true, 
-      opacity: 0.3,
+      color: '#6db7ff',
+      transparent: true,
+      opacity: 0.36,
     })
     const glow = new THREE.Mesh(glowGeo, glowMat)
     group.add(glow)
@@ -3772,11 +3772,11 @@ function createPowerUpMesh(type: 'magnet' | 'multiplier' | 'shield'): THREE.Grou
     // Green shield - BIGGER
     const shieldGeo = new THREE.SphereGeometry(0.6, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2)
     const shieldMat = new THREE.MeshStandardMaterial({ 
-      color: '#10b981', 
-      metalness: 0.6, 
-      roughness: 0.3,
-      emissive: '#059669',
-      emissiveIntensity: 0.8,
+      color: '#28d99c',
+      metalness: 0.62,
+      roughness: 0.25,
+      emissive: '#08a875',
+      emissiveIntensity: 0.95,
       side: THREE.DoubleSide,
     })
     const shield = new THREE.Mesh(shieldGeo, shieldMat)
@@ -3785,11 +3785,11 @@ function createPowerUpMesh(type: 'magnet' | 'multiplier' | 'shield'): THREE.Grou
     // Shield base - BIGGER
     const baseGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.15, 16)
     const baseMat = new THREE.MeshStandardMaterial({ 
-      color: '#059669', 
-      metalness: 0.7, 
-      roughness: 0.3,
-      emissive: '#047857',
-      emissiveIntensity: 0.6,
+      color: '#16b982',
+      metalness: 0.72,
+      roughness: 0.26,
+      emissive: '#078f68',
+      emissiveIntensity: 0.72,
     })
     const base = new THREE.Mesh(baseGeo, baseMat)
     base.position.y = -0.075
@@ -3798,9 +3798,9 @@ function createPowerUpMesh(type: 'magnet' | 'multiplier' | 'shield'): THREE.Grou
     // Glow - BIGGER
     const glowGeo = new THREE.SphereGeometry(0.8, 8, 8)
     const glowMat = new THREE.MeshBasicMaterial({ 
-      color: '#10b981', 
-      transparent: true, 
-      opacity: 0.3,
+      color: '#59f0b8',
+      transparent: true,
+      opacity: 0.36,
     })
     const glow = new THREE.Mesh(glowGeo, glowMat)
     group.add(glow)
@@ -3938,51 +3938,6 @@ function SpeedVignette() {
         [texture]
       )}
     />
-  )
-}
-
-function NearMissSpeedEffect() {
-  const groupRef = useRef<THREE.Group>(null)
-  const lastNearMissRef = useRef(0)
-  const effectRef = useRef(0)
-  const reducedRef = useRef(false)
-
-  useEffect(() => {
-    reducedRef.current = areSpeedEffectsReduced()
-  }, [])
-
-  useFrame((_, delta) => {
-    const state = getState()
-    if (!groupRef.current) return
-
-    if (state.nearMisses > lastNearMissRef.current) {
-      lastNearMissRef.current = state.nearMisses
-      effectRef.current = reducedRef.current ? 0.3 : 0.55
-    }
-
-    effectRef.current = Math.max(0, effectRef.current - delta * 2.6)
-    groupRef.current.visible = effectRef.current > 0.01
-
-    groupRef.current.children.forEach((child, i) => {
-      const material = (child as THREE.Mesh).material as THREE.MeshBasicMaterial
-      material.opacity = effectRef.current * (i % 2 === 0 ? 0.2 : 0.13)
-      ;(child as THREE.Mesh).scale.y = 1 + effectRef.current * 4.5
-    })
-  })
-
-  return (
-    <group ref={groupRef} position={[0, 2.3, PLAYER_Z - 9]} visible={false}>
-      {[-1, 1].map((side) => (
-        <mesh key={side} position={[side * 2.2, 0, 0]}>
-          <boxGeometry args={[0.035, 1.2, 0.035]} />
-          <meshBasicMaterial color="#dfe8eb" transparent opacity={0} depthWrite={false} />
-        </mesh>
-      ))}
-      <mesh position={[0, 0, 0]}>
-        <boxGeometry args={[0.03, 1.4, 0.03]} />
-        <meshBasicMaterial color="#fff4cf" transparent opacity={0} depthWrite={false} />
-      </mesh>
-    </group>
   )
 }
 
@@ -4762,7 +4717,7 @@ function DistantBuilding({ position, variant }: {
   const width = 8 + (variant % 3) * 2
   const height = 7 + (variant % 4) * 2
   const depth = 5 + (variant % 2) * 2
-  const bodyColor = variant % 2 === 0 ? '#71818a' : '#7f887f'
+  const bodyColor = variant % 2 === 0 ? '#7e9098' : '#8d958c'
 
   return (
     <group position={position}>
@@ -4808,7 +4763,7 @@ function DistantTower({ position, variant }: {
     <group position={position}>
       <mesh position={[0, height / 2, 0]}>
         <boxGeometry args={[4.5, height, 4.5]} />
-        <meshStandardMaterial color="#67747c" roughness={0.82} metalness={0.08} />
+        <meshStandardMaterial color="#77878e" roughness={0.82} metalness={0.08} />
       </mesh>
       <mesh position={[0, height + 0.9, 0]}>
         <cylinderGeometry args={[0.16, 0.16, 1.8, 7]} />
@@ -4825,7 +4780,7 @@ function TerrainMound({ position, scale }: {
   return (
     <mesh position={position} scale={scale}>
       <sphereGeometry args={[1, 10, 6]} />
-      <meshStandardMaterial color="#537052" roughness={1} />
+      <meshStandardMaterial color="#63835a" roughness={1} />
     </mesh>
   )
 }
@@ -4835,10 +4790,10 @@ function AtmosphereSky() {
 
   const uniforms = useMemo(
     () => ({
-      topColor: { value: new THREE.Color('#5a9fc9') },
-      horizonColor: { value: new THREE.Color('#c9e1ec') },
-      lowerHorizonColor: { value: new THREE.Color('#b9c8d0') },
-      sunColor: { value: new THREE.Color('#fff5d6') },
+      topColor: { value: new THREE.Color('#70b5dc') },
+      horizonColor: { value: new THREE.Color('#e0eef4') },
+      lowerHorizonColor: { value: new THREE.Color('#d3dfe3') },
+      sunColor: { value: new THREE.Color('#fff7df') },
       sunDirection: { value: new THREE.Vector3(0.12, 0.72, -0.68).normalize() },
     }),
     []
@@ -5036,12 +4991,12 @@ function Environment() {
 
       {/* Sun: bright enough to define the sky without washing out road/vehicle contrast. */}
       <mesh position={[40, 70, -250]}>
-        <sphereGeometry args={[16, 16, 16]} />
-        <meshBasicMaterial color="#fff4cf" />
+        <sphereGeometry args={[17, 16, 16]} />
+        <meshBasicMaterial color="#fff7df" />
       </mesh>
       <mesh position={[40, 70, -250]}>
-        <sphereGeometry args={[31, 16, 16]} />
-        <meshBasicMaterial color="#fff4cf" transparent opacity={0.12} depthWrite={false} />
+        <sphereGeometry args={[33, 16, 16]} />
+        <meshBasicMaterial color="#fff7df" transparent opacity={0.14} depthWrite={false} />
       </mesh>
 
       <DistantDepthLayers />
@@ -5049,7 +5004,7 @@ function Environment() {
       {/* Broad terrain base */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, -150]} receiveShadow>
         <planeGeometry args={[300, 800]} />
-        <meshStandardMaterial color="#5a8a4a" roughness={1} />
+        <meshStandardMaterial color="#679353" roughness={1} />
       </mesh>
 
       {/* Layered terrain close to and beyond the road */}
@@ -5068,7 +5023,7 @@ function Environment() {
         return (
           <mesh key={`hill-${i}`} position={[x, height * 0.4, -300]}>
             <coneGeometry args={[height * 0.8, height, 4]} />
-            <meshStandardMaterial color={i % 2 === 0 ? '#4a6741' : '#5a7a51'} roughness={1} />
+            <meshStandardMaterial color={i % 2 === 0 ? '#58784d' : '#67885c'} roughness={1} />
           </mesh>
         )
       })}
@@ -5086,7 +5041,7 @@ function Environment() {
 
       {/* Layered atmospheric depth: near detail stays crisp while distant
           structures merge naturally into the horizon. */}
-      <fog attach="fog" args={['#b9c8d0', 58, 205]} />
+      <fog attach="fog" args={['#c7d8df', 62, 220]} />
     </>
   )
 }
@@ -5182,7 +5137,7 @@ export function GameScene() {
         powerPreference: 'high-performance',
         outputColorSpace: THREE.SRGBColorSpace,
         toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 1.0,
+        toneMappingExposure: 1.12,
       }}
       shadows={{ type: THREE.PCFSoftShadowMap }}
     >
@@ -5196,7 +5151,6 @@ export function GameScene() {
       <SpeedLines />
       <SpeedEdgeStreaks />
       <SpeedVignette />
-      <NearMissSpeedEffect />
       <CollisionFeedback />
       <CollisionScreenEffect />
       <GameCamera />
