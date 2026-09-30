@@ -905,6 +905,7 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
   const tiltRef = useRef(0)
   const bikeRef = useRef(bike)
   const wheelSpinRef = useRef(0)
+  const shieldActive = useGameStore((s) => s.shieldActive)
   const vehicleMode = useGameStore((s) => s.vehicleMode)
 
   useEffect(() => { bikeRef.current = bike }, [bike])
