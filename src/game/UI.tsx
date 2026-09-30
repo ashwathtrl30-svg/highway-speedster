@@ -913,13 +913,26 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="hs-screen hs-screen-enter absolute inset-0 flex flex-col overflow-y-auto bg-[#0a0f13]">
+      <style>{`
+        @keyframes hsGarageFloorFlow { from { background-position:0 0,0 0; } to { background-position:0 180px,120px 0; } }
+        @keyframes hsGarageLightSweep { 0%,100% { transform:translateX(-24px); opacity:.10; } 50% { transform:translateX(18px); opacity:.22; } }
+        @keyframes hsGarageVehicleDrift { 0%,100% { transform:translate3d(0,0,0) scale(.98); } 50% { transform:translate3d(-18px,5px,0) scale(1.01); } }
+        @keyframes hsGarageReflection { 0% { transform:translateX(-30%); opacity:0; } 25% { opacity:.12; } 75% { opacity:.06; } 100% { transform:translateX(130%); opacity:0; } }
+        .hs-garage-floor-depth { background:linear-gradient(rgba(159,178,190,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(159,178,190,.06) 1px,transparent 1px); background-size:84px 58px; animation:hsGarageFloorFlow 5.5s linear infinite; mask-image:linear-gradient(to top,black,transparent 92%); }
+      `}</style>
       {/* Static garage environment. Selected vehicle is visible in the background, offset from labels. */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_22%,rgba(211,157,71,.14),transparent_27%),radial-gradient(circle_at_16%_65%,rgba(48,81,99,.17),transparent_34%),linear-gradient(135deg,#0c1217_0%,#17212a_50%,#080b0e_100%)]" />
-        <div className="absolute right-[-6%] top-[15%] h-44 w-[42%] max-w-[360px] opacity-[0.13] saturate-50 sm:right-[2%] sm:top-[13%] sm:h-56 sm:w-[34%]">
-          {section === 'bikes' ? <BikeIcon bike={state.selectedBike} /> : <CarIcon car={state.selectedCar} />}
-        </div>
         <div className="absolute inset-x-0 top-[8.5rem] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div className="absolute inset-x-0 bottom-[-4%] h-[56%] [perspective:720px]">
+          <div className="hs-garage-floor-depth absolute inset-[-10%] [transform:rotateX(68deg)] [transform-origin:center_bottom]" />
+        </div>
+        <div className="absolute left-[10%] top-[17%] h-[68%] w-px bg-gradient-to-b from-transparent via-slate-200/16 to-transparent" style={{ animation: "hsGarageLightSweep 4.8s ease-in-out infinite" }} />
+        <div className="absolute right-[13%] top-[14%] h-[72%] w-px bg-gradient-to-b from-transparent via-amber-300/20 to-transparent" style={{ animation: "hsGarageLightSweep 5.6s ease-in-out -1.7s infinite reverse" }} />
+        <div className="absolute top-[18%] left-[-20%] h-px w-[58%] bg-gradient-to-r from-transparent via-amber-200/20 to-transparent" style={{ animation: "hsGarageReflection 7s linear infinite" }} />
+        <div className="absolute right-[-6%] top-[15%] h-44 w-[42%] max-w-[360px] opacity-[0.13] saturate-50 sm:right-[2%] sm:top-[13%] sm:h-56 sm:w-[34%]" style={{ animation: "hsGarageVehicleDrift 7s ease-in-out infinite" }}>
+          {section === "bikes" ? <BikeIcon bike={state.selectedBike} /> : <CarIcon car={state.selectedCar} />}
+        </div>
         <div className="absolute inset-x-0 bottom-0 h-[44%] bg-gradient-to-t from-black/55 to-transparent" />
       </div>
       {/* Header */}
