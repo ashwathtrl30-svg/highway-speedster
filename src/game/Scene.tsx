@@ -4093,10 +4093,11 @@ function GameCamera() {
     perspectiveCamera.fov = fovRef.current
     perspectiveCamera.updateProjectionMatrix()
 
-    // Micro inertia: only vertical render offset, with X and the look-center
-    // fixed so lanes do not slide sideways on screen. It is deliberately tiny.
+    // Restore yesterday's horizontal chase-camera feel: the camera smoothly
+    // follows the player's lane movement while gameplay/input coordinates stay unchanged.
+    const targetRenderX = state.playerX
     const targetRenderY = 3.2 + THREE.MathUtils.clamp(state.speed * 0.0008, 0, 0.07)
-    renderPosRef.current.x = basePosRef.current.x
+    renderPosRef.current.x = THREE.MathUtils.damp(renderPosRef.current.x, targetRenderX, 6.0, dt)
     renderPosRef.current.y = THREE.MathUtils.damp(renderPosRef.current.y, targetRenderY, 6.5, dt)
     renderPosRef.current.z = basePosRef.current.z
 
@@ -4111,7 +4112,7 @@ function GameCamera() {
       shakeY = (Math.random() - 0.5) * amplitude
     }
 
-    renderPosRef.current.x = shakeX
+    renderPosRef.current.x += shakeX
     renderPosRef.current.y += shakeY
     renderPosRef.current.z = basePosRef.current.z
 
@@ -4121,8 +4122,9 @@ function GameCamera() {
       renderPosRef.current.z
     )
 
-    // Fixed world-space look target: no render-time change to steering,
-    // playerX, lane geometry, obstacle positions, or input mapping.
+    // The look target follows a small fraction of the player's lateral movement,
+    // matching yesterday's camera framing while leaving gameplay coordinates untouched.
+    targetRef.current.x = state.playerX * 0.25
     camera.lookAt(targetRef.current)
   })
 
