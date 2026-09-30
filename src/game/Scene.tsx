@@ -1038,21 +1038,21 @@ function BlitzBike({ bike }: { bike: Bike }) {
       </mesh>
 
       {/* Front wheel */}
-      <mesh name="player-wheel" <mesh position={[0, 0.25, -0.92]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, -0.92]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.24, 0.07, 8, 16]} />
         <meshStandardMaterial color="#111111" roughness={0.9} />
       </mesh>
-      <mesh name="player-wheel" <mesh position={[0, 0.25, -0.92]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, -0.92]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.17, 0.17, 0.05, 8]} />
         <meshStandardMaterial color="#555555" metalness={0.8} />
       </mesh>
       
       {/* Rear wheel */}
-      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.82]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, 0.82]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.26, 0.09, 8, 16]} />
         <meshStandardMaterial color="#111111" roughness={0.9} />
       </mesh>
-      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.82]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, 0.82]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.19, 0.19, 0.1, 8]} />
         <meshStandardMaterial color="#555555" metalness={0.8} />
       </mesh>
@@ -1178,21 +1178,21 @@ function ApexBike({ bike }: { bike: Bike }) {
       </mesh>
 
       {/* Front wheel */}
-      <mesh name="player-wheel" <mesh position={[0, 0.25, -0.95]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, -0.95]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.26, 0.09, 8, 16]} />
         <meshStandardMaterial color="#111111" roughness={0.9} />
       </mesh>
-      <mesh name="player-wheel" <mesh position={[0, 0.25, -0.95]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, -0.95]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.19, 0.19, 0.08, 8]} />
         <meshStandardMaterial color="#666666" metalness={0.85} />
       </mesh>
       
       {/* Rear wheel */}
-      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.85]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, 0.85]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.28, 0.11, 8, 16]} />
         <meshStandardMaterial color="#111111" roughness={0.9} />
       </mesh>
-      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.85]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, 0.85]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.21, 0.21, 0.14, 8]} />
         <meshStandardMaterial color="#666666" metalness={0.85} />
       </mesh>
@@ -1317,21 +1317,21 @@ function ChronosBike({ bike }: { bike: Bike }) {
       </mesh>
 
       {/* Front wheel */}
-      <mesh name="player-wheel" <mesh position={[0, 0.25, -0.98]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, -0.98]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.25, 0.08, 8, 16]} />
         <meshStandardMaterial color="#111111" roughness={0.9} />
       </mesh>
-      <mesh name="player-wheel" <mesh position={[0, 0.25, -0.98]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, -0.98]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.18, 0.18, 0.06, 8]} />
         <meshStandardMaterial color="#555555" metalness={0.85} />
       </mesh>
       
       {/* Rear wheel - wider */}
-      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.88]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, 0.88]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.27, 0.12, 8, 16]} />
         <meshStandardMaterial color="#111111" roughness={0.9} />
       </mesh>
-      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.88]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, 0.88]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.2, 0.2, 0.15, 8]} />
         <meshStandardMaterial color="#555555" metalness={0.85} />
       </mesh>
@@ -1456,21 +1456,21 @@ function StratosBike({ bike }: { bike: Bike }) {
       </mesh>
 
       {/* Front wheel */}
-      <mesh name="player-wheel" <mesh position={[0, 0.25, -1.0]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, -1.0]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.24, 0.075, 8, 16]} />
         <meshStandardMaterial color="#111111" roughness={0.9} />
       </mesh>
-      <mesh name="player-wheel" <mesh position={[0, 0.25, -1.0]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, -1.0]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.17, 0.17, 0.055, 8]} />
         <meshStandardMaterial color="#666666" metalness={0.85} />
       </mesh>
       
       {/* Rear wheel */}
-      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.9]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, 0.9]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.26, 0.11, 8, 16]} />
         <meshStandardMaterial color="#111111" roughness={0.9} />
       </mesh>
-      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.9]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, 0.9]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.19, 0.19, 0.14, 8]} />
         <meshStandardMaterial color="#666666" metalness={0.85} />
       </mesh>
@@ -1587,21 +1587,21 @@ function ZenithBike({ bike }: { bike: Bike }) {
       </mesh>
 
       {/* Front wheel */}
-      <mesh name="player-wheel" <mesh position={[0, 0.25, -1.05]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, -1.05]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.24, 0.07, 8, 16]} />
         <meshStandardMaterial color="#0a0a0a" roughness={0.9} />
       </mesh>
-      <mesh name="player-wheel" <mesh position={[0, 0.25, -1.05]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, -1.05]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.17, 0.17, 0.05, 8]} />
         <meshStandardMaterial color="#777777" metalness={0.9} />
       </mesh>
       
       {/* Rear wheel - widest */}
-      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.95]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, 0.95]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.27, 0.13, 8, 16]} />
         <meshStandardMaterial color="#0a0a0a" roughness={0.9} />
       </mesh>
-      <mesh name="player-wheel" <mesh position={[0, 0.25, 0.95]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, 0.95]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.2, 0.2, 0.16, 8]} />
         <meshStandardMaterial color="#777777" metalness={0.9} />
       </mesh>
