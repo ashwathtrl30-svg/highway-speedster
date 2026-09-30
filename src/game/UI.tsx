@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useGameStore, actions, BIKES, CARS, BIKE_SKINS, getState, type Bike, type Car, type BikeSkin } from './store'
+import { useGameStore, actions, BIKES, CARS, BIKE_SKINS, getState, type Bike, type Car, type BikeSkin, type GameData } from './store'
 import { fetchAllAnalytics, fetchMyPlaytimeRank } from '../supabase'
 import { HighScoreAnalytics } from '../HighScoreAnalytics'
 
@@ -827,7 +827,7 @@ function GarageShowroomPreview({
   state,
   section,
 }: {
-  state: ReturnType<typeof useGameStore>
+  state: GameData
   section: 'bikes' | 'cars'
 }) {
   const isBike = section === 'bikes'
