@@ -513,6 +513,12 @@ function LightingRig() {
   const keyRef = useRef<THREE.DirectionalLight>(null)
   const targetRef = useRef<THREE.Object3D>(null)
 
+  useEffect(() => {
+    if (keyRef.current && targetRef.current) {
+      keyRef.current.target = targetRef.current
+    }
+  }, [])
+
   useFrame(() => {
     const state = getState()
     const playerX = state.playerX
@@ -521,7 +527,6 @@ function LightingRig() {
       keyRef.current.position.set(playerX + 18, 28, PLAYER_Z + 18)
       targetRef.current.position.set(playerX, 0, PLAYER_Z - 9)
       targetRef.current.updateMatrixWorld()
-      keyRef.current.target.updateMatrixWorld()
     }
   })
 
