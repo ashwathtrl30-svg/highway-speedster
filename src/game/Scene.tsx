@@ -876,6 +876,59 @@ function emitShieldImpact(position: THREE.Vector3) {
 
 // [GFX] Persistent visual shield. Gameplay state controls only the active flag;
 // the short in/out animation is purely cosmetic.
+const shellVS = `
+varying vec3 vNormal;
+varying vec3 vWorldPosition;
+void main() {
+  vNormal = normalize(normalMatrix * normal);
+  vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+  vWorldPosition = worldPosition.xyz;
+  gl_Position = projectionMatrix * viewMatrix * worldPosition;
+}
+`
+
+const shellFS = `
+uniform float uTime;
+uniform float uOpacity;
+uniform vec3 uColor;
+varying vec3 vNormal;
+varying vec3 vWorldPosition;
+void main() {
+  vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
+  float fresnel = pow(1.0 - max(dot(vNormal, viewDirection), 0.0), 2.2);
+  float wave = 0.5 + 0.5 * sin(vWorldPosition.y * 7.0 + atan(vWorldPosition.z, vWorldPosition.x) * 3.0 - uTime * 3.2);
+  float alpha = uOpacity * (0.055 + fresnel * 0.42 + wave * 0.045);
+  vec3 color = uColor * (0.72 + fresnel * 1.45 + wave * 0.18);
+  gl_FragColor = vec4(color, alpha);
+}
+`
+
+const innerVS = `
+varying vec3 vNormal;
+varying vec3 vWorldPosition;
+void main() {
+  vNormal = normalize(normalMatrix * normal);
+  vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+  vWorldPosition = worldPosition.xyz;
+  gl_Position = projectionMatrix * viewMatrix * worldPosition;
+}
+`
+
+const innerFS = `
+uniform float uTime;
+uniform float uOpacity;
+uniform vec3 uColor;
+varying vec3 vNormal;
+varying vec3 vWorldPosition;
+void main() {
+  vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
+  float rim = pow(1.0 - max(dot(vNormal, viewDirection), 0.0), 3.0);
+  float shimmer = 0.5 + 0.5 * sin(vWorldPosition.x * 5.0 - vWorldPosition.z * 4.0 + uTime * 2.4);
+  float alpha = uOpacity * (0.018 + rim * 0.18 + shimmer * 0.018);
+  gl_FragColor = vec4(uColor * (0.8 + rim * 1.2), alpha);
+}
+`
+
 function ShieldBubble({
   vehicleMode,
   active,
@@ -3012,9 +3065,9 @@ function CoinSystem() {
   const collectionTriggeredRef = useRef<Set<number>>(new Set())
   const magnetTrailsRef = useRef<THREE.LineSegments>(null)
   const bodyMeshRef = useRef<THREE.InstancedMesh | null>(null)
-  const faceMeshRef = useRef<THREE.InstancedMesh>(null)
-  const glintMeshRef = useRef<THREE.InstancedMesh>(null)
-  const magnetGlowMeshRef = useRef<THREE.InstancedMesh>(null)
+  const faceMeshRef = useRef<THREE.InstancedMesh | null>(null)
+  const glintMeshRef = useRef<THREE.InstancedMesh | null>(null)
+  const magnetGlowMeshRef = useRef<THREE.InstancedMesh | null>(null)
 
   const magnetTrailPositions = useMemo(() => new Float32Array(64 * 2 * 3), [])
   const magnetGlowGeometry = useMemo(
