@@ -4209,78 +4209,113 @@ function CollisionScreenEffect() {
 // ============== CAMERA ==============
 function GameCamera() {
   const { camera } = useThree()
-  const smoothPosRef = useRef(new THREE.Vector3(0, 4, PLAYER_Z + 8))
+  const basePosRef = useRef(new THREE.Vector3(0, 3.2, PLAYER_Z + 6.5))
+  const renderPosRef = useRef(new THREE.Vector3(0, 3.2, PLAYER_Z + 6.5))
+  const targetRef = useRef(new THREE.Vector3(0, 0.8, PLAYER_Z - 25))
   const shakeRef = useRef(0)
+  const nearMissKickRef = useRef(0)
   const fovRef = useRef(70)
   const lastNearMissRef = useRef(0)
-  const nearMissKickRef = useRef(0)
-  const reducedRef = useRef(false)
   const lastCollisionIdRef = useRef(0)
+  const reducedRef = useRef(false)
+  const hiddenRef = useRef(false)
 
   useEffect(() => {
     reducedRef.current = areSpeedEffectsReduced()
+
+    const onVisibility = () => {
+      hiddenRef.current = document.hidden
+    }
+
+    hiddenRef.current = document.hidden
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [])
 
   useFrame((_, delta) => {
+    if (hiddenRef.current || document.hidden) return
+
     const state = getState()
-    const playerX = state.playerX
+    const dt = Math.min(delta, 0.05)
+    const perspectiveCamera = camera as THREE.PerspectiveCamera
 
     if (
       collisionImpactVisual &&
       collisionImpactVisual.id !== lastCollisionIdRef.current
     ) {
       lastCollisionIdRef.current = collisionImpactVisual.id
-      // [GFX] Strictly capped cosmetic camera feedback; never pauses logic.
+      // Render-only camera kick. Gameplay position, collision checks and
+      // steering/input variables are never modified.
       shakeRef.current = reducedRef.current
-        ? 0.55
-        : (collisionImpactVisual.absorbed ? 0.62 : 1.0)
+        ? 0.42
+        : collisionImpactVisual.absorbed
+          ? 0.58
+          : 0.82
     }
 
     if (state.nearMisses > lastNearMissRef.current) {
       lastNearMissRef.current = state.nearMisses
-      nearMissKickRef.current = reducedRef.current ? 0.6 : 1
+      nearMissKickRef.current = reducedRef.current ? 0.5 : 0.82
     }
-    nearMissKickRef.current = Math.max(0, nearMissKickRef.current - delta * 5.0)
+    nearMissKickRef.current = Math.max(0, nearMissKickRef.current - dt * 4.5)
 
+    // Small speed-based FOV expansion only. The camera position and obstacle
+    // layout remain unchanged, preserving lane positions and visibility fairness.
+    const selectedMaxSpeed =
+      state.vehicleMode === 'car'
+        ? state.selectedCar.maxSpeed
+        : state.selectedBike.maxSpeed
     const speedNormalized = THREE.MathUtils.clamp(
-      (state.speed - 25) / Math.max(1, (state.vehicleMode === 'car' ? state.selectedCar.maxSpeed : state.selectedBike.maxSpeed) - 25),
+      (state.speed - 25) / Math.max(1, selectedMaxSpeed - 25),
       0,
       1
     )
-    const speedFov = (reducedRef.current ? 2.5 : 5.5) * speedNormalized
-    const targetFov = 70 + speedFov + nearMissKickRef.current * (reducedRef.current ? 1.2 : 2.2)
-    fovRef.current = THREE.MathUtils.lerp(fovRef.current, targetFov, 1 - Math.exp(-5 * delta))
-    const perspectiveCamera = camera as THREE.PerspectiveCamera
+    const maxFovDelta = reducedRef.current ? 2.2 : 4.5
+    const targetFov =
+      70 +
+      speedNormalized * maxFovDelta +
+      nearMissKickRef.current * (reducedRef.current ? 1.0 : 1.6)
+
+    fovRef.current = THREE.MathUtils.damp(
+      fovRef.current,
+      targetFov,
+      5.5,
+      dt
+    )
     perspectiveCamera.fov = fovRef.current
     perspectiveCamera.updateProjectionMatrix()
-    
-    // Chase camera that follows player slightly
-    const targetPos = new THREE.Vector3(
-      playerX,
-      3.2 + state.speed * 0.004,
-      PLAYER_Z + 6.5 + state.speed * 0.008
+
+    // Micro inertia: only vertical render offset, with X and the look-center
+    // fixed so lanes do not slide sideways on screen. It is deliberately tiny.
+    const targetRenderY = 3.2 + THREE.MathUtils.clamp(state.speed * 0.0008, 0, 0.07)
+    renderPosRef.current.x = basePosRef.current.x
+    renderPosRef.current.y = THREE.MathUtils.damp(renderPosRef.current.y, targetRenderY, 6.5, dt)
+    renderPosRef.current.z = basePosRef.current.z
+
+    let shakeX = 0
+    let shakeY = 0
+
+    if (shakeRef.current > 0) {
+      shakeRef.current = Math.max(0, shakeRef.current - dt * 4.8)
+      const maxAmplitude = reducedRef.current ? 0.009 : 0.022
+      const amplitude = Math.min(shakeRef.current * 0.02, maxAmplitude)
+      shakeX = (Math.random() - 0.5) * amplitude
+      shakeY = (Math.random() - 0.5) * amplitude
+    }
+
+    renderPosRef.current.x = shakeX
+    renderPosRef.current.y += shakeY
+    renderPosRef.current.z = basePosRef.current.z
+
+    camera.position.set(
+      renderPosRef.current.x,
+      renderPosRef.current.y,
+      renderPosRef.current.z
     )
 
-    smoothPosRef.current.lerp(targetPos, 3 * delta)
-    
-    // Screen shake effect
-    let shakeX = 0, shakeY = 0
-    if (shakeRef.current > 0) {
-      shakeRef.current -= delta * 5
-      const intensity = Math.min(
-        shakeRef.current * 0.028,
-        reducedRef.current ? 0.012 : 0.03
-      )
-      shakeX = (Math.random() - 0.5) * intensity
-      shakeY = (Math.random() - 0.5) * intensity
-    }
-    
-    camera.position.set(
-      smoothPosRef.current.x + shakeX,
-      smoothPosRef.current.y + shakeY,
-      smoothPosRef.current.z
-    )
-    camera.lookAt(playerX * 0.25, 0.8, PLAYER_Z - 25)
+    // Fixed world-space look target: no render-time change to steering,
+    // playerX, lane geometry, obstacle positions, or input mapping.
+    camera.lookAt(targetRef.current)
   })
 
   return null
