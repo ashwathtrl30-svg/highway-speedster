@@ -601,14 +601,6 @@ export function MainMenu() {
         .hs-menu-enter-delay { animation-delay: 110ms; }
         .hs-menu-enter-delay-2 { animation-delay: 190ms; }
         .hs-menu-enter-delay-3 { animation-delay: 280ms; }
-        @keyframes hsMenuHeroRotate {
-          from { transform: perspective(900px) rotateY(0deg); }
-          to { transform: perspective(900px) rotateY(360deg); }
-        }
-        .hs-menu-hero-rotate {
-          animation: hsMenuHeroRotate 14s linear infinite;
-          transform-style: preserve-3d;
-        }
       `}</style>
 
       {/* Static highway backdrop: restrained metallic tones with no continuous background motion. */}
@@ -673,7 +665,7 @@ export function MainMenu() {
               style={{ animation: 'hsMenuVehicleIn 240ms ease-out' }}
             >
               <div
-                className="hs-menu-hero-rotate relative h-[125px] w-[225px] sm:h-[155px] sm:w-[285px]"
+                className="relative h-[125px] w-[225px] sm:h-[155px] sm:w-[285px]"
               >
                 {isCar ? <CarIcon car={state.selectedCar} /> : <BikeIcon bike={state.selectedBike} />}
               </div>
@@ -890,9 +882,6 @@ function GarageShowroomPreview({
           <p className="mt-1 text-sm sm:text-base font-black text-white">{vehicleName}</p>
         </div>
 
-        <div className="absolute right-4 top-4 sm:right-5 sm:top-5 rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-white/55 backdrop-blur-sm">
-          Studio
-        </div>
       </div>
     </div>
   )
