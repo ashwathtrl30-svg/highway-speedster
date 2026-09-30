@@ -207,6 +207,7 @@ export interface GameData {
   targetLane: number
   playerX: number
   newUnlock: string | null
+  newUnlockUntil: number | null
   magnetActive: boolean
   magnetTimer: number
   magnet2xActive: boolean
@@ -366,6 +367,7 @@ let state: GameData = {
   targetLane: 0,
   playerX: 0,
   newUnlock: null,
+  newUnlockUntil: null,
   magnetActive: false,
   magnetTimer: 0,
   magnet2xActive: false,
@@ -611,6 +613,9 @@ export const actions = {
       newUnlock: isCar
         ? (newlyUnlockedCars[0]?.name ?? null)
         : (newlyUnlockedBikes[0]?.name ?? null),
+      newUnlockUntil: (newlyUnlockedBikes.length > 0 || newlyUnlockedCars.length > 0)
+        ? Date.now() + 4000
+        : state.newUnlockUntil,
     })
 
     if (
@@ -801,7 +806,7 @@ export const actions = {
     })
   },
 
-  clearNewUnlock() { setState({ newUnlock: null }) },
+  clearNewUnlock() { setState({ newUnlock: null, newUnlockUntil: null }) },
 
   restoreCloudProgress(username = state.username) {
     const trimmed = username.trim()
