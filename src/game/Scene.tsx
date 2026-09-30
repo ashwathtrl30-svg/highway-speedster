@@ -3063,7 +3063,7 @@ function CoinSystem() {
   const lastGameStateRef = useRef<string>('menu')
   const visualCoinsRef = useRef<Map<number, CoinVisualState>>(new Map())
   const collectionTriggeredRef = useRef<Set<number>>(new Set())
-  const magnetTrailsRef = useRef<THREE.LineSegments>(null)
+  const magnetTrailsRef = useRef<THREE.LineSegments | null>(null)
   const bodyMeshRef = useRef<THREE.InstancedMesh | null>(null)
   const faceMeshRef = useRef<THREE.InstancedMesh | null>(null)
   const glintMeshRef = useRef<THREE.InstancedMesh | null>(null)
@@ -3273,7 +3273,7 @@ function CoinSystem() {
     const now = performance.now()
     const liveIds = new Set<number>()
     const dummy = new THREE.Object3D()
-    const maxInstances = bodyMeshRef.current.count
+    const maxInstances = bodyMeshRef.current!.count
     let instanceIndex = 0
 
     coins.forEach((coin) => {
@@ -3313,14 +3313,14 @@ function CoinSystem() {
       dummy.rotation.set(0, rotationY, 0)
       dummy.scale.setScalar(scale)
       dummy.updateMatrix()
-      bodyMeshRef.current.setMatrixAt(instanceIndex, dummy.matrix)
+      bodyMeshRef.current!.setMatrixAt(instanceIndex, dummy.matrix)
 
       // Slightly lifted embossed face.
       dummy.position.set(coin.x, coin.y + 0.012, coin.z)
       dummy.rotation.set(0, rotationY, 0)
       dummy.scale.setScalar(scale)
       dummy.updateMatrix()
-      faceMeshRef.current.setMatrixAt(instanceIndex, dummy.matrix)
+      faceMeshRef.current!.setMatrixAt(instanceIndex, dummy.matrix)
 
       // Occasional moving glint sweep. The matrix is zero-scaled unless the
       // coin's phase is currently inside the brief glint window.
@@ -3339,7 +3339,7 @@ function CoinSystem() {
         1
       )
       dummy.updateMatrix()
-      glintMeshRef.current.setMatrixAt(instanceIndex, dummy.matrix)
+      glintMeshRef.current!.setMatrixAt(instanceIndex, dummy.matrix)
 
       // [GFX] Soft coin aura grows only after the existing logic has marked
       // the coin magnetized. It is a presentation layer, not attraction logic.
@@ -3350,7 +3350,7 @@ function CoinSystem() {
       dummy.rotation.set(0, 0, 0)
       dummy.scale.setScalar(magnetGlowStrength)
       dummy.updateMatrix()
-      magnetGlowMeshRef.current.setMatrixAt(instanceIndex, dummy.matrix)
+      magnetGlowMeshRef.current!.setMatrixAt(instanceIndex, dummy.matrix)
 
       instanceIndex++
     })
@@ -3412,17 +3412,17 @@ function CoinSystem() {
       dummy.rotation.set(0, 0, 0)
       dummy.scale.setScalar(0)
       dummy.updateMatrix()
-      bodyMeshRef.current.setMatrixAt(i, dummy.matrix)
-      faceMeshRef.current.setMatrixAt(i, dummy.matrix)
-      glintMeshRef.current.setMatrixAt(i, dummy.matrix)
-      magnetGlowMeshRef.current.setMatrixAt(i, dummy.matrix)
+      bodyMeshRef.current!.setMatrixAt(i, dummy.matrix)
+      faceMeshRef.current!.setMatrixAt(i, dummy.matrix)
+      glintMeshRef.current!.setMatrixAt(i, dummy.matrix)
+      magnetGlowMeshRef.current!.setMatrixAt(i, dummy.matrix)
     }
 
-    bodyMeshRef.current.instanceMatrix.needsUpdate = true
-    faceMeshRef.current.instanceMatrix.needsUpdate = true
-    glintMeshRef.current.instanceMatrix.needsUpdate = true
-    magnetGlowMeshRef.current.instanceMatrix.needsUpdate = true
-    const magnetGlowMaterialRef = magnetGlowMeshRef.current.material as THREE.MeshBasicMaterial
+    bodyMeshRef.current!.instanceMatrix.needsUpdate = true
+    faceMeshRef.current!.instanceMatrix.needsUpdate = true
+    glintMeshRef.current!.instanceMatrix.needsUpdate = true
+    magnetGlowMeshRef.current!.instanceMatrix.needsUpdate = true
+    const magnetGlowMaterialRef = magnetGlowMeshRef.current!.material as THREE.MeshBasicMaterial
     magnetGlowMaterialRef.opacity =
       state.magnetActive || state.magnet2xActive ? 0.14 : 0.0
 
