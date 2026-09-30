@@ -1451,11 +1451,11 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
           </button>
           <div className="ml-3 min-w-0">
             <h2 className="text-lg sm:text-xl font-bold text-white">Select Power-Ups</h2>
-            <p className="text-[10px] sm:text-xs text-white/45 mt-0.5">Choose exactly how many units to use • maximum 3</p>
+            <p className="text-[10px] sm:text-xs text-white/45 mt-0.5">Choose exactly how many units to use • no per-run limit</p>
           </div>
         </div>
         <div className="shrink-0 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1.5 text-xs sm:text-sm font-black text-amber-200">
-          {selectedCount}/3
+          {selectedCount} SELECTED
         </div>
       </div>
 
@@ -1466,7 +1466,6 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
             const quantity = Math.max(0, Math.floor(state.selectedPowerUps[powerUp.type] || 0))
             const plusDisabled =
               owned <= quantity ||
-              selectedCount >= 3 ||
               (powerUp.type === 'magnet' && state.selectedPowerUps.magnet2x > 0) ||
               (powerUp.type === 'magnet2x' && state.selectedPowerUps.magnet > 0) ||
               (powerUp.type === 'multiplier2x' && state.selectedPowerUps.multiplier4x > 0) ||
@@ -1533,7 +1532,7 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
               : selectedCount + ' power-' + (selectedCount === 1 ? 'up' : 'ups') + ' will activate immediately when the ride starts.'}
           </p>
           <p className="text-[10px] text-white/35 mt-1">
-            Each selected unit is consumed from your inventory. Up to 3 total units can be used per run.
+            Each selected unit is consumed from your inventory. You can use as many as you own in one run.
           </p>
         </div>
 
