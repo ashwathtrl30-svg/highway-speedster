@@ -256,18 +256,27 @@ function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHig
       const carHighScore = typeof data.carHighScore === 'number' ? Math.max(0, data.carHighScore) : 0
       const highScore = Math.max(legacyHighScore, bikeHighScore, carHighScore)
 
-      const savedUnlockedBikes = (data.unlockedBikes || ['blitz']).map(migrate)
-      const unlockedBikes = BIKES
-        .filter((bike) => bike.unlockScore <= bikeHighScore)
-        .map((bike) => bike.id)
-        .reduce((ids, id) => ids.includes(id) ? ids : [...ids, id], ['blitz', ...savedUnlockedBikes])
+      const savedUnlockedBikes = [...new Set(
+        (data.unlockedBikes || ['blitz'])
+          .map(migrate)
+          .filter((id: string) => BIKES.some((bike) => bike.id === id))
+      )]
+      const unlockedBikes = [...new Set([
+        'blitz',
+        ...BIKES
+          .filter((bike) => bike.unlockScore <= bikeHighScore)
+          .map((bike) => bike.id),
+        ...savedUnlockedBikes,
+      ])].slice(0, BIKES.length)
 
       // Every profile always owns the starter car.
       // Car progression is calculated only from the car high score.
-      const unlockedCars = CARS
-        .filter((car) => car.unlockScore <= carHighScore)
-        .map((car) => car.id)
-        .reduce((ids, id) => ids.includes(id) ? ids : [...ids, id], ['kanto-zip'])
+      const unlockedCars = [...new Set([
+        'kanto-zip',
+        ...CARS
+          .filter((car) => car.unlockScore <= carHighScore)
+          .map((car) => car.id),
+      ])].slice(0, CARS.length)
 
       return {
         highScore,
