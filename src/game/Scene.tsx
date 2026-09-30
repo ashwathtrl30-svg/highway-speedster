@@ -2513,6 +2513,59 @@ function createCoinCollectionBurst(
   }
 }
 
+function MagnetAura() {
+  const groupRef = useRef<THREE.Group>(null)
+  const reducedRef = useRef(false)
+
+  useEffect(() => {
+    reducedRef.current = areSpeedEffectsReduced()
+  }, [])
+
+  useFrame((_, delta) => {
+    const state = getState()
+    if (!groupRef.current) return
+
+    const active = state.magnetActive || state.magnet2xActive
+    groupRef.current.visible = active
+    if (!active) return
+
+    // Critical gameplay constant: existing magnet acquisition radius is 11.
+    const magnetRadius = 11
+    const speedPulse = 1 + Math.sin(performance.now() * 0.005) * 0.04
+    const pulse = reducedRef.current
+      ? speedPulse
+      : speedPulse + Math.sin(performance.now() * 0.008) * 0.035
+
+    groupRef.current.position.set(state.playerX, 0.045, PLAYER_Z)
+    groupRef.current.children.forEach((child, index) => {
+      const mesh = child as THREE.Mesh
+      mesh.scale.setScalar(pulse * (1 - index * 0.035))
+      mesh.rotation.z += delta * (index % 2 === 0 ? 0.12 : -0.09)
+      const material = mesh.material as THREE.MeshBasicMaterial
+      material.opacity = (reducedRef.current ? 0.05 : 0.075) * (1 - index * 0.14)
+    })
+    // The visible ring diameter maps directly to the verified 11-unit radius.
+    void magnetRadius
+  })
+
+  return (
+    <group ref={groupRef} visible={false}>
+      {[1, 0.86, 0.72].map((scale, index) => (
+        <mesh key={index} rotation={[-Math.PI / 2, 0, 0]} scale={scale}>
+          <torusGeometry args={[11, 0.045, 8, 48]} />
+          <meshBasicMaterial
+            color={index === 0 ? '#ffe08a' : '#fff2be'}
+            transparent
+            opacity={0.06}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+          />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
 function CoinSystem() {
   const coinsRef = useRef<Coin[]>([])
   const nextIdRef = useRef(0)
@@ -2522,9 +2575,18 @@ function CoinSystem() {
   const visualCoinsRef = useRef<Map<number, CoinVisualState>>(new Map())
   const burstPoolRef = useRef<CoinCollectionBurst[]>([])
   const burstCursorRef = useRef(0)
+  const collectionTriggeredRef = useRef<Set<number>>(new Set())
+  const magnetTrailsRef = useRef<THREE.LineSegments>(null)
   const bodyMeshRef = useRef<THREE.InstancedMesh>(null)
   const faceMeshRef = useRef<THREE.InstancedMesh>(null)
   const glintMeshRef = useRef<THREE.InstancedMesh>(null)
+  const magnetGlowMeshRef = useRef<THREE.InstancedMesh>(null)
+
+  const magnetTrailPositions = useMemo(() => new Float32Array(64 * 2 * 3), [])
+  const magnetGlowGeometry = useMemo(
+    () => new THREE.SphereGeometry(0.34, 8, 6),
+    []
+  )
 
   const coinBodyGeometry = useMemo(() => {
     const shape = new THREE.Shape()
@@ -2581,6 +2643,17 @@ function CoinSystem() {
     []
   )
 
+  const magnetGlowMaterial = useMemo(
+    () => new THREE.MeshBasicMaterial({
+      color: '#ffe08a',
+      transparent: true,
+      opacity: 0.0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }),
+    []
+  )
+
   useEffect(() => {
     if (!groupRef.current) return
 
@@ -2599,12 +2672,15 @@ function CoinSystem() {
         burst.pointMaterial.dispose()
       })
       burstPoolRef.current = []
+      collectionTriggeredRef.current.clear()
       coinBodyGeometry.dispose()
       coinFaceGeometry.dispose()
       coinGlintGeometry.dispose()
+      magnetGlowGeometry.dispose()
       coinBodyMaterial.dispose()
       coinFaceMaterial.dispose()
       coinGlintMaterial.dispose()
+      magnetGlowMaterial.dispose()
     }
   }, [
     coinBodyGeometry,
@@ -2613,9 +2689,11 @@ function CoinSystem() {
     coinBodyMaterial,
     coinFaceMaterial,
     coinGlintMaterial,
+    magnetGlowGeometry,
+    magnetGlowMaterial,
   ])
 
-  const activateCollectionBurst = useCallback((x: number, y: number, z: number) => {
+  const activateCollectionBurst = useCallback((x: number, y: number, z: number, magnetBoost = false) => {
     const pool = burstPoolRef.current
     if (!pool.length) return
 
@@ -2635,16 +2713,16 @@ function CoinSystem() {
     burst.startedAt = now
     burst.origin.set(x, y, z)
     burst.group.position.copy(burst.origin)
-    burst.coinMaterial.opacity = 0.95
+    burst.coinMaterial.opacity = magnetBoost ? 1.0 : 0.95
     burst.points.visible = true
     burst.coinMesh.visible = true
 
     burst.velocities.forEach((velocity, i) => {
       const angle = (Math.PI * 2 * i) / burst.velocities.length + (now % 1000) * 0.001
-      const radial = 0.9 + (i % 3) * 0.22
+      const radial = (magnetBoost ? 1.12 : 0.9) + (i % 3) * (magnetBoost ? 0.25 : 0.22)
       velocity.set(
         Math.cos(angle) * radial,
-        1.1 + (i % 4) * 0.22,
+        (magnetBoost ? 1.32 : 1.1) + (i % 4) * (magnetBoost ? 0.25 : 0.22),
         Math.sin(angle) * radial
       )
       const base = i * 3
@@ -2662,6 +2740,7 @@ function CoinSystem() {
       coinsRef.current = []
       spawnTimerRef.current = 0
       visualCoinsRef.current.clear()
+      collectionTriggeredRef.current.clear()
       burstPoolRef.current.forEach((burst) => {
         burst.active = false
         burst.group.visible = false
@@ -2757,7 +2836,13 @@ function CoinSystem() {
       }
     }
 
-    if (!groupRef.current || !bodyMeshRef.current || !faceMeshRef.current || !glintMeshRef.current) return
+    if (
+      !groupRef.current ||
+      !bodyMeshRef.current ||
+      !faceMeshRef.current ||
+      !glintMeshRef.current ||
+      !magnetGlowMeshRef.current
+    ) return
 
     const now = performance.now()
     const liveIds = new Set<number>()
@@ -2769,13 +2854,17 @@ function CoinSystem() {
       const visual = visualCoinsRef.current.get(coin.id)
 
       if (coin.collected) {
-        // The collection event has already fired above. This only starts the
-        // visual burst from the coin's last rendered position.
-        if (visual) {
-          activateCollectionBurst(visual.x, visual.y, visual.z)
-          visualCoinsRef.current.delete(coin.id)
-        } else {
-          activateCollectionBurst(coin.x, coin.y, coin.z)
+        // [GFX] Gameplay credit has already happened above. Start the visual
+        // burst once, using the last rendered position; never predict collection.
+        if (!collectionTriggeredRef.current.has(coin.id)) {
+          collectionTriggeredRef.current.add(coin.id)
+          const magnetBoost = state.magnetActive || state.magnet2xActive
+          if (visual) {
+            activateCollectionBurst(visual.x, visual.y, visual.z, magnetBoost)
+            visualCoinsRef.current.delete(coin.id)
+          } else {
+            activateCollectionBurst(coin.x, coin.y, coin.z, magnetBoost)
+          }
         }
         return
       }
@@ -2813,14 +2902,77 @@ function CoinSystem() {
       const glintStrength = glintPhase > 0.965
         ? (glintPhase - 0.965) / 0.035
         : 0
+      const magnetBoost = coin.magnetized
+        ? 0.55 + Math.sin(now * 0.01 + phase) * 0.08
+        : 0
       dummy.position.set(coin.x, coin.y + 0.055, coin.z)
       dummy.rotation.set(-Math.PI / 2, rotationY, glintStrength * Math.PI * 0.35)
-      dummy.scale.set(glintStrength * 0.9, glintStrength * 0.9, 1)
+      dummy.scale.set(
+        (glintStrength * 0.9) + magnetBoost,
+        (glintStrength * 0.9) + magnetBoost * 0.55,
+        1
+      )
       dummy.updateMatrix()
       glintMeshRef.current.setMatrixAt(instanceIndex, dummy.matrix)
 
+      // [GFX] Soft coin aura grows only after the existing logic has marked
+      // the coin magnetized. It is a presentation layer, not attraction logic.
+      const magnetGlowStrength = coin.magnetized
+        ? 0.9 + Math.sin(now * 0.009 + phase) * 0.16
+        : 0
+      dummy.position.set(coin.x, coin.y, coin.z)
+      dummy.rotation.set(0, 0, 0)
+      dummy.scale.setScalar(magnetGlowStrength)
+      dummy.updateMatrix()
+      magnetGlowMeshRef.current.setMatrixAt(instanceIndex, dummy.matrix)
+
       instanceIndex++
     })
+
+    // [GFX] Style the existing logical magnet pull. No coordinates are changed.
+    let trailIndex = 0
+    coins.forEach((coin) => {
+      if (!coin.collected && coin.magnetized && trailIndex < 64) {
+        const visual = visualCoinsRef.current.get(coin.id)
+        if (visual) {
+          const tx = state.playerX
+          const tz = PLAYER_Z
+          const alpha = THREE.MathUtils.clamp(
+            1 - Math.sqrt((coin.x - tx) ** 2 + (coin.z - tz) ** 2) / 11,
+            0.15,
+            1
+          )
+          const tailX = coin.x + (tx - coin.x) * 0.32
+          const tailZ = coin.z + (tz - coin.z) * 0.32
+          const base = trailIndex * 6
+          magnetTrailPositions[base] = coin.x
+          magnetTrailPositions[base + 1] = coin.y + 0.02
+          magnetTrailPositions[base + 2] = coin.z
+          magnetTrailPositions[base + 3] = tailX
+          magnetTrailPositions[base + 4] = coin.y + 0.02
+          magnetTrailPositions[base + 5] = tailZ
+          trailIndex++
+          void alpha
+        }
+      }
+    })
+    if (magnetTrailsRef.current) {
+      const geometry = magnetTrailsRef.current.geometry as THREE.BufferGeometry
+      const position = geometry.getAttribute('position') as THREE.BufferAttribute
+      const drawCount = trailIndex * 2
+      for (let i = trailIndex; i < 64; i++) {
+        const base = i * 6
+        magnetTrailPositions[base] = 0
+        magnetTrailPositions[base + 1] = -100
+        magnetTrailPositions[base + 2] = 0
+        magnetTrailPositions[base + 3] = 0
+        magnetTrailPositions[base + 4] = -100
+        magnetTrailPositions[base + 5] = 0
+      }
+      position.array.set(magnetTrailPositions)
+      position.needsUpdate = true
+      geometry.setDrawRange(0, drawCount)
+    }
 
     visualCoinsRef.current.forEach((_, id) => {
       if (!liveIds.has(id)) {
@@ -2837,11 +2989,16 @@ function CoinSystem() {
       bodyMeshRef.current.setMatrixAt(i, dummy.matrix)
       faceMeshRef.current.setMatrixAt(i, dummy.matrix)
       glintMeshRef.current.setMatrixAt(i, dummy.matrix)
+      magnetGlowMeshRef.current.setMatrixAt(i, dummy.matrix)
     }
 
     bodyMeshRef.current.instanceMatrix.needsUpdate = true
     faceMeshRef.current.instanceMatrix.needsUpdate = true
     glintMeshRef.current.instanceMatrix.needsUpdate = true
+    magnetGlowMeshRef.current.instanceMatrix.needsUpdate = true
+    const magnetGlowMaterialRef = magnetGlowMeshRef.current.material as THREE.MeshBasicMaterial
+    magnetGlowMaterialRef.opacity =
+      state.magnetActive || state.magnet2xActive ? 0.14 : 0.0
 
     // Animate pooled collection bursts independently of the collection event.
     burstPoolRef.current.forEach((burst) => {
@@ -2906,19 +3063,58 @@ function CoinSystem() {
     glintMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
     glintMesh.frustumCulled = false
 
+    const magnetGlowMesh = new THREE.InstancedMesh(
+      magnetGlowGeometry,
+      magnetGlowMaterial,
+      64
+    )
+    magnetGlowMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    magnetGlowMesh.frustumCulled = false
+
     bodyMeshRef.current = bodyMesh
     faceMeshRef.current = faceMesh
     glintMeshRef.current = glintMesh
+    magnetGlowMeshRef.current = magnetGlowMesh
 
-    groupRef.current.add(bodyMesh, faceMesh, glintMesh)
+    const trailGeometry = new THREE.BufferGeometry()
+    trailGeometry.setAttribute(
+      'position',
+      new THREE.BufferAttribute(magnetTrailPositions, 3)
+    )
+    const trailMaterial = new THREE.LineBasicMaterial({
+      color: '#ffe9a6',
+      transparent: true,
+      opacity: 0.22,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    })
+    const trailLines = new THREE.LineSegments(trailGeometry, trailMaterial)
+    trailLines.frustumCulled = false
+    magnetTrailsRef.current = trailLines
+
+    groupRef.current.add(bodyMesh, faceMesh, glintMesh, magnetGlowMesh, trailLines)
 
     return () => {
-      groupRef.current?.remove(bodyMesh, faceMesh, glintMesh)
+      groupRef.current?.remove(bodyMesh, faceMesh, glintMesh, magnetGlowMesh, trailLines)
+      trailGeometry.dispose()
+      trailMaterial.dispose()
       bodyMeshRef.current = null
       faceMeshRef.current = null
       glintMeshRef.current = null
+      magnetGlowMeshRef.current = null
+      magnetTrailsRef.current = null
     }
-  }, [coinBodyGeometry, coinFaceGeometry, coinGlintGeometry, coinBodyMaterial, coinFaceMaterial, coinGlintMaterial])
+  }, [
+    coinBodyGeometry,
+    coinFaceGeometry,
+    coinGlintGeometry,
+    coinBodyMaterial,
+    coinFaceMaterial,
+    coinGlintMaterial,
+    magnetGlowGeometry,
+    magnetGlowMaterial,
+    magnetTrailPositions,
+  ])
 
   return <group ref={groupRef} />
 }
