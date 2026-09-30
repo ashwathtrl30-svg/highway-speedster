@@ -4135,6 +4135,7 @@ function CollisionScreenEffect() {
   const spriteRef = useRef<THREE.Sprite>(null)
   const materialRef = useRef<THREE.SpriteMaterial>(null)
   const lastEventIdRef = useRef(0)
+  const lastTintAtRef = useRef(0)
   const effectRef = useRef(0)
   const reducedRef = useRef(false)
 
@@ -4170,9 +4171,14 @@ function CollisionScreenEffect() {
     const event = collisionImpactVisual
     if (event && event.id !== lastEventIdRef.current) {
       lastEventIdRef.current = event.id
-      effectRef.current = reducedRef.current
-        ? (event.absorbed ? 0.18 : 0.24)
-        : (event.absorbed ? 0.28 : 0.42)
+
+      // [GFX] Screen flashes are rate-limited to <=3 starts per second.
+      if (performance.now() - lastTintAtRef.current >= 333) {
+        lastTintAtRef.current = performance.now()
+        effectRef.current = reducedRef.current
+          ? (event.absorbed ? 0.18 : 0.24)
+          : (event.absorbed ? 0.28 : 0.42)
+      }
     }
 
     effectRef.current = Math.max(0, effectRef.current - delta * 2.6)
