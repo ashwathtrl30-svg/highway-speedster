@@ -767,27 +767,18 @@ export const actions = {
 
   setPowerUpQuantity(powerUp: PowerUpType, quantity: number) {
     const owned = Math.max(0, Math.floor(state.inventory[powerUp]))
-    const currentQuantity = Math.max(0, Math.floor(state.selectedPowerUps[powerUp] || 0))
-    const requested = Math.max(0, Math.min(3, Math.floor(quantity)))
+    const requested = Math.max(0, Math.min(owned, Math.floor(quantity)))
 
-    if (requested > currentQuantity) {
-      const selectedOthers = (Object.keys(state.selectedPowerUps) as PowerUpType[]).reduce(
-        (sum, item) => item === powerUp ? sum : sum + Math.max(0, Math.floor(state.selectedPowerUps[item] || 0)),
-        0
-      )
-      const maxForThisPowerUp = Math.min(owned, 3 - selectedOthers)
-      if (requested > maxForThisPowerUp) return
-    }
-
-    // Keep alternate versions of the same effect mutually exclusive.
-    // Changing to one magnet variant clears the other magnet variant, and
-    // changing to one score multiplier clears the other multiplier variant.
+    // There is no per-run quantity cap. The player's inventory is the only limit.
+    // Alternate versions of the same effect remain mutually exclusive.
     const nextSelection = { ...state.selectedPowerUps }
+
     if (requested === 0) {
       nextSelection[powerUp] = 0
     } else {
       const isMagnetVariant = powerUp === 'magnet' || powerUp === 'magnet2x'
       const isMultiplierVariant = powerUp === 'multiplier2x' || powerUp === 'multiplier4x'
+
       if (isMagnetVariant) {
         nextSelection.magnet = 0
         nextSelection.magnet2x = 0
@@ -796,7 +787,8 @@ export const actions = {
         nextSelection.multiplier2x = 0
         nextSelection.multiplier4x = 0
       }
-      nextSelection[powerUp] = Math.min(requested, owned, 3)
+
+      nextSelection[powerUp] = requested
     }
 
     setState({ selectedPowerUps: nextSelection })
