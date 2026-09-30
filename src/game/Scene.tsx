@@ -1956,9 +1956,9 @@ function TrafficSystem() {
   const playtimeTrackerRef = useRef(0)
 
   const vehicleColors = useMemo(() => [
-    '#e74c3c', '#3498db', '#27ae60', '#f39c12', '#8e44ad',
-    '#1abc9c', '#e67e22', '#ecf0f1', '#2c3e50', '#d35400',
-    '#c0392b', '#16a085', '#f1c40f', '#7f8c8d', '#2980b9',
+    '#f4b942', '#39b8c4', '#e16b3a', '#8f5de7', '#58a85b',
+    '#f08a3c', '#5cc8d7', '#c45ad8', '#e0a72f', '#4fae7a',
+    '#d96c9b', '#6f9be8',
   ], [])
 
   const getVehicleDimensions = useCallback((type: string): [number, number, number] => {
@@ -2205,6 +2205,31 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
     roof.position.y = h * 0.65
     roof.position.z = -l * 0.05
     group.add(roof)
+
+    // Clearly civilian/traffic-only details: these keep road traffic from
+    // resembling the selectable player car roster.
+    const windshieldGeo = new THREE.BoxGeometry(w * 0.58, h * 0.13, 0.035)
+    const windshieldMat = new THREE.MeshStandardMaterial({
+      color: '#243442',
+      metalness: 0.15,
+      roughness: 0.24,
+      transparent: true,
+      opacity: 0.9,
+    })
+    const windshield = new THREE.Mesh(windshieldGeo, windshieldMat)
+    windshield.position.set(0, h * 0.69, -l * 0.245)
+    windshield.rotation.x = -0.12
+    group.add(windshield)
+
+    const trafficStripeGeo = new THREE.BoxGeometry(w * 0.84, 0.045, l * 0.035)
+    const trafficStripeMat = new THREE.MeshStandardMaterial({
+      color: '#f3cf59',
+      metalness: 0.3,
+      roughness: 0.34,
+    })
+    const trafficStripe = new THREE.Mesh(trafficStripeGeo, trafficStripeMat)
+    trafficStripe.position.set(0, h * 0.45, -l * 0.09)
+    group.add(trafficStripe)
   } else if (type === 'auto') {
     // Auto-rickshaw style - open top with canopy
     const roofGeo = new RoundedBoxGeometry(w * 0.9, h * 0.15, l * 0.7, 0.025, 1)
@@ -2227,6 +2252,26 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
     const handle = new THREE.Mesh(new THREE.BoxGeometry(w * 0.7, 0.05, 0.05), new THREE.MeshStandardMaterial({ color: '#555555', metalness: 0.8 }))
     handle.position.set(0, h * 0.82, -l * 0.34)
     group.add(handle)
+
+    // Traffic-bike signature: compact rear carrier and bright tank accent,
+    // visually distinct from every selectable player bike.
+    const carrierGeo = new THREE.BoxGeometry(w * 0.45, h * 0.09, l * 0.18)
+    const carrierMat = new THREE.MeshStandardMaterial({ color: '#555c62', metalness: 0.65, roughness: 0.38 })
+    const carrier = new THREE.Mesh(carrierGeo, carrierMat)
+    carrier.position.set(0, h * 0.78, l * 0.25)
+    group.add(carrier)
+
+    const tankAccentGeo = new THREE.BoxGeometry(w * 0.34, h * 0.08, l * 0.28)
+    const tankAccentMat = new THREE.MeshStandardMaterial({
+      color: '#f4c842',
+      metalness: 0.55,
+      roughness: 0.3,
+      emissive: '#5a4510',
+      emissiveIntensity: 0.12,
+    })
+    const tankAccent = new THREE.Mesh(tankAccentGeo, tankAccentMat)
+    tankAccent.position.set(0, h * 0.53, -l * 0.05)
+    group.add(tankAccent)
   } else if (type === 'scooter') {
     const deck = new THREE.Mesh(new THREE.BoxGeometry(w * 0.55, h * 0.14, l * 0.5), new THREE.MeshStandardMaterial({ color: displayColor, metalness: 0.5, roughness: 0.4 }))
     deck.position.y = h * 0.38
@@ -2237,6 +2282,19 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
     const handle = new THREE.Mesh(new THREE.BoxGeometry(w * 0.72, 0.05, 0.05), new THREE.MeshStandardMaterial({ color: '#555555', metalness: 0.8 }))
     handle.position.set(0, h * 0.9, -l * 0.28)
     group.add(handle)
+
+    // Traffic-scooter signature: broad front apron and rear utility box.
+    const apronGeo = new THREE.RoundedBoxGeometry(w * 0.72, h * 0.18, l * 0.22, 0.025, 1)
+    const apronMat = new THREE.MeshStandardMaterial({ color: '#e7b62f', metalness: 0.4, roughness: 0.4 })
+    const apron = new THREE.Mesh(apronGeo, apronMat)
+    apron.position.set(0, h * 0.56, -l * 0.20)
+    group.add(apron)
+
+    const boxGeo = new THREE.RoundedBoxGeometry(w * 0.48, h * 0.20, l * 0.22, 0.025, 1)
+    const boxMat = new THREE.MeshStandardMaterial({ color: '#4e5960', metalness: 0.4, roughness: 0.5 })
+    const box = new THREE.Mesh(boxGeo, boxMat)
+    box.position.set(0, h * 0.84, l * 0.22)
+    group.add(box)
   } else if (type === 'truck') {
     // Cabin
     const cabinGeo = new THREE.BoxGeometry(w * 0.88, h * 0.5, l * 0.22)
