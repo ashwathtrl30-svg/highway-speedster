@@ -463,6 +463,8 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
   )
 }
 
+let openPowerUpsOnNextMenu = false
+
 // ============== MAIN MENU ==============
 function PlaytimeRankCard({ username }: { username: string }) {
   const [rank, setRank] = useState<{ rank: number; playtimeSeconds: number; totalPlayers: number } | null>(null)
@@ -529,6 +531,12 @@ export function MainMenu() {
       }
     }
   }, [])
+
+  useEffect(() => {
+    if (state.gameState !== 'menu' || !openPowerUpsOnNextMenu) return
+    openPowerUpsOnNextMenu = false
+    setShowPowerUpSelection(true)
+  }, [state.gameState])
 
   // Secret keyboard shortcut for admin analytics (preserved).
   useEffect(() => {
@@ -2557,13 +2565,21 @@ export function GameOverScreen() {
 
         <div className="flex flex-col gap-2.5 sm:gap-3 w-52 sm:w-56 mx-auto">
           <button
-            onClick={() => { actions.resetGame(); actions.setGameState('playing') }}
+            onClick={() => {
+              actions.resetGame()
+              openPowerUpsOnNextMenu = true
+              actions.setGameState('menu')
+            }}
             className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-base sm:text-lg py-3 rounded-xl shadow-lg shadow-green-500/25 active:scale-95 transition-all"
           >
             🔄 RIDE AGAIN
           </button>
           <button
-            onClick={() => { actions.resetGame(); actions.setGameState('menu') }}
+            onClick={() => {
+              openPowerUpsOnNextMenu = false
+              actions.resetGame()
+              actions.setGameState('menu')
+            }}
             className="bg-white/10 hover:bg-white/15 text-white font-bold text-base sm:text-lg py-3 rounded-xl active:scale-95 transition-all border border-white/10"
           >
             🏠 MAIN MENU
@@ -2668,7 +2684,10 @@ export function TouchControls() {
       </div>
 
       {/* Mobile arrow controls remain available alongside swipe steering */}
-      <div className="absolute bottom-8 left-0 right-0 flex justify-between px-6 z-20 sm:hidden">
+      <div
+        className="absolute bottom-8 left-0 right-0 flex justify-between z-20 sm:hidden"
+        style={{ paddingLeft: '1.5cm', paddingRight: '1.5cm' }}
+      >
         <button
           type="button"
           aria-label="Steer left"
