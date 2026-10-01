@@ -29,6 +29,64 @@ export interface Car {
 
 export type BikeSkin = 'black' | 'blue' | 'red' | 'silver' | 'gold'
 
+export interface CarColorOption {
+  id: string
+  name: string
+  color: string
+  accentColor: string
+}
+
+export const CAR_COLORS: Record<string, CarColorOption[]> = {
+  'kanto-zip': [
+    { id: 'green', name: 'Green', color: '#2f7d32', accentColor: '#78b77b' },
+    { id: 'blue', name: 'Blue', color: '#2563eb', accentColor: '#60a5fa' },
+    { id: 'red', name: 'Red', color: '#dc2626', accentColor: '#f87171' },
+    { id: 'black', name: 'Black', color: '#111111', accentColor: '#3a3a3a' },
+  ],
+  'saber-swift': [
+    { id: 'orange', name: 'Orange', color: '#f97316', accentColor: '#fdba74' },
+    { id: 'red', name: 'Red', color: '#dc2626', accentColor: '#f87171' },
+    { id: 'blue', name: 'Blue', color: '#2563eb', accentColor: '#60a5fa' },
+    { id: 'black', name: 'Black', color: '#111111', accentColor: '#3a3a3a' },
+  ],
+  'goliath-titan': [
+    { id: 'santorini-black', name: 'Santorini Black', color: '#0f1112', accentColor: '#3b4146' },
+    { id: 'pangea-green', name: 'Pangea Green', color: '#354238', accentColor: '#728173' },
+    { id: 'carpathian-grey', name: 'Carpathian Grey', color: '#4b5055', accentColor: '#9aa0a6' },
+    { id: 'tasman-blue', name: 'Tasman Blue', color: '#214560', accentColor: '#6687a0' },
+  ],
+  'kaiser-monarch': [
+    { id: 'dravit-grey-metallic', name: 'Dravit Grey Metallic', color: '#4b4d50', accentColor: '#93969b' },
+    { id: 'brooklyn-grey-metallic', name: 'Brooklyn Grey Metallic', color: '#6b7075', accentColor: '#b9bec4' },
+    { id: 'black-sapphire-metallic', name: 'Black Sapphire Metallic', color: '#0b0f14', accentColor: '#46505c' },
+    { id: 'marina-bay-blue-metallic', name: 'Marina Bay Blue Metallic', color: '#245ca8', accentColor: '#72a7e3' },
+  ],
+  'scuderia-fury': [
+    { id: 'rosso-corsa', name: 'Rosso Corsa', color: '#cc1f24', accentColor: '#ff686d' },
+    { id: 'giallo-modena', name: 'Giallo Modena', color: '#f6c90e', accentColor: '#ffe98a' },
+    { id: 'rosso-imola', name: 'Rosso Imola', color: '#8f171b', accentColor: '#d66367' },
+    { id: 'azzurro-california', name: 'Azzurro California', color: '#1f6fae', accentColor: '#70b4e5' },
+  ],
+}
+
+function normalizeCarColorSelections(raw: Record<string, unknown> = {}): Record<string, string> {
+  return Object.fromEntries(
+    CARS.map((car) => {
+      const available = CAR_COLORS[car.id] || []
+      const saved = typeof raw[car.id] === 'string' ? raw[car.id] : ''
+      const fallback = available[0]?.id || ''
+      const valid = available.some((option) => option.id === saved)
+      return [car.id, valid ? saved : fallback]
+    })
+  )
+}
+
+function getCarColorOption(carId: string, colorId?: string): CarColorOption | null {
+  const available = CAR_COLORS[carId] || []
+  return available.find((option) => option.id === colorId) || available[0] || null
+}
+
+
 export const BIKE_SKINS: Record<string, BikeSkin[]> = {
   blitz: ['black', 'blue', 'red'],
   apex: ['black', 'blue', 'red'],
@@ -201,6 +259,8 @@ export interface GameData {
   unlockedBikes: string[]
   unlockedCars: string[]
   bikeSkins: Record<string, BikeSkin>
+  carColors: Record<string, string>
+  selectedCarColor: string
   totalCoins: number
   runCoins: number
   inventory: PowerUpInventory
@@ -238,7 +298,7 @@ export function getPlayerId(): string {
   return id
 }
 
-function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHighScore: number; unlockedBikes: string[]; unlockedCars: string[]; bikeSkins: Record<string, BikeSkin>; totalCoins: number; inventory: PowerUpInventory; username: string; totalPlaytime: number; userPlaytime: Record<string, number>; playtimeHistory: PlaytimeEntry[]; vehicleMode: 'bike' | 'car'; selectedBikeId: string; selectedCarId: string; selectedSkin: BikeSkin } {
+function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHighScore: number; unlockedBikes: string[]; unlockedCars: string[]; bikeSkins: Record<string, BikeSkin>; totalCoins: number; inventory: PowerUpInventory; username: string; totalPlaytime: number; userPlaytime: Record<string, number>; playtimeHistory: PlaytimeEntry[]; vehicleMode: 'bike' | 'car'; selectedBikeId: string; selectedCarId: string; selectedSkin: BikeSkin; carColors: Record<string, string>; selectedCarColor: string } {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
@@ -280,6 +340,19 @@ function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHig
           .map((car) => car.id),
       ])].slice(0, CARS.length)
 
+      const selectedCarId =
+        typeof data.selectedCarId === 'string' && CARS.some((car) => car.id === data.selectedCarId)
+          ? data.selectedCarId
+          : CARS[0].id
+      const carColors = normalizeCarColorSelections(
+        data.carColors && typeof data.carColors === 'object' ? data.carColors : {}
+      )
+      const selectedCarColor =
+        typeof data.selectedCarColor === 'string' &&
+        (CAR_COLORS[selectedCarId] || []).some((option) => option.id === data.selectedCarColor)
+          ? data.selectedCarColor
+          : carColors[selectedCarId]
+
       return {
         highScore,
         bikeHighScore,
@@ -296,11 +369,14 @@ function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHig
         vehicleMode: data.vehicleMode === 'car' ? 'car' : 'bike',
         selectedBikeId: typeof data.selectedBikeId === 'string' && BIKES.some((bike) => bike.id === migrate(data.selectedBikeId)) ? migrate(data.selectedBikeId) : BIKES[0].id,
         selectedSkin: typeof data.selectedSkin === 'string' ? data.selectedSkin as BikeSkin : 'black',
-        selectedCarId: typeof data.selectedCarId === 'string' && CARS.some((car) => car.id === data.selectedCarId) ? data.selectedCarId : CARS[0].id,
+        selectedCarId,
+        carColors,
+        selectedCarColor,
       }
     }
   } catch (e) { /* ignore */ }
-  return { highScore: 0, bikeHighScore: 0, carHighScore: 0, unlockedBikes: ['blitz'], unlockedCars: ['kanto-zip'], bikeSkins: { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' }, totalCoins: 0, inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }, username: '', totalPlaytime: 0, userPlaytime: {}, playtimeHistory: [], vehicleMode: 'bike', selectedBikeId: BIKES[0].id, selectedCarId: CARS[0].id, selectedSkin: 'black' }
+  const defaultCarColors = normalizeCarColorSelections()
+  return { highScore: 0, bikeHighScore: 0, carHighScore: 0, unlockedBikes: ['blitz'], unlockedCars: ['kanto-zip'], bikeSkins: { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' }, totalCoins: 0, inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }, username: '', totalPlaytime: 0, userPlaytime: {}, playtimeHistory: [], vehicleMode: 'bike', selectedBikeId: BIKES[0].id, selectedCarId: CARS[0].id, selectedSkin: 'black', carColors: defaultCarColors, selectedCarColor: defaultCarColors[CARS[0].id] }
 }
 
 function saveProgress(highScore: number, unlockedBikes: string[], bikeSkins: Record<string, BikeSkin>, totalCoins: number, inventory: PowerUpInventory, username: string, totalPlaytime: number, userPlaytime: Record<string, number>, playtimeHistory: PlaytimeEntry[]) {
@@ -320,6 +396,8 @@ function saveProgress(highScore: number, unlockedBikes: string[], bikeSkins: Rec
       selectedBikeId: state.selectedBike.id,
       selectedCarId: state.selectedCar.id,
       selectedSkin: state.selectedSkin,
+      carColors: state.carColors,
+      selectedCarColor: state.selectedCarColor,
       bikeHighScore: state.bikeHighScore,
       carHighScore: state.carHighScore,
       unlockedCars: state.unlockedCars,
@@ -337,6 +415,8 @@ function saveVehicleSelection(vehicleMode: 'bike' | 'car', selectedVehicleId: st
       selectedCarId: vehicleMode === 'car'
         ? selectedVehicleId
         : (saved.selectedCarId || CARS[0].id),
+      carColors: state.carColors,
+      selectedCarColor: state.selectedCarColor,
     }))
   } catch (e) { /* ignore */ }
   if (state.username.trim()) queueCloudSave()
@@ -350,6 +430,7 @@ const initialBike = BIKES[0]
 const initialSkin = savedProgress.bikeSkins[initialBike.id] || 'black'
 const initialColors = SKIN_COLORS[initialSkin]
 const initialCar = CARS.find((car) => car.id === savedProgress.selectedCarId) || CARS[0]
+const initialCarColor = getCarColorOption(initialCar.id, savedProgress.selectedCarColor)
 const defaultInventory = { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }
 
 let state: GameData = {
@@ -364,9 +445,11 @@ let state: GameData = {
   combo: 0,
   comboTimer: 0,
   selectedBike: { ...initialBike, color: initialColors.color, accentColor: initialColors.accentColor },
-  selectedCar: initialCar,
+  selectedCar: initialCarColor ? { ...initialCar, color: initialCarColor.color, accentColor: initialCarColor.accentColor } : initialCar,
   vehicleMode: savedProgress.vehicleMode,
   selectedSkin: initialSkin,
+  carColors: savedProgress.carColors,
+  selectedCarColor: savedProgress.selectedCarColor,
   unlockedBikes: savedProgress.unlockedBikes,
   unlockedCars: savedProgress.unlockedCars,
   bikeSkins: savedProgress.bikeSkins,
@@ -416,6 +499,8 @@ function buildCloudProgress(): CloudGameProgress | null {
     selectedBikeId: current.selectedBike.id,
     selectedCarId: current.selectedCar.id,
     selectedSkin: current.selectedSkin,
+    carColors: current.carColors,
+    selectedCarColor: current.selectedCarColor,
     totalPlaytime: current.totalPlaytime,
     userPlaytime: current.userPlaytime,
     playtimeHistory: current.playtimeHistory,
@@ -487,6 +572,16 @@ async function loadCloudProgress(username: string) {
   const carId = typeof cloud.selectedCarId === 'string' && CARS.some((car) => car.id === cloud.selectedCarId)
     ? cloud.selectedCarId
     : current.selectedCar.id
+  const carColors = normalizeCarColorSelections({
+    ...current.carColors,
+    ...((cloud.carColors || {}) as Record<string, unknown>),
+  })
+  const selectedCarColor =
+    typeof cloud.selectedCarColor === 'string' &&
+    (CAR_COLORS[carId] || []).some((option) => option.id === cloud.selectedCarColor)
+      ? cloud.selectedCarColor
+      : carColors[carId]
+  const carColor = getCarColorOption(carId, selectedCarColor)
   const bikeSkin = typeof cloud.selectedSkin === 'string' && BIKE_SKINS[bikeId]?.includes(cloud.selectedSkin as BikeSkin)
     ? cloud.selectedSkin as BikeSkin
     : (cloud.bikeSkins?.[bikeId] as BikeSkin) || current.bikeSkins[bikeId] || 'black'
@@ -503,8 +598,12 @@ async function loadCloudProgress(username: string) {
     totalCoins: Math.max(current.totalCoins, Number(cloud.totalCoins || 0)),
     inventory: { ...current.inventory, ...(cloud.inventory || {}) },
     selectedBike: { ...bike, color: colors.color, accentColor: colors.accentColor },
-    selectedCar: CARS.find((item) => item.id === carId) || current.selectedCar,
+    selectedCar: carColor
+      ? { ...(CARS.find((item) => item.id === carId) || current.selectedCar), color: carColor.color, accentColor: carColor.accentColor }
+      : CARS.find((item) => item.id === carId) || current.selectedCar,
     selectedSkin: bikeSkin,
+    carColors,
+    selectedCarColor,
     vehicleMode: cloud.vehicleMode === 'car' ? 'car' : current.vehicleMode,
     totalPlaytime: Math.max(current.totalPlaytime, Number(cloud.totalPlaytime || 0)),
     userPlaytime: { ...current.userPlaytime, ...(cloud.userPlaytime || {}) },
@@ -692,12 +791,44 @@ export const actions = {
       ? state.unlockedCars
       : [...state.unlockedCars, car.id]
 
+    const selectedColorId = state.carColors[car.id] || getCarColorOption(car.id)?.id || ''
+    const color = getCarColorOption(car.id, selectedColorId)
+
     setState({
-      selectedCar: car,
+      selectedCar: color ? { ...car, color: color.color, accentColor: color.accentColor } : car,
+      selectedCarColor: selectedColorId,
       vehicleMode: 'car',
       unlockedCars,
     })
     saveVehicleSelection('car', car.id)
+  },
+
+  selectCarColor(carId: string, colorId: string) {
+    const car = CARS.find((item) => item.id === carId)
+    const color = getCarColorOption(carId, colorId)
+    if (!car || !color) return
+    if (car.id !== CARS[0].id && !state.unlockedCars.includes(car.id)) return
+
+    const carColors = { ...state.carColors, [carId]: color.id }
+    const updates: Partial<GameData> = { carColors }
+
+    if (state.selectedCar.id === carId) {
+      updates.selectedCar = { ...state.selectedCar, color: color.color, accentColor: color.accentColor }
+      updates.selectedCarColor = color.id
+    }
+
+    setState(updates)
+    saveProgress(
+      state.highScore,
+      state.unlockedBikes,
+      state.bikeSkins,
+      state.totalCoins,
+      state.inventory,
+      state.username,
+      state.totalPlaytime,
+      state.userPlaytime,
+      state.playtimeHistory
+    )
   },
 
   selectSkin(bikeId: string, skin: BikeSkin) {
