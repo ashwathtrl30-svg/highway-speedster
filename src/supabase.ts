@@ -54,17 +54,32 @@ export async function syncAnalyticsToSupabase(
 }
 
 export async function recordPlaytimeEvent(playerId: string, username: string, seconds: number) {
-  if (!playerId.trim() || !username.trim() || seconds <= 0) return
+  const cleanPlayerId = playerId.trim()
+  const cleanUsername = username.trim()
+  const eventSeconds = Math.min(60, Math.floor(seconds))
+
+  if (!cleanPlayerId || !cleanUsername || eventSeconds <= 0) return
+
   try {
-    if (!(await ensureSupabaseAuth())) return
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData.user) return
-    const { error } = await supabase.from('playtime_events').insert({
-      player_id: playerId,
-      auth_user_id: authData.user.id,
-      username,
-      seconds: Math.floor(seconds)
-    })
+    // Prefer an authenticated session when available. When anonymous sign-ins
+    // are disabled, this still records to the public append-only analytics sink.
+    const { data: sessionData } = await supabase.auth.getSession()
+    const authUserId = sessionData.session?.user?.id ?? null
+
+    const payload: {
+      player_id: string
+      username: string
+      seconds: number
+      auth_user_id?: string
+    } = {
+      player_id: cleanPlayerId,
+      username: cleanUsername,
+      seconds: eventSeconds,
+    }
+
+    if (authUserId) payload.auth_user_id = authUserId
+
+    const { error } = await supabase.from('playtime_events').insert(payload)
     if (error) throw error
   } catch (error) {
     console.error('Error recording playtime event:', error)
