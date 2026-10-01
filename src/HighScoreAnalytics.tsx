@@ -77,7 +77,7 @@ export function HighScoreAnalytics() {
     : -1
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-950 to-black text-white overflow-y-auto">
+    <div className="hs-scroll-page bg-gradient-to-b from-gray-900 via-gray-950 to-black text-white">
       <div className="sticky top-0 z-20 border-b border-white/10 bg-gray-950/95 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-3">
