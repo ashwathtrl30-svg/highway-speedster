@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useGameStore, actions, BIKES, CARS, BIKE_SKINS, getState, type Bike, type Car, type BikeSkin, type GameData, type PowerUpType } from './store'
+import { useGameStore, actions, BIKES, CARS, BIKE_SKINS, CAR_COLORS, getState, type Bike, type Car, type BikeSkin, type CarColorOption, type GameData, type PowerUpType } from './store'
 import { fetchAllAnalytics, fetchMyPlaytimeRank } from '../supabase'
 import { HighScoreAnalytics } from '../HighScoreAnalytics'
 
@@ -1067,6 +1067,34 @@ function SkinSelector({ bikeId, isSelected }: { bikeId: string; isSelected: bool
   )
 }
 
+function CarColorSelector({ carId, isSelected }: { carId: string; isSelected: boolean }) {
+  const state = useGameStore()
+  const availableColors = CAR_COLORS[carId] || []
+  // Only the currently selected car's equipped paint gets an active highlight.
+  const currentColor = isSelected ? state.selectedCarColor : null
+
+  return (
+    <div className="mt-1.5 flex items-center gap-1">
+      {availableColors.map((paint: CarColorOption) => {
+        const isActive = isSelected && currentColor === paint.id
+        return (
+          <button
+            key={paint.id}
+            onClick={() => actions.selectCarColor(carId, paint.id)}
+            className={`w-5 h-5 sm:w-6 sm:h-6 rounded-md border-2 transition-all active:scale-90 ${isActive ? 'border-white scale-110' : 'border-gray-600 hover:border-gray-400'}`}
+            style={{
+              background: `linear-gradient(145deg, ${paint.accentColor}, ${paint.color})`,
+              boxShadow: isActive ? `0 0 12px ${paint.color}66` : undefined,
+            }}
+            title={paint.name}
+            aria-label={paint.name}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
 // ============== GARAGE ==============
 const shouldMirrorGarageVehicle = (section: 'bikes' | 'cars', vehicleId: string) =>
   section === 'bikes' || vehicleId !== 'saber-swift'
@@ -1120,8 +1148,9 @@ function GarageShowroomPreview({
   )
   const switchNonceRef = useRef(0)
   const [switchFx, setSwitchFx] = useState<GarageVehicleSnapshot | null>(null)
+  const selectedPaintId = isBike ? state.selectedSkin : state.selectedCarColor
   const previousSkinRef = useRef<string | null>(
-    isSectionSelected ? state.selectedSkin : null
+    isSectionSelected ? selectedPaintId : null
   )
   const skinFxNonceRef = useRef(0)
   const [skinFx, setSkinFx] = useState(false)
@@ -1175,8 +1204,8 @@ function GarageShowroomPreview({
     }
 
     const previousSkin = previousSkinRef.current
-    const changed = previousSkin !== null && previousSkin !== state.selectedSkin
-    previousSkinRef.current = state.selectedSkin
+    const changed = previousSkin !== null && previousSkin !== selectedPaintId
+    previousSkinRef.current = selectedPaintId
 
     if (!changed) return
 
@@ -1190,7 +1219,7 @@ function GarageShowroomPreview({
     }, 420)
 
     return () => window.clearTimeout(timer)
-  }, [isSectionSelected, state.selectedSkin])
+  }, [isSectionSelected, selectedPaintId])
 
   return (
     <div className="mx-3 sm:mx-4 mt-3 sm:mt-4">
@@ -1873,11 +1902,14 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
                       </p>
 
                       {isUnlocked && (
-                        <div className="mt-1.5">
-                          <p className="text-[10px] sm:text-xs text-gray-400">
-                            Top Speed: <span className="text-white font-semibold">{car.maxSpeed} kmph</span>
-                          </p>
-                        </div>
+                        <>
+                          <div className="mt-1.5">
+                            <p className="text-[10px] sm:text-xs text-gray-400">
+                              Top Speed: <span className="text-white font-semibold">{car.maxSpeed} kmph</span>
+                            </p>
+                          </div>
+                          <CarColorSelector carId={car.id} isSelected={isSelected} />
+                        </>
                       )}
 
                       {!isUnlocked && (
