@@ -398,13 +398,20 @@ export interface GameData {
 const STORAGE_KEY = 'highway-speedster-progress'
 
 export function getPlayerId(): string {
-  const key = 'highway-speedster-player-id'
-  const existing = localStorage.getItem(key)
-  if (existing) return existing
+  try {
+    return localStorage.getItem('highway-speedster-player-id')?.trim() || ''
+  } catch {
+    return ''
+  }
+}
+
+export function generatePlayerId(): string {
   const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`
-  localStorage.setItem(key, id)
+  try {
+    localStorage.setItem('highway-speedster-player-id', id)
+  } catch {}
   return id
 }
 
@@ -644,39 +651,28 @@ function queueCloudSave() {
   }, CLOUD_ANALYTICS_SYNC_MS)
 }
 
-async function loadCloudProgress(username: string) {
+async function loadCloudProgress(username = state.username): Promise<boolean> {
   cloudHydratingUser = username.trim()
-  const cloud = await fetchUserGameProgress(playerId, username)
+  const cloud = await fetchUserGameProgress(playerId)
+
   if (!cloud) {
     cloudHydratingUser = ''
-    queueCloudSave()
-    return
+    return false
   }
 
+  const resolvedUsername = cloud.username.trim() || username.trim()
   const current = getState()
-  if (current.username.trim() !== username.trim()) {
+  if (username.trim() && current.username.trim() && current.username.trim() !== username.trim()) {
     cloudHydratingUser = ''
-    return
+    return false
   }
 
   const cloudGlobalHighScore = Number(cloud.highScore || 0)
   const cloudBikeHighScore = Number(cloud.bikeHighScore || 0)
   const cloudCarHighScore = Number(cloud.carHighScore || 0)
-
-  // Recover legacy/global bike progress as well as the explicit bike score.
-  // Car progress remains strictly tied to car runs.
-  const mergedBikeHighScore = Math.max(
-    current.bikeHighScore,
-    cloudBikeHighScore,
-    Number.isFinite(cloudGlobalHighScore) ? cloudGlobalHighScore : 0
-  )
+  const mergedBikeHighScore = Math.max(current.bikeHighScore, cloudBikeHighScore, Number.isFinite(cloudGlobalHighScore) ? cloudGlobalHighScore : 0)
   const mergedCarHighScore = Math.max(current.carHighScore, cloudCarHighScore)
-  const mergedHighScore = Math.max(
-    current.highScore,
-    Number.isFinite(cloudGlobalHighScore) ? cloudGlobalHighScore : 0,
-    mergedBikeHighScore,
-    mergedCarHighScore
-  )
+  const mergedHighScore = Math.max(current.highScore, Number.isFinite(cloudGlobalHighScore) ? cloudGlobalHighScore : 0, mergedBikeHighScore, mergedCarHighScore)
 
   const unlockedBikes = BIKES
     .filter((bike) => bike.unlockScore <= mergedBikeHighScore)
@@ -687,31 +683,22 @@ async function loadCloudProgress(username: string) {
     .map((car) => car.id)
     .reduce((ids, id) => ids.includes(id) ? ids : [...ids, id], ['kanto-zip'])
 
-  const bikeId = typeof cloud.selectedBikeId === 'string' && BIKES.some((bike) => bike.id === cloud.selectedBikeId)
-    ? cloud.selectedBikeId
-    : current.selectedBike.id
-  const carId = typeof cloud.selectedCarId === 'string' && CARS.some((car) => car.id === cloud.selectedCarId)
-    ? cloud.selectedCarId
-    : current.selectedCar.id
-  const carColors = normalizeCarColorSelections({
-    ...current.carColors,
-    ...((cloud.carColors || {}) as Record<string, unknown>),
-  })
-  const selectedCarColor =
-    typeof cloud.selectedCarColor === 'string' &&
-    (CAR_COLORS[carId] || []).some((option) => option.id === cloud.selectedCarColor)
-      ? cloud.selectedCarColor
-      : carColors[carId]
+  const bikeId = typeof cloud.selectedBikeId === 'string' && BIKES.some((bike) => bike.id === cloud.selectedBikeId) ? cloud.selectedBikeId : current.selectedBike.id
+  const carId = typeof cloud.selectedCarId === 'string' && CARS.some((car) => car.id === cloud.selectedCarId) ? cloud.selectedCarId : current.selectedCar.id
+  const carColors = normalizeCarColorSelections({ ...current.carColors, ...((cloud.carColors || {}) as Record<string, unknown>) })
+  const selectedCarColor = typeof cloud.selectedCarColor === 'string' && (CAR_COLORS[carId] || []).some((option) => option.id === cloud.selectedCarColor) ? cloud.selectedCarColor : carColors[carId]
   const carColor = getCarColorOption(carId, selectedCarColor)
   const bikeSkin = getBikeSkinOption(
     bikeId,
-    migrateBikeSkin(cloud.selectedSkin)
-      || migrateBikeSkin(cloud.bikeSkins?.[bikeId])
-      || migrateBikeSkin(current.bikeSkins[bikeId])
-      || undefined
+    migrateBikeSkin(cloud.selectedSkin) || migrateBikeSkin(cloud.bikeSkins?.[bikeId]) || migrateBikeSkin(current.bikeSkins[bikeId]) || undefined
   )
   const bike = BIKES.find((item) => item.id === bikeId) || BIKES[0]
   const colors = SKIN_COLORS[bikeSkin]
+
+  const mergedTotalCoins = Math.max(current.totalCoins, Number(cloud.totalCoins || 0))
+  const mergedTotalPlaytime = Math.max(current.totalPlaytime, Number(cloud.totalPlaytime || 0))
+  const mergedUserPlaytime = { ...current.userPlaytime, ...(cloud.userPlaytime || {}) }
+  const mergedHistory = cloud.playtimeHistory?.length ? cloud.playtimeHistory : current.playtimeHistory
 
   setState({
     highScore: mergedHighScore,
@@ -720,34 +707,34 @@ async function loadCloudProgress(username: string) {
     unlockedBikes,
     unlockedCars,
     bikeSkins: { ...current.bikeSkins, ...(cloud.bikeSkins || {}) },
-    totalCoins: Math.max(current.totalCoins, Number(cloud.totalCoins || 0)),
+    totalCoins: mergedTotalCoins,
     inventory: { ...current.inventory, ...(cloud.inventory || {}) },
     selectedBike: { ...bike, color: colors.color, accentColor: colors.accentColor },
-    selectedCar: carColor
-      ? { ...(CARS.find((item) => item.id === carId) || current.selectedCar), color: carColor.color, accentColor: carColor.accentColor }
-      : CARS.find((item) => item.id === carId) || current.selectedCar,
+    selectedCar: carColor ? { ...(CARS.find((item) => item.id === carId) || current.selectedCar), color: carColor.color, accentColor: carColor.accentColor } : CARS.find((item) => item.id === carId) || current.selectedCar,
     selectedSkin: bikeSkin,
     carColors,
     selectedCarColor,
     vehicleMode: cloud.vehicleMode === 'car' ? 'car' : current.vehicleMode,
-    totalPlaytime: Math.max(current.totalPlaytime, Number(cloud.totalPlaytime || 0)),
-    userPlaytime: { ...current.userPlaytime, ...(cloud.userPlaytime || {}) },
-    playtimeHistory: cloud.playtimeHistory?.length ? cloud.playtimeHistory : current.playtimeHistory,
+    username: resolvedUsername,
+    totalPlaytime: mergedTotalPlaytime,
+    userPlaytime: mergedUserPlaytime,
+    playtimeHistory: mergedHistory,
   })
 
   saveProgress(
     mergedHighScore,
     unlockedBikes,
     { ...current.bikeSkins, ...(cloud.bikeSkins || {}) },
-    Math.max(current.totalCoins, Number(cloud.totalCoins || 0)),
+    mergedTotalCoins,
     { ...current.inventory, ...(cloud.inventory || {}) },
-    username,
-    Math.max(current.totalPlaytime, Number(cloud.totalPlaytime || 0)),
-    { ...current.userPlaytime, ...(cloud.userPlaytime || {}) },
-    cloud.playtimeHistory?.length ? cloud.playtimeHistory : current.playtimeHistory
+    resolvedUsername,
+    mergedTotalPlaytime,
+    mergedUserPlaytime,
+    mergedHistory
   )
+
   cloudHydratingUser = ''
-  queueCloudSave()
+  return true
 }
 
 const listeners: Set<Listener> = new Set()
@@ -779,6 +766,10 @@ export function setPlayerId(id: string) {
   if (!trimmed) return
   playerId = trimmed
   try { localStorage.setItem('highway-speedster-player-id', trimmed) } catch {}
+}
+
+export function getCurrentPlayerId(): string {
+  return playerId
 }
 
 export const actions = {
@@ -1143,7 +1134,99 @@ export const actions = {
   restoreCloudProgress(username = state.username) {
     const trimmed = username.trim()
     if (!trimmed) return Promise.resolve()
-    return loadCloudProgress(trimmed)
+    return loadCloudProgress(trimmed).then(() => undefined)
+  },
+
+  startNewAccount() {
+    const id = generatePlayerId()
+    const defaultCarColors = normalizeCarColorSelections()
+    const defaultBikeSkins = normalizeBikeSkinSelections()
+    const bike = BIKES[0]
+    const skin = defaultBikeSkins[bike.id] || BIKE_SKINS[bike.id][0]
+    const colors = SKIN_COLORS[skin]
+    const car = CARS[0]
+    const carColor = getCarColorOption(car.id, defaultCarColors[car.id])
+
+    setState({
+      highScore: 0,
+      bikeHighScore: 0,
+      carHighScore: 0,
+      unlockedBikes: ['blitz'],
+      unlockedCars: ['kanto-zip'],
+      bikeSkins: defaultBikeSkins,
+      totalCoins: 0,
+      inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 },
+      vehicleMode: 'bike',
+      selectedBike: { ...bike, color: colors.color, accentColor: colors.accentColor },
+      selectedCar: carColor ? { ...car, color: carColor.color, accentColor: carColor.accentColor } : car,
+      selectedSkin: skin,
+      carColors: defaultCarColors,
+      selectedCarColor: defaultCarColors[car.id],
+      username: '',
+      totalPlaytime: 0,
+      userPlaytime: {},
+      playtimeHistory: [],
+      score: 0,
+      distance: 0,
+      speed: 0,
+      nearMisses: 0,
+      combo: 0,
+      comboTimer: 0,
+      runCoins: 0,
+      selectedPowerUps: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 },
+      playerLane: 0,
+      targetLane: 0,
+      playerX: 0,
+      newUnlock: null,
+      newUnlockUntil: null,
+      magnetActive: false,
+      magnetTimer: 0,
+      magnet2xActive: false,
+      magnet2xTimer: 0,
+      multiplierActive: false,
+      multiplierTimer: 0,
+      multiplier4x: false,
+      shieldActive: false,
+      shieldCount: 0,
+    })
+    try {
+      localStorage.setItem('highway-speedster-progress', JSON.stringify({
+        highScore: 0,
+        bikeHighScore: 0,
+        carHighScore: 0,
+        unlockedBikes: ['blitz'],
+        unlockedCars: ['kanto-zip'],
+        bikeSkins: defaultBikeSkins,
+        totalCoins: 0,
+        inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 },
+        username: '',
+        totalPlaytime: 0,
+        userPlaytime: {},
+        playtimeHistory: [],
+        vehicleMode: 'bike',
+        selectedBikeId: bike.id,
+        selectedCarId: car.id,
+        selectedSkin: skin,
+        carColors: defaultCarColors,
+        selectedCarColor: defaultCarColors[car.id],
+      }))
+    } catch {}
+    return id
+  },
+
+  async connectAccount(id: string) {
+    const trimmed = id.trim()
+    if (!trimmed) return { ok: false as const, reason: 'Enter an account ID.' }
+    const previousId = playerId
+    const previous = { ...getState() }
+    setPlayerId(trimmed)
+    const connected = await loadCloudProgress()
+    if (!connected) {
+      setPlayerId(previousId)
+      setState(previous)
+      return { ok: false as const, reason: 'Account not found. Check the account ID and try again.' }
+    }
+    return { ok: true as const, username: getState().username }
   },
 
   syncSharedHighScore() {
@@ -1178,10 +1261,9 @@ export const actions = {
 
   setUsername(username: string) {
     const trimmed = username.trim()
+    if (!trimmed || !playerId) return
     setState({ username: trimmed })
     saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory, trimmed, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
-
-    // A username represents the same player across devices.
     void loadCloudProgress(trimmed).then(() => actions.syncSharedHighScore())
   },
 
