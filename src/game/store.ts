@@ -346,6 +346,7 @@ export interface PlaytimeEntry {
 
 export interface GameData {
   gameState: GameState
+  crashActive: boolean
   score: number
   highScore: number
   bikeHighScore: number
@@ -544,6 +545,7 @@ const defaultInventory = { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x
 
 let state: GameData = {
   gameState: 'menu',
+  crashActive: false,
   score: 0,
   highScore: savedProgress.highScore,
   bikeHighScore: savedProgress.bikeHighScore,
@@ -590,6 +592,7 @@ let playerId = getPlayerId()
 
 let cloudSaveTimer: ReturnType<typeof setTimeout> | null = null
 let cloudHydratingUser = ''
+let crashSequenceTimer: ReturnType<typeof setTimeout> | null = null
 
 function buildCloudProgress(): CloudGameProgress | null {
   const current = getState()
@@ -771,6 +774,11 @@ export function setPlayerId(id: string) {
 
 export const actions = {
   setGameState(gameState: GameState) {
+    if (gameState === 'gameover' && crashSequenceTimer) {
+      clearTimeout(crashSequenceTimer)
+      crashSequenceTimer = null
+      setState({ crashActive: false })
+    }
     setState({ gameState })
     // Save progress when game ends
     if (gameState === 'gameover') {
@@ -864,6 +872,27 @@ export const actions = {
 
   setDistance(d: number) { setState({ distance: d }) },
   setSpeed(s: number) { setState({ speed: s }) },
+
+  startCrashSequence() {
+    if (state.crashActive || state.gameState !== 'playing') return
+
+    setState({
+      crashActive: true,
+      speed: 0,
+    })
+
+    if (crashSequenceTimer) clearTimeout(crashSequenceTimer)
+    crashSequenceTimer = setTimeout(() => {
+      crashSequenceTimer = null
+      if (getState().crashActive && getState().gameState === 'playing') {
+        setState({
+          crashActive: false,
+          gameState: 'gameover',
+        })
+        actions.setGameState('gameover')
+      }
+    }, 4000)
+  },
 
   addNearMiss() {
     const newCombo = state.combo + 1
@@ -1101,7 +1130,12 @@ export const actions = {
   },
 
   resetGame() {
+    if (crashSequenceTimer) {
+      clearTimeout(crashSequenceTimer)
+      crashSequenceTimer = null
+    }
     setState({
+      crashActive: false,
       score: 0,
       distance: 0,
       speed: 0,
