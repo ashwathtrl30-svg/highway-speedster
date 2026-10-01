@@ -1094,6 +1094,19 @@ function CarColorSelector({ carId, isSelected }: { carId: string; isSelected: bo
 }
 
 // ============== GARAGE ==============
+function GarageVehicleArt({
+  children,
+  className = '',
+}: {
+  section: 'bikes' | 'cars'
+  vehicleId: string
+  children: React.ReactNode
+  className?: string
+}) {
+  // Shared vehicle artwork already owns its right-facing orientation.
+  return <div className={className}>{children}</div>
+}
+
 function GarageShowroomPreview({
   state,
   section,
