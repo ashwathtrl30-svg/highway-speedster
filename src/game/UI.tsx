@@ -1945,7 +1945,7 @@ function CarIcon({ car }: { car: Car }) {
         <rect x="13" y="40" width="13" height="2.5" rx="1" fill="#f5f5f5"/>
         <rect x="76" y="39" width="10" height="3" rx="1" fill="#c7363d"/>
         <rect x="38" y="38" width="30" height="2" rx="1" fill="#dfe6ee" opacity="0.75"/>
-        <path d="M22 31 L26 28 L30 31" stroke="#9ba8b4" strokeWidth="1.3" fill="none"/>
+        <path d="M70 31 L74 28 L78 31" stroke="#9ba8b4" strokeWidth="1.3" fill="none"/>
       </svg>
     )
   }
