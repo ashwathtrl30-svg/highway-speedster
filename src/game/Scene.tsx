@@ -955,9 +955,15 @@ function RiderSegment({
 function FuturisticRider({
   position,
   scale = 0.70,
+  elbowX = 0.19,
+  handX = 0.20,
+  handZ = -0.82,
 }: {
   position: [number, number, number]
   scale?: number
+  elbowX?: number
+  handX?: number
+  handZ?: number
 }) {
   const suit = '#20252a'
   const suitEdge = '#0f1317'
@@ -1010,25 +1016,25 @@ function FuturisticRider({
         <sphereGeometry args={[0.105, 10, 8]} />
         <meshStandardMaterial color={red} metalness={0.42} roughness={0.30} />
       </mesh>
-      <RiderSegment start={[-0.16, 0.53, -0.07]} end={[-0.19, 0.28, -0.34]} radius={0.075} color={suit} />
-      <RiderSegment start={[-0.19, 0.28, -0.34]} end={[-0.20, -0.04, -0.82]} radius={0.065} color={suit} />
-      <RiderSegment start={[0.16, 0.53, -0.07]} end={[0.19, 0.28, -0.34]} radius={0.075} color={suit} />
-      <RiderSegment start={[0.19, 0.28, -0.34]} end={[0.20, -0.04, -0.82]} radius={0.065} color={suit} />
+      <RiderSegment start={[-0.16, 0.53, -0.07]} end={[-elbowX, 0.28, -0.34]} radius={0.075} color={suit} />
+      <RiderSegment start={[-elbowX, 0.28, -0.34]} end={[-handX, -0.04, handZ]} radius={0.065} color={suit} />
+      <RiderSegment start={[0.16, 0.53, -0.07]} end={[elbowX, 0.28, -0.34]} radius={0.075} color={suit} />
+      <RiderSegment start={[elbowX, 0.28, -0.34]} end={[handX, -0.04, handZ]} radius={0.065} color={suit} />
 
       {/* White/red suit accents and gloves. */}
-      <mesh position={[-0.19, 0.38, -0.22]} rotation={[0.1, 0, -0.04]}>
+      <mesh position={[-elbowX, 0.38, -0.22]} rotation={[0.1, 0, -0.04]}>
         <boxGeometry args={[0.18, 0.052, 0.035]} />
         <meshStandardMaterial color={white} metalness={0.22} roughness={0.45} />
       </mesh>
-      <mesh position={[0.19, 0.38, -0.22]} rotation={[0.1, 0, 0.04]}>
+      <mesh position={[elbowX, 0.38, -0.22]} rotation={[0.1, 0, 0.04]}>
         <boxGeometry args={[0.18, 0.052, 0.035]} />
         <meshStandardMaterial color={white} metalness={0.22} roughness={0.45} />
       </mesh>
-      <mesh position={[-0.20, -0.04, -0.83]}>
+      <mesh position={[-handX, -0.04, handZ - 0.01]}>
         <sphereGeometry args={[0.072, 9, 7]} />
         <meshStandardMaterial color={suitEdge} metalness={0.18} roughness={0.70} />
       </mesh>
-      <mesh position={[0.20, -0.04, -0.83]}>
+      <mesh position={[handX, -0.04, handZ - 0.01]}>
         <sphereGeometry args={[0.072, 9, 7]} />
         <meshStandardMaterial color={suitEdge} metalness={0.18} roughness={0.70} />
       </mesh>
@@ -1534,7 +1540,7 @@ function StratosBike({ bike }: { bike: Bike }) {
       </mesh>
 
       {/* Supplied futuristic rider reference, scaled down to fit this bike. */}
-      <FuturisticRider position={[0, 0.95, 0.08]} scale={0.70} />
+      <FuturisticRider position={[0, 0.98, 0.10]} scale={0.78} elbowX={0.23} handX={0.49} handZ={-0.82} />
     </>
   )
 }
@@ -1682,7 +1688,7 @@ function ZenithBike({ bike }: { bike: Bike }) {
       </mesh>
 
       {/* Supplied futuristic rider reference, scaled down to fit this bike. */}
-      <FuturisticRider position={[0, 0.92, 0.05]} scale={0.70} />
+      <FuturisticRider position={[0, 0.99, 0.06]} scale={0.80} elbowX={0.23} handX={0.50} handZ={-0.80} />
     </>
   )
 }
