@@ -1096,8 +1096,8 @@ function CarColorSelector({ carId, isSelected }: { carId: string; isSelected: bo
 }
 
 // ============== GARAGE ==============
-const shouldMirrorGarageVehicle = (section: 'bikes' | 'cars', vehicleId: string) =>
-  section === 'bikes' || vehicleId !== 'saber-swift'
+const shouldMirrorGarageVehicle = (section: 'bikes' | 'cars', _vehicleId: string) =>
+  section === 'bikes' || section === 'cars'
 
 function GarageVehicleArt({
   section,
