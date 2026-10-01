@@ -1937,12 +1937,10 @@ function TrafficRenderer({ vehiclesRef, getDimensions }: {
     const vehicles = vehiclesRef.current
     const state = getState()
 
-    // Traffic visual scale follows the car-scale reference even while the
-    // player is riding a bike. The player's bike size is untouched.
-    const trafficReferenceLength =
-      state.vehicleMode === 'car'
-        ? getPlayerVisualLength(state)
-        : getPlayerVisualLength({ ...state, vehicleMode: 'car' })
+    // Traffic uses the same fixed car-reference envelope in every run.
+    // This keeps vans/cars/buses visually consistent when the player is on a bike.
+    // The player's bike geometry and scale are untouched.
+    const trafficReferenceLength = 4.2
 
     const existingIds = new Set<number>()
 
