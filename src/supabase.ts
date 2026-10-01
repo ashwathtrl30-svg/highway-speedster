@@ -39,17 +39,32 @@ export async function ensureSupabaseAuth(): Promise<boolean> {
 export async function syncAnalyticsToSupabase(
   playerId: string, username: string, playtimeSeconds: number, highScore: number, totalCoins: number
 ) {
-  if (!playerId.trim() || !username.trim()) return
+  const cleanPlayerId = playerId.trim()
+  const cleanUsername = username.trim()
+  const safePlaytime = Math.floor(playtimeSeconds)
+  const safeHighScore = Math.floor(highScore)
+  const safeCoins = Math.max(0, Math.floor(totalCoins))
+
+  if (!cleanPlayerId || !cleanUsername) return
+  if (safePlaytime === 1 || safeHighScore === 1) return
+
   if (!(await ensureSupabaseAuth())) return
   const { data: session } = await supabase.auth.getSession()
   if (!session.session) return
-  const { error } = await supabase.from('user_analytics').upsert({
-    player_id: playerId, auth_user_id: session.session.user.id, username,
-    playtime_seconds: Math.max(0, Math.floor(playtimeSeconds)),
-    high_score: Math.max(0, Math.floor(highScore)),
-    total_coins: Math.max(0, Math.floor(totalCoins)),
-    last_updated: new Date().toISOString()
-  }, { onConflict: 'player_id' })
+
+  const payload: Record<string, unknown> = {
+    player_id: cleanPlayerId,
+    auth_user_id: session.session.user.id,
+    username: cleanUsername,
+    total_coins: safeCoins,
+    last_updated: new Date().toISOString(),
+  }
+
+  // Never write a one-second or one-point analytics value.
+  if (safePlaytime === 0 || safePlaytime >= 2) payload.playtime_seconds = Math.max(0, safePlaytime)
+  if (safeHighScore === 0 || safeHighScore >= 2) payload.high_score = Math.max(0, safeHighScore)
+
+  const { error } = await supabase.from('user_analytics').upsert(payload, { onConflict: 'player_id' })
   if (error) console.error('Error syncing analytics:', error)
 }
 
@@ -58,7 +73,8 @@ export async function recordPlaytimeEvent(playerId: string, username: string, se
   const cleanUsername = username.trim()
   const eventSeconds = Math.min(60, Math.floor(seconds))
 
-  if (!cleanPlayerId || !cleanUsername || eventSeconds <= 0) return
+  // A one-second analytics event is treated as noise/error and is never stored.
+  if (!cleanPlayerId || !cleanUsername || eventSeconds < 2) return
 
   try {
     // Prefer an authenticated session when available. When anonymous sign-ins
