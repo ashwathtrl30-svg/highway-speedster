@@ -6,7 +6,7 @@ const VEHICLE_FACING_RIGHT_STYLE = {
   display: 'block',
 } as const
 
-function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
+export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
   if (bike.id === 'blitz') {
     return (
       <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}>
@@ -295,7 +295,7 @@ function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
   return <span className="text-2xl sm:text-3xl">🏍️</span>
 }
 
-function CarIcon({ car }: { car: Car }) {
+export function CarIcon({ car }: { car: Car }) {
   const common = { fill: car.color, accent: car.accentColor }
 
   if (car.id === 'kanto-zip') {
