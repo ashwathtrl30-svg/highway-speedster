@@ -98,7 +98,7 @@ export const BIKE_SKINS: Record<string, BikeSkin[]> = {
   blitz: ['drifter-blue', 'getaway-orange', 'marine', 'matte-black'],
   apex: ['aurora-green', 'charcoal-black', 'rock-matte-black', 'canyon-red'],
   chronos: ['metallic-galaxy-gray', 'pearl-vigor-blue', 'candy-daring-red', 'glass-sparkle-black'],
-  stratos: ['mirror-coated-matte-spark-black', 'mirror-coated-spark-black-carbon-edition', 'custom-midnight', 'rainbow-finish'],
+  stratos: ['mirror-coated-matte-spark-black', 'mirror-coated-spark-black-carbon-edition', 'custom-midnight', 'candy-flat-blazed-green'],
   zenith: ['ducati-red', 'tricolore-livery', 'racing-black', 'winter-test'],
 }
 
@@ -127,7 +127,7 @@ export const SKIN_COLORS: Record<BikeSkin, { color: string; accentColor: string 
   'mirror-coated-matte-spark-black': { color: '#25282a', accentColor: '#a4abb0' },
   'mirror-coated-spark-black-carbon-edition': { color: '#16191c', accentColor: '#6f767c' },
   'custom-midnight': { color: '#101a2c', accentColor: '#49627f' },
-  'rainbow-finish': { color: '#6446a5', accentColor: '#53c7a2' },
+  'candy-flat-blazed-green': { color: '#17191c', accentColor: '#39c56a' },
 
   'ducati-red': { color: '#c9141d', accentColor: '#ff686d' },
   'tricolore-livery': { color: '#c81422', accentColor: '#f4f4f4' },
@@ -156,7 +156,7 @@ export const SKIN_NAMES: Record<BikeSkin, string> = {
   'mirror-coated-matte-spark-black': 'Mirror Coated Matte Spark Black',
   'mirror-coated-spark-black-carbon-edition': 'Mirror Coated Spark Black (Carbon Edition)',
   'custom-midnight': 'Custom Midnight',
-  'rainbow-finish': 'Rainbow Finish',
+  'candy-flat-blazed-green': 'Candy Flat Blazed Green',
   'ducati-red': 'Ducati Red',
   'tricolore-livery': 'Tricolore Livery',
   'racing-black': 'Racing Black',
@@ -174,18 +174,24 @@ export const SKIN_SWATCHES: Record<BikeSkin, string> = {
   'mirror-coated-matte-spark-black': 'linear-gradient(145deg,#8d959b,#171a1c)',
   'mirror-coated-spark-black-carbon-edition': 'linear-gradient(145deg,#59636b,#0d1013)',
   'custom-midnight': 'linear-gradient(145deg,#314b70,#0d1627)',
-  'rainbow-finish': 'linear-gradient(135deg,#e85a7a 0%,#f0c34e 24%,#58c487 48%,#4da4e8 72%,#8b5cf6 100%)',
+  'candy-flat-blazed-green': 'linear-gradient(145deg,#1c2024 0%,#0d1114 58%,#35c968 59%,#8bea9f 100%)',
   'ducati-red': '#c9141d',
   'tricolore-livery': 'linear-gradient(90deg,#c81422 0 38%,#f2f2f2 38% 66%,#2c8a52 66% 100%)',
   'racing-black': '#111315',
   'winter-test': 'linear-gradient(145deg,#f5f7f8 0 58%,#22262b 58% 78%,#c99a34 78% 100%)',
 }
 
+function migrateBikeSkin(skin: unknown): BikeSkin | null {
+  if (typeof skin !== 'string') return null
+  if (skin === 'rainbow-finish') return 'candy-flat-blazed-green'
+  return skin as BikeSkin
+}
+
 function normalizeBikeSkinSelections(raw: Record<string, unknown> = {}): Record<string, BikeSkin> {
   return Object.fromEntries(
     BIKES.map((bike) => {
       const available = BIKE_SKINS[bike.id] || []
-      const saved = typeof raw[bike.id] === 'string' ? raw[bike.id] as BikeSkin : null
+      const saved = migrateBikeSkin(raw[bike.id])
       const valid = saved && available.includes(saved)
       return [bike.id, valid ? saved : available[0]]
     })
@@ -194,7 +200,8 @@ function normalizeBikeSkinSelections(raw: Record<string, unknown> = {}): Record<
 
 function getBikeSkinOption(bikeId: string, skinId?: string): BikeSkin {
   const available = BIKE_SKINS[bikeId] || []
-  return (skinId && available.includes(skinId as BikeSkin) ? skinId as BikeSkin : available[0])
+  const migrated = migrateBikeSkin(skinId)
+  return (migrated && available.includes(migrated) ? migrated : available[0])
 }
 
 
@@ -467,7 +474,7 @@ function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHig
         selectedBikeId: typeof data.selectedBikeId === 'string' && BIKES.some((bike) => bike.id === migrate(data.selectedBikeId)) ? migrate(data.selectedBikeId) : BIKES[0].id,
         selectedSkin: getBikeSkinOption(
           migrate(data.selectedBikeId && typeof data.selectedBikeId === 'string' ? data.selectedBikeId : BIKES[0].id),
-          typeof data.selectedSkin === 'string' ? data.selectedSkin : undefined
+          migrateBikeSkin(data.selectedSkin) || undefined
         ),
         selectedCarId,
         carColors,
@@ -685,9 +692,10 @@ async function loadCloudProgress(username: string) {
   const carColor = getCarColorOption(carId, selectedCarColor)
   const bikeSkin = getBikeSkinOption(
     bikeId,
-    typeof cloud.selectedSkin === 'string' ? cloud.selectedSkin : undefined
-      || (cloud.bikeSkins?.[bikeId] as BikeSkin)
-      || current.bikeSkins[bikeId]
+    migrateBikeSkin(cloud.selectedSkin)
+      || migrateBikeSkin(cloud.bikeSkins?.[bikeId])
+      || migrateBikeSkin(current.bikeSkins[bikeId])
+      || undefined
   )
   const bike = BIKES.find((item) => item.id === bikeId) || BIKES[0]
   const colors = SKIN_COLORS[bikeSkin]
