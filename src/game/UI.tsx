@@ -997,7 +997,8 @@ function GarageShowroomPreview({
   section: 'bikes' | 'cars'
 }) {
   const isBike = section === 'bikes'
-  const isSectionSelected = state.vehicleMode === section
+  const selectedMode = isBike ? 'bike' : 'car'
+  const isSectionSelected = state.vehicleMode === selectedMode
   const vehicle = isSectionSelected
     ? (isBike ? state.selectedBike : state.selectedCar)
     : null
