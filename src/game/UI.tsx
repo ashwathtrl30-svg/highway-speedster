@@ -1148,7 +1148,7 @@ function GarageShowroomPreview({
 
     // Changing the BIKES/CARS filter must not select the previously saved
     // vehicle from the other category.
-    if (!isSectionSelected || !vehicle) {
+    if (!isSectionSelected || !vehicle || !vehicleId) {
       previousVehicleRef.current = null
       setSwitchFx(null)
       return
@@ -1437,7 +1437,7 @@ function GarageShowroomPreview({
             <div
               className="absolute left-1/2 top-[58%] h-24 w-40 sm:h-28 sm:w-52 rounded-full border border-white/25 bg-white/[0.025] blur-[1px]"
               style={{
-                color: vehicle.accentColor,
+                color: switchFx.vehicle.accentColor,
                 borderColor: `color-mix(in srgb, currentColor 48%, white 20%)`,
                 boxShadow: `0 0 38px color-mix(in srgb, currentColor 28%, transparent)`,
                 animation: 'hsGarageSwitchRing 470ms cubic-bezier(.16,.8,.18,1) both',
@@ -1447,7 +1447,7 @@ function GarageShowroomPreview({
             <div
               className="absolute left-1/2 top-[52%] h-16 w-16 rounded-full border-2 border-white/25"
               style={{
-                color: vehicle.color,
+                color: switchFx.vehicle.color,
                 boxShadow: `0 0 40px 10px color-mix(in srgb, currentColor 24%, transparent)`,
                 animation: 'hsGarageSwitchBurst 470ms cubic-bezier(.16,.8,.18,1) both',
               }}
@@ -1556,7 +1556,7 @@ function GarageShowroomPreview({
           </div>
         )}
 
-        {skinFx && (
+        {skinFx && vehicle && (
           <div className="absolute inset-0 z-[25] pointer-events-none overflow-hidden">
             <div
               className="absolute left-1/2 top-[53%] h-20 w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
