@@ -1756,7 +1756,7 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
                       {isUnlocked ? (
                         <div
                           className="w-full h-full transition-transform duration-300 group-hover:scale-[1.06]"
-                          style={{ transform: 'scaleX(-1)' }}
+                          style={{ transform: 'none' }}
                         >
                           <BikeIcon bike={bike} />
                         </div>
@@ -1764,7 +1764,7 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
                         <>
                           <div
                             className="w-full h-full opacity-25 grayscale"
-                            style={{ transform: 'scaleX(-1)' }}
+                            style={{ transform: 'none' }}
                           >
                             <BikeIcon bike={bike} />
                           </div>
@@ -1865,7 +1865,7 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
                       {isUnlocked ? (
                         <div
                           className="w-full h-full transition-transform duration-300 group-hover:scale-[1.06]"
-                          style={{ transform: car.id === 'saber-swift' ? undefined : 'scaleX(-1)' }}
+                          style={{ transform: 'none' }}
                         >
                           <CarIcon car={car} />
                         </div>
@@ -1873,7 +1873,7 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
                         <>
                           <div
                             className="w-full h-full opacity-25 grayscale"
-                            style={{ transform: car.id === 'saber-swift' ? undefined : 'scaleX(-1)' }}
+                            style={{ transform: 'none' }}
                           >
                             <CarIcon car={car} />
                           </div>
