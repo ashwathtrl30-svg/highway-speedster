@@ -1901,6 +1901,7 @@ function TrafficSystem() {
   const lastGameStateRef = useRef<string>('menu')
   const survivalTimeRef = useRef(0)
   const playtimeTrackerRef = useRef(0)
+  const previousPlayerXRef = useRef(0)
 
   const vehicleColors = useMemo(() => [
     '#e74c3c', '#3498db', '#27ae60', '#f39c12', '#8e44ad',
@@ -1928,6 +1929,7 @@ function TrafficSystem() {
       spawnTimerRef.current = 0
       survivalTimeRef.current = 0
       playtimeTrackerRef.current = 0
+      previousPlayerXRef.current = state.playerX
     }
     lastGameStateRef.current = state.gameState
     
@@ -2017,8 +2019,14 @@ function TrafficSystem() {
       }
 
       // Collision detection
-      const [vw, , vl] = getVehicleDimensions(v.type)
-      const collisionX = lateralDist < (vw / 2 + 0.35)
+      const [vw] = getVehicleDimensions(v.type)
+      const collisionHalfWidth = vw / 2 + 0.35
+      const collisionX = sweptSegmentOverlapsRange(
+        previousPlayerXRef.current,
+        playerX,
+        vehicleX - collisionHalfWidth,
+        vehicleX + collisionHalfWidth,
+      )
       const collisionZ = sweptSegmentOverlapsRange(
         previousZ,
         v.z,
@@ -2043,6 +2051,8 @@ function TrafficSystem() {
         return
       }
     }
+
+    previousPlayerXRef.current = playerX
 
     // Score: 180 points per second base rate (continuous), 2x or 4x if multiplier active
     const scoreRate = state.multiplierActive ? (state.multiplier4x ? 720 : 360) : 180
