@@ -278,3 +278,15 @@ button:active:not(:disabled) { transform: scale(.985) !important; }
   }
   button:active:not(:disabled) { transform: none !important; }
 }
+
+
+/* Dedicated scroll container for analytics pages. */
+.hs-scroll-page {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
