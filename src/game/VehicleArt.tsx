@@ -11,7 +11,7 @@ function BikeMenuRider({ compact = false }: { compact?: boolean }) {
   const scale = compact ? 0.86 : 0.78
 
   return (
-    <g transform={\`translate(8 -1) scale(\${scale})\`}>
+    <g transform={`translate(8 -1) scale(${scale})`}>
       {/* Far leg, kept darker so the near-side ">" bent leg reads clearly. */}
       <path
         d="M49 30 C46 31 43 33 40 35 L46.5 41.8"
