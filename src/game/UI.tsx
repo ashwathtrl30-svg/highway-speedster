@@ -1809,6 +1809,9 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
     setDraftQuantity('')
   }
 
+  // Only the three store special power-ups are selectable before a run.
+  // The normal Magnet and 2× Score remain gameplay pickups and are intentionally
+  // not offered on this pre-run screen.
   const powerUps: Array<{
     type: PowerUpType
     icon: string
@@ -1819,15 +1822,6 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
     selectedBorderClass: string
   }> = [
     {
-      type: 'magnet',
-      icon: '🧲',
-      title: 'COIN MAGNET',
-      description: 'Auto-collect coins for 10s per unit',
-      availableClass: 'text-blue-400',
-      borderClass: 'border-blue-500/30 bg-gradient-to-r from-blue-500/20 to-blue-600/20',
-      selectedBorderClass: 'border-blue-400',
-    },
-    {
       type: 'magnet2x',
       icon: '🧲',
       title: '2× COIN MAGNET',
@@ -1835,15 +1829,6 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
       availableClass: 'text-cyan-400',
       borderClass: 'border-cyan-500/30 bg-gradient-to-r from-cyan-500/20 to-blue-500/20',
       selectedBorderClass: 'border-cyan-400',
-    },
-    {
-      type: 'multiplier2x',
-      icon: '⭐',
-      title: '2× SCORE',
-      description: 'Double score for 10s per unit',
-      availableClass: 'text-yellow-400',
-      borderClass: 'border-yellow-500/30 bg-gradient-to-r from-yellow-500/20 to-orange-500/20',
-      selectedBorderClass: 'border-yellow-400',
     },
     {
       type: 'multiplier4x',
@@ -1857,7 +1842,7 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
     {
       type: 'shield',
       icon: '🛡️',
-      title: 'SHIELD',
+      title: '2× SHIELD',
       description: 'Protects from 2 crashes per unit',
       availableClass: 'text-green-400',
       borderClass: 'border-green-500/30 bg-gradient-to-r from-green-500/20 to-emerald-500/20',
