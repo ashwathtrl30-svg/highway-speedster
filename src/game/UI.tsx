@@ -150,60 +150,192 @@ export function AccountSetup({ onComplete }: { onComplete: () => void }) {
   }
 
   return (
-    <div className="absolute inset-0 z-[120] flex items-center justify-center overflow-y-auto bg-[radial-gradient(circle_at_50%_20%,rgba(65,94,112,.42),transparent_35%),linear-gradient(145deg,#091016,#111b22_50%,#07090c)] px-4 py-8 text-white">
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-black/35 p-5 sm:p-7 shadow-2xl backdrop-blur-2xl">
-        <div className="mb-6 text-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-amber-300/75">HIGHWAY SPEEDSTER</p>
-          <h1 className="mt-2 text-3xl sm:text-4xl font-black tracking-tight">Your Account</h1>
-          <p className="mt-2 text-sm leading-6 text-white/55">Your account ID keeps your progress separate from everyone else, even when names are identical.</p>
-        </div>
+    <div className="absolute inset-0 z-[120] overflow-hidden bg-[#0a1117] text-white">
+      <style>{`
+        @keyframes hsAccountRoad {
+          from { transform: translate3d(0, 0, 0); }
+          to { transform: translate3d(0, 72px, 0); }
+        }
+        @keyframes hsAccountDrift {
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: .24; }
+          50% { transform: translate3d(0, -10px, 0) scale(1.04); opacity: .42; }
+        }
+        @keyframes hsAccountSweep {
+          0% { transform: translate3d(-65%, 0, 0) rotate(12deg); opacity: 0; }
+          15% { opacity: .28; }
+          70% { opacity: .1; }
+          100% { transform: translate3d(75%, 0, 0) rotate(12deg); opacity: 0; }
+        }
+        @keyframes hsAccountGlow {
+          0%, 100% { opacity: .38; transform: scale(1); }
+          50% { opacity: .62; transform: scale(1.08); }
+        }
+        @keyframes hsAccountCardIn {
+          from { opacity: 0; transform: perspective(1100px) rotateX(7deg) translateY(18px) scale(.985); }
+          to { opacity: 1; transform: perspective(1100px) rotateX(0deg) translateY(0) scale(1); }
+        }
+        @keyframes hsAccountOptionIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .hs-account-road-lines {
+          animation: hsAccountRoad 1.25s linear infinite;
+          background-image:
+            linear-gradient(90deg, transparent 0 48.9%, rgba(255,255,255,.16) 48.9% 49.25%, transparent 49.25% 50.75%, rgba(255,255,255,.16) 50.75% 51.1%, transparent 51.1%),
+            repeating-linear-gradient(180deg, transparent 0 34px, rgba(255,255,255,.12) 34px 40px, transparent 40px 78px);
+          background-size: 100% 100%, 100% 100%;
+        }
+        .hs-account-drift {
+          animation: hsAccountDrift 2.6s ease-in-out infinite;
+        }
+        .hs-account-sweep {
+          animation: hsAccountSweep 4.5s ease-in-out infinite;
+        }
+        .hs-account-glow {
+          animation: hsAccountGlow 3.4s ease-in-out infinite;
+        }
+        .hs-account-option {
+          transform: translateZ(0);
+          transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+        }
+        .hs-account-option:hover {
+          transform: translate3d(0, -2px, 0) scale(1.01);
+        }
+        .hs-account-option:active {
+          transform: translate3d(0, 1px, 0) scale(.995);
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .hs-account-road-lines,
+          .hs-account-drift,
+          .hs-account-sweep,
+          .hs-account-glow,
+          .hs-account-option {
+            animation: none !important;
+            transition: none !important;
+          }
+        }
+      `}</style>
 
-        {mode === 'choice' && (
-          <div className="space-y-3">
-            <button onClick={beginNewUser} className="w-full rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-4 text-left font-black text-black shadow-lg shadow-orange-500/20 transition-all active:scale-[.98]">
-              <span className="block text-lg">NEW USER</span>
-              <span className="mt-1 block text-xs font-semibold text-black/65">Start a completely fresh account with zero progress.</span>
-            </button>
-            <button onClick={() => { setMode('existing'); setError('') }} className="w-full rounded-2xl border border-white/12 bg-white/[0.055] px-5 py-4 text-left font-black transition-all hover:bg-white/[0.09] active:scale-[.98]">
-              <span className="block text-lg">ALREADY HAVE AN ACCOUNT</span>
-              <span className="mt-1 block text-xs font-semibold text-white/50">Use your account ID to load the same account on this device.</span>
-            </button>
-          </div>
-        )}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-[62%] bg-[radial-gradient(ellipse_at_50%_78%,rgba(97,141,161,.34),transparent_58%),linear-gradient(180deg,#0d1820_0%,#101d25_48%,#14242b_100%)]" />
+        <div className="absolute left-1/2 top-[18%] h-[46%] w-[72%] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(255,190,80,.12),transparent_68%)] blur-2xl hs-account-glow" />
+        <div
+          className="absolute left-1/2 top-[46%] h-[64%] w-[155%] -translate-x-1/2 origin-top bg-[#0d151a]"
+          style={{ clipPath: 'polygon(43% 0, 57% 0, 100% 100%, 0 100%)' }}
+        />
+        <div
+          className="hs-account-road-lines absolute left-1/2 top-[46%] h-[64%] w-[155%] -translate-x-1/2 origin-top opacity-75"
+          style={{ clipPath: 'polygon(43% 0, 57% 0, 100% 100%, 0 100%)' }}
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(115deg,transparent_0%,transparent_41%,rgba(255,188,86,.10)_45%,transparent_49%,transparent_100%)]" />
+        <div className="hs-account-sweep absolute left-0 top-[35%] h-32 w-1/3 bg-[linear-gradient(90deg,transparent,rgba(255,205,120,.22),transparent)] blur-xl" />
+        <div className="hs-account-drift absolute left-[12%] top-[28%] h-1.5 w-1.5 rounded-full bg-white/50" />
+        <div className="hs-account-drift absolute right-[17%] top-[23%] h-1 w-1 rounded-full bg-white/40 [animation-delay:.7s]" />
+        <div className="hs-account-drift absolute left-[22%] bottom-[23%] h-1 w-1 rounded-full bg-white/40 [animation-delay:1.1s]" />
+        <div className="absolute inset-x-0 top-[46%] h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+      </div>
 
-        {mode === 'new' && (
-          <div>
-            <div className="rounded-2xl border border-emerald-300/20 bg-emerald-400/[0.07] p-4">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-200/65">YOUR ACCOUNT ID</p>
-              <button onClick={copyAccountId} className="mt-2 w-full break-all rounded-xl border border-white/10 bg-black/25 px-3 py-3 text-left font-mono text-sm leading-6 text-emerald-100 transition-colors hover:bg-black/35">
-                {newAccountId}
-              </button>
-              <p className="mt-2 text-xs leading-5 text-white/55">Store this safely. You will use it to open this exact account on another device.</p>
-              <p className="mt-1 text-xs font-semibold text-emerald-200/75">{copied ? 'Copied.' : 'Tap the ID to copy it.'}</p>
+      <div className="relative flex h-full items-center justify-center overflow-y-auto px-4 py-8 sm:px-6">
+        <div className="relative w-full max-w-[470px] [animation:hsAccountCardIn_500ms_ease-out]">
+          <div className="absolute -inset-px rounded-[28px] bg-[linear-gradient(135deg,rgba(255,220,150,.28),rgba(255,255,255,.04)_34%,rgba(255,255,255,.02)_70%,rgba(88,172,200,.20))] blur-[1px]" />
+          <div className="relative overflow-hidden rounded-[28px] border border-white/12 bg-[#0d151b]/82 p-5 shadow-[0_26px_90px_rgba(0,0,0,.45),0_8px_28px_rgba(0,0,0,.22)] backdrop-blur-2xl sm:p-7">
+            <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-amber-200/60 to-transparent" />
+            <div className="pointer-events-none absolute -right-20 -top-20 h-44 w-44 rounded-full bg-amber-300/8 blur-3xl" />
+
+            <div className="relative mb-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-[0.28em] text-amber-200/70">HIGHWAY SPEEDSTER</p>
+                  <h1 className="mt-2 text-[30px] font-black tracking-[-0.03em] text-white sm:text-[36px]">Welcome, rider.</h1>
+                </div>
+                <div className="hidden rounded-2xl border border-white/10 bg-white/[0.045] px-3 py-2 text-right sm:block">
+                  <p className="text-[8px] font-black uppercase tracking-[0.22em] text-white/35">CROSS-DEVICE</p>
+                  <p className="mt-1 text-[10px] font-bold text-emerald-200/80">READY</p>
+                </div>
+              </div>
+              <p className="mt-3 max-w-[390px] text-[13px] leading-5 text-white/55">
+                Create a fresh account or reconnect an existing one. Your account ID keeps your progress separate from every other rider.
+              </p>
             </div>
-            <input value={username} onChange={(e) => { setUsername(e.target.value); setError('') }} onKeyDown={(e) => e.key === 'Enter' && finishNewUser()} placeholder="Display name" maxLength={40} autoFocus className="mt-4 w-full rounded-xl border border-white/12 bg-white/7 px-4 py-3 text-center text-lg font-bold text-white placeholder-white/30 outline-none focus:border-amber-300/60" />
-            {error && <p className="mt-2 text-center text-xs font-semibold text-red-300">{error}</p>}
-            <button onClick={finishNewUser} disabled={!username.trim()} className="mt-4 w-full rounded-xl bg-gradient-to-r from-emerald-400 to-green-500 py-3.5 font-black text-black disabled:cursor-not-allowed disabled:opacity-40">CREATE ACCOUNT</button>
-            <button onClick={() => setMode('choice')} className="mt-2 w-full py-2 text-xs font-bold text-white/45 hover:text-white/70">BACK</button>
-          </div>
-        )}
 
-        {mode === 'existing' && (
-          <div>
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/45">ACCOUNT ID</label>
-            <textarea value={accountId} onChange={(e) => { setAccountId(e.target.value); setError('') }} placeholder="Paste your account ID here" rows={3} autoFocus className="mt-2 w-full resize-none rounded-xl border border-white/12 bg-white/7 px-4 py-3 font-mono text-sm text-white placeholder-white/30 outline-none focus:border-amber-300/60" />
-            {error && <p className="mt-2 text-center text-xs font-semibold text-red-300">{error}</p>}
-            <button onClick={() => void connectExisting()} disabled={connecting || !accountId.trim()} className="mt-4 w-full rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 py-3.5 font-black text-black disabled:cursor-not-allowed disabled:opacity-40">
-              {connecting ? 'CONNECTING…' : 'CONNECT ACCOUNT'}
-            </button>
-            <button onClick={() => setMode('choice')} disabled={connecting} className="mt-2 w-full py-2 text-xs font-bold text-white/45 hover:text-white/70">BACK</button>
+            {mode === 'choice' && (
+              <div className="relative space-y-3">
+                <button
+                  onClick={beginNewUser}
+                  className="hs-account-option group w-full rounded-2xl border border-amber-200/25 bg-[linear-gradient(135deg,rgba(255,190,70,.98),rgba(241,118,36,.98))] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,.28),0_12px_30px_rgba(246,124,39,.18)]"
+                  style={{ animation: 'hsAccountOptionIn 360ms ease-out both' }}
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-black/10 bg-white/18 text-[13px] font-black text-black shadow-[inset_0_1px_0_rgba(255,255,255,.30)]">01</div>
+                    <div className="min-w-0 flex-1">
+                      <span className="block text-[15px] font-black tracking-wide text-black sm:text-base">NEW USER</span>
+                      <span className="mt-1 block text-[11px] font-semibold leading-4 text-black/62">
+                        Start fresh with a brand-new account and zero progress.
+                      </span>
+                    </div>
+                    <span className="text-lg font-black text-black/60 transition-transform duration-200 group-hover:translate-x-1">→</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => { setMode('existing'); setError('') }}
+                  className="hs-account-option group w-full rounded-2xl border border-white/12 bg-white/[0.045] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,.05),0_12px_28px_rgba(0,0,0,.16)] hover:border-white/20 hover:bg-white/[0.07]"
+                  style={{ animation: 'hsAccountOptionIn 360ms 90ms ease-out both' }}
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.055] text-[13px] font-black text-white/75">02</div>
+                    <div className="min-w-0 flex-1">
+                      <span className="block text-[15px] font-black tracking-wide text-white sm:text-base">ALREADY HAVE AN ACCOUNT</span>
+                      <span className="mt-1 block text-[11px] font-semibold leading-4 text-white/48">
+                        Enter your account ID to continue with the same cloud progress.
+                      </span>
+                    </div>
+                    <span className="text-lg font-black text-white/38 transition-transform duration-200 group-hover:translate-x-1">→</span>
+                  </div>
+                </button>
+
+                <div className="mt-4 flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-[0.22em] text-white/28">
+                  <span className="h-px w-10 bg-white/10" />
+                  YOUR PROGRESS, YOUR ACCOUNT
+                  <span className="h-px w-10 bg-white/10" />
+                </div>
+              </div>
+            )}
+
+            {mode === 'new' && (
+              <div>
+                <div className="rounded-2xl border border-emerald-300/20 bg-emerald-400/[0.07] p-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-200/65">YOUR ACCOUNT ID</p>
+                  <button onClick={copyAccountId} className="mt-2 w-full break-all rounded-xl border border-white/10 bg-black/25 px-3 py-3 text-left font-mono text-sm leading-6 text-emerald-100 transition-colors hover:bg-black/35">
+                    {newAccountId}
+                  </button>
+                  <p className="mt-2 text-xs leading-5 text-white/55">Store this safely. You will use it to open this exact account on another device.</p>
+                  <p className="mt-1 text-xs font-semibold text-emerald-200/75">{copied ? 'Copied.' : 'Tap the ID to copy it.'}</p>
+                </div>
+                <input value={username} onChange={(e) => { setUsername(e.target.value); setError('') }} onKeyDown={(e) => e.key === 'Enter' && finishNewUser()} placeholder="Display name" maxLength={40} autoFocus className="mt-4 w-full rounded-xl border border-white/12 bg-white/7 px-4 py-3 text-center text-lg font-bold text-white placeholder-white/30 outline-none focus:border-amber-300/60" />
+                {error && <p className="mt-2 text-center text-xs font-semibold text-red-300">{error}</p>}
+                <button onClick={finishNewUser} disabled={!username.trim()} className="mt-4 w-full rounded-xl bg-gradient-to-r from-emerald-400 to-green-500 py-3.5 font-black text-black disabled:cursor-not-allowed disabled:opacity-40">CREATE ACCOUNT</button>
+                <button onClick={() => setMode('choice')} className="mt-2 w-full py-2 text-xs font-bold text-white/45 hover:text-white/70">BACK</button>
+              </div>
+            )}
+
+            {mode === 'existing' && (
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/45">ACCOUNT ID</label>
+                <textarea value={accountId} onChange={(e) => { setAccountId(e.target.value); setError('') }} placeholder="Paste your account ID here" rows={3} autoFocus className="mt-2 w-full resize-none rounded-xl border border-white/12 bg-white/7 px-4 py-3 font-mono text-sm text-white placeholder-white/30 outline-none focus:border-amber-300/60" />
+                {error && <p className="mt-2 text-center text-xs font-semibold text-red-300">{error}</p>}
+                <button onClick={() => void connectExisting()} disabled={connecting || !accountId.trim()} className="mt-4 w-full rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 py-3.5 font-black text-black disabled:cursor-not-allowed disabled:opacity-40">
+                  {connecting ? 'CONNECTING…' : 'CONNECT ACCOUNT'}
+                </button>
+                <button onClick={() => setMode('choice')} disabled={connecting} className="mt-2 w-full py-2 text-xs font-bold text-white/45 hover:text-white/70">BACK</button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   )
 }
-
 function AccountProfile({ onBack }: { onBack: () => void }) {
   const state = useGameStore()
   const [editing, setEditing] = useState(false)
