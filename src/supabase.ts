@@ -41,31 +41,26 @@ export async function syncAnalyticsToSupabase(
 ) {
   const cleanPlayerId = playerId.trim()
   const cleanUsername = username.trim()
-  const safePlaytime = Math.floor(playtimeSeconds)
-  const safeHighScore = Math.floor(highScore)
+  const safePlaytime = Math.max(0, Math.floor(playtimeSeconds))
+  const safeHighScore = Math.max(0, Math.floor(highScore))
   const safeCoins = Math.max(0, Math.floor(totalCoins))
 
   if (!cleanPlayerId || !cleanUsername) return
-  if (
-    (safePlaytime < 0 || safePlaytime === 1) &&
-    (safeHighScore < 0 || safeHighScore === 1)
-  ) return
-
   if (!(await ensureSupabaseAuth())) return
   const { data: session } = await supabase.auth.getSession()
   if (!session.session) return
 
-  const payload: Record<string, unknown> = {
+  // Analytics values are lossless at whole-second / whole-point precision.
+  // A valid value of exactly 1 is written exactly as 1.
+  const payload = {
     player_id: cleanPlayerId,
     auth_user_id: session.session.user.id,
     username: cleanUsername,
+    playtime_seconds: safePlaytime,
+    high_score: safeHighScore,
     total_coins: safeCoins,
     last_updated: new Date().toISOString(),
   }
-
-  // Never write a one-second or one-point analytics value.
-  if (safePlaytime === 0 || safePlaytime >= 2) payload.playtime_seconds = Math.max(0, safePlaytime)
-  if (safeHighScore === 0 || safeHighScore >= 2) payload.high_score = Math.max(0, safeHighScore)
 
   const { error } = await supabase.from('user_analytics').upsert(payload, { onConflict: 'player_id' })
   if (error) console.error('Error syncing analytics:', error)
@@ -76,8 +71,7 @@ export async function recordPlaytimeEvent(playerId: string, username: string, se
   const cleanUsername = username.trim()
   const eventSeconds = Math.min(60, Math.floor(seconds))
 
-  // A one-second analytics event is treated as noise/error and is never stored.
-  if (!cleanPlayerId || !cleanUsername || eventSeconds < 2) return
+  if (!cleanPlayerId || !cleanUsername || eventSeconds <= 0) return
 
   try {
     // Prefer an authenticated session when available. When anonymous sign-ins
