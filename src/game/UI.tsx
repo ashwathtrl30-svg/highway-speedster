@@ -629,6 +629,19 @@ export function MainMenu() {
           0%, 100% { transform: translateY(0) rotate(-1deg); }
           50% { transform: translateY(-7px) rotate(1deg); }
         }
+        @keyframes hsMenuExhaustSmoke {
+          0% { transform: translate3d(0, 2px, 0) scale(.42); opacity: 0; filter: blur(1.5px); }
+          12% { opacity: .24; }
+          44% { opacity: .18; }
+          100% { transform: translate3d(18px, -34px, 0) scale(1.55); opacity: 0; filter: blur(5px); }
+        }
+        .hs-menu-exhaust-smoke {
+          animation: hsMenuExhaustSmoke 2.35s ease-out infinite;
+          transform-origin: center;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .hs-menu-exhaust-smoke { animation: none; opacity: .12; transform: scale(.9); }
+        }
         @keyframes hsMenuGlow {
           0%, 100% { opacity: .18; transform: scale(.94); }
           50% { opacity: .34; transform: scale(1.04); }
@@ -861,6 +874,21 @@ export function MainMenu() {
               className="absolute bottom-8 left-1/2 h-20 w-52 sm:w-64 -translate-x-1/2 rounded-[50%] bg-amber-300/10 blur-2xl"
               style={{ animation: 'hsMenuGlow 3.7s ease-in-out infinite' }}
             />
+            <div className="absolute inset-0 pointer-events-none z-[1]" aria-hidden="true">
+              <div className="absolute left-[66%] top-[53%] h-5 w-5 sm:left-[67%] sm:top-[53%]">
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <span
+                    key={i}
+                    className="hs-menu-exhaust-smoke absolute left-0 top-0 block rounded-full bg-slate-200/30 shadow-[0_0_18px_rgba(210,218,224,.18)]"
+                    style={{
+                      width: `${7 + (i % 3) * 3}px`,
+                      height: `${7 + (i % 3) * 3}px`,
+                      animationDelay: `${i * 0.34 - 1.7}s`,
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
             <div
               key={heroVehicle.id}
               className="absolute inset-0 flex items-center justify-center"
