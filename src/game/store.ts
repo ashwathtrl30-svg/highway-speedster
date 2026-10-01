@@ -390,6 +390,7 @@ export interface GameData {
   shieldActive: boolean
   shieldCount: number
   username: string
+  nameEditsUsed: number
   totalPlaytime: number
   userPlaytime: Record<string, number>
   playtimeHistory: PlaytimeEntry[]
