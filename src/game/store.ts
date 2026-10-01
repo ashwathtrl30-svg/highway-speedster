@@ -33,6 +33,7 @@ export type BikeSkin =
   | 'aurora-green' | 'charcoal-black' | 'rock-matte-black' | 'canyon-red'
   | 'metallic-galaxy-gray' | 'pearl-vigor-blue' | 'candy-daring-red' | 'glass-sparkle-black'
   | 'mirror-coated-matte-spark-black' | 'mirror-coated-spark-black-carbon-edition' | 'custom-midnight' | 'rainbow-finish'
+  | 'deep-crimson' | 'candy-flat-blazed-green'
   | 'ducati-red' | 'tricolore-livery' | 'racing-black' | 'winter-test'
 
 
@@ -85,7 +86,7 @@ function normalizeCarColorSelections(raw: Record<string, unknown> = {}): Record<
       const valid = available.some((option) => option.id === saved)
       return [car.id, valid ? saved : fallback]
     })
-  )
+  ) as Record<string, string>
 }
 
 function getCarColorOption(carId: string, colorId?: string): CarColorOption | null {
@@ -196,7 +197,7 @@ function normalizeBikeSkinSelections(raw: Record<string, unknown> = {}): Record<
       const valid = saved && available.includes(saved)
       return [bike.id, valid ? saved : available[0]]
     })
-  )
+  ) as Record<string, BikeSkin>
 }
 
 function getBikeSkinOption(bikeId: string, skinId?: string): BikeSkin {
