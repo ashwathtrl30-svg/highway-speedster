@@ -783,6 +783,104 @@ void main() {
 }
 `
 
+function CrashFireEffect({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
+  const groupRef = useRef<THREE.Group>(null)
+  const glowRef = useRef<THREE.PointLight>(null)
+  const isCar = vehicleMode === 'car'
+  const baseScale = isCar ? 1.18 : 0.82
+
+  useFrame(() => {
+    if (!groupRef.current) return
+
+    const t = performance.now() * 0.01
+    const flicker = 0.92 + Math.sin(t * 2.1) * 0.08 + Math.sin(t * 4.7) * 0.05
+    groupRef.current.scale.set(baseScale * flicker, baseScale * flicker, baseScale * flicker)
+    groupRef.current.rotation.y = Math.sin(t * 0.35) * 0.12
+
+    if (glowRef.current) {
+      glowRef.current.intensity = (isCar ? 3.4 : 2.5) + Math.sin(t * 2.6) * 0.7
+      glowRef.current.distance = isCar ? 6.2 : 4.8
+    }
+  })
+
+  const flames = isCar
+    ? [
+        { x: -0.62, y: 0.62, z: -0.62, sx: 0.46, sy: 1.08, sz: 0.46, phase: 0.0 },
+        { x: 0.0, y: 0.72, z: -0.92, sx: 0.58, sy: 1.28, sz: 0.58, phase: 0.9 },
+        { x: 0.64, y: 0.6, z: -0.58, sx: 0.48, sy: 1.02, sz: 0.48, phase: 1.7 },
+        { x: -0.25, y: 0.52, z: 0.15, sx: 0.4, sy: 0.92, sz: 0.4, phase: 2.3 },
+        { x: 0.34, y: 0.5, z: 0.12, sx: 0.42, sy: 0.88, sz: 0.42, phase: 3.1 },
+      ]
+    : [
+        { x: -0.28, y: 0.56, z: -0.52, sx: 0.28, sy: 0.72, sz: 0.28, phase: 0.0 },
+        { x: 0.0, y: 0.64, z: -0.76, sx: 0.34, sy: 0.92, sz: 0.34, phase: 1.0 },
+        { x: 0.28, y: 0.55, z: -0.48, sx: 0.3, sy: 0.78, sz: 0.3, phase: 1.8 },
+        { x: 0.0, y: 0.48, z: 0.18, sx: 0.24, sy: 0.62, sz: 0.24, phase: 2.6 },
+      ]
+
+  return (
+    <group ref={groupRef} position={[0, 0.18, 0]}>
+      <pointLight ref={glowRef} position={[0, 0.72, -0.35]} color="#ff6a00" intensity={2.5} distance={5} decay={2} />
+
+      {flames.map((flame, index) => (
+        <group
+          key={index}
+          position={[flame.x, flame.y, flame.z]}
+          rotation={[0, flame.phase * 0.4, (index % 2 === 0 ? -0.12 : 0.12)]}
+        >
+          <mesh>
+            <coneGeometry args={[0.16, 0.72, 7]} />
+            <meshStandardMaterial
+              color="#ff5a00"
+              emissive="#ff2400"
+              emissiveIntensity={3.8}
+              roughness={0.28}
+              metalness={0.02}
+              transparent
+              opacity={0.88}
+            />
+          </mesh>
+          <mesh scale={[0.58, 0.62, 0.58]} position={[0, -0.05, 0]}>
+            <coneGeometry args={[0.16, 0.62, 7]} />
+            <meshStandardMaterial
+              color="#ffd34a"
+              emissive="#ff9d00"
+              emissiveIntensity={4.6}
+              roughness={0.2}
+              metalness={0}
+              transparent
+              opacity={0.95}
+            />
+          </mesh>
+          <mesh scale={[0.34, 0.34, 0.34]} position={[0, -0.16, 0]}>
+            <sphereGeometry args={[0.34, 8, 8]} />
+            <meshBasicMaterial color="#fff1b0" transparent opacity={0.9} />
+          </mesh>
+        </group>
+      ))}
+
+      <mesh position={[0, 1.45, -0.25]} scale={[0.9, 1.6, 0.9]}>
+        <sphereGeometry args={[0.26, 10, 10]} />
+        <meshStandardMaterial
+          color="#5b5e62"
+          roughness={1}
+          transparent
+          opacity={0.14}
+        />
+      </mesh>
+      <mesh position={[-0.28, 1.82, -0.2]} scale={[0.62, 1.05, 0.62]}>
+        <sphereGeometry args={[0.24, 10, 10]} />
+        <meshStandardMaterial
+          color="#34373a"
+          roughness={1}
+          transparent
+          opacity={0.1}
+        />
+      </mesh>
+    </group>
+  )
+}
+
 function ShieldBubble({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
   const bubbleRef = useRef<THREE.Group>(null)
   const radius = vehicleMode === 'car' ? 1.48 : 0.96
@@ -831,6 +929,7 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
   const bikeRef = useRef(bike)
   const wheelSpinRef = useRef(0)
   const shieldActive = useGameStore((s) => s.shieldActive)
+  const crashActive = useGameStore((s) => s.crashActive)
   const vehicleMode = useGameStore((s) => s.vehicleMode)
 
   useEffect(() => { bikeRef.current = bike }, [bike])
@@ -912,6 +1011,7 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
         {vehicleMode === 'car' ? renderCarModel() : renderBikeModel()}
         <VehicleLightingAccents vehicleMode={vehicleMode} />
         {shieldActive && <ShieldBubble vehicleMode={vehicleMode} />}
+        {crashActive && <CrashFireEffect vehicleMode={vehicleMode} />}
       </group>
     </group>
   )
@@ -1972,8 +2072,8 @@ function TrafficSystem() {
           continue
         }
         emitCollisionImpact(new THREE.Vector3(vehicleX, 0.72, v.z), false)
-        actions.setGameState('gameover')
-        actions.setSpeed(0)
+        vehicles.splice(i, 1)
+        actions.startCrashSequence()
         return
       }
     }
