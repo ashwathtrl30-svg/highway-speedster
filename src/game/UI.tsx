@@ -634,7 +634,12 @@ export function MainMenu() {
           10% { opacity: .72; }
           34% { opacity: .54; }
           68% { opacity: .28; }
-          100% { transform: translate3d(28px, -48px, 0) scale(1.8); opacity: 0; filter: blur(6px); }
+          100% { transform: translate3d(-34px, -48px, 0) scale(1.8); opacity: 0; filter: blur(6px); }
+        }
+        .hs-vehicle-facing-right {
+          transform: scaleX(-1);
+          transform-origin: center;
+          display: block;
         }
         .hs-menu-exhaust-smoke {
           animation: hsMenuExhaustSmoke 2.65s ease-out infinite;
@@ -904,7 +909,7 @@ export function MainMenu() {
               style={{ animation: 'hsMenuGlow 3.7s ease-in-out infinite' }}
             />
             <div className="absolute inset-0 pointer-events-none z-[4]" aria-hidden="true">
-              <div className="absolute left-[65%] top-[53%] h-7 w-7 sm:left-[66%] sm:top-[53%]">
+              <div className="absolute left-[24%] top-[53%] h-7 w-7 sm:left-[25%] sm:top-[53%]">
                 <span className="absolute -inset-3 rounded-full bg-slate-200/10 blur-xl" />
                 {[0, 1, 2, 3, 4, 5].map((i) => (
                   <span
@@ -1876,7 +1881,7 @@ function CarIcon({ car }: { car: Car }) {
 
   if (car.id === 'kanto-zip') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full">
+      <svg viewBox="0 0 100 60" className="w-full h-full hs-vehicle-facing-right">
         <circle cx="23" cy="46" r="9" fill="#222" stroke="#777" strokeWidth="2"/>
         <circle cx="77" cy="46" r="9" fill="#222" stroke="#777" strokeWidth="2"/>
         <path d="M13 43 L18 33 L28 31 L38 22 L56 21 L66 25 L73 33 L84 38 L87 43Z" fill={common.fill}/>
@@ -1892,7 +1897,7 @@ function CarIcon({ car }: { car: Car }) {
 
   if (car.id === 'saber-swift') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full">
+      <svg viewBox="0 0 100 60" className="w-full h-full hs-vehicle-facing-right">
         <circle cx="19" cy="47" r="9" fill="#1d1d1d" stroke="#777" strokeWidth="2"/>
         <circle cx="81" cy="47" r="9" fill="#1d1d1d" stroke="#777" strokeWidth="2"/>
         <path d="M9 43 L16 35 L29 32 L39 25 L61 25 L72 30 L79 34 L90 38 L92 43Z" fill={common.fill}/>
@@ -1909,7 +1914,7 @@ function CarIcon({ car }: { car: Car }) {
 
   if (car.id === 'goliath-titan') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full">
+      <svg viewBox="0 0 100 60" className="w-full h-full hs-vehicle-facing-right">
         <circle cx="19" cy="47" r="10.5" fill="#202020" stroke="#777" strokeWidth="2"/>
         <circle cx="81" cy="47" r="10.5" fill="#202020" stroke="#777" strokeWidth="2"/>
         <path d="M10 44 L14 28 L24 24 L24 16 L68 16 L77 22 L82 27 L88 30 L91 44Z" fill={common.fill}/>
@@ -1926,7 +1931,7 @@ function CarIcon({ car }: { car: Car }) {
 
   if (car.id === 'kaiser-monarch') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full">
+      <svg viewBox="0 0 100 60" className="w-full h-full hs-vehicle-facing-right">
         <circle cx="19" cy="46" r="9" fill="#191919" stroke="#777" strokeWidth="2"/>
         <circle cx="81" cy="46" r="9" fill="#191919" stroke="#777" strokeWidth="2"/>
         <path d="M8 43 L17 33 L29 30 L45 20 L62 18 L74 23 L82 30 L92 36 L94 43Z" fill={common.fill}/>
@@ -1943,7 +1948,7 @@ function CarIcon({ car }: { car: Car }) {
 
   // Scuderia Fury — very low wedge supercar with a long nose, wide stance and rear wing.
   return (
-    <svg viewBox="0 0 100 60" className="w-full h-full">
+    <svg viewBox="0 0 100 60" className="w-full h-full hs-vehicle-facing-right">
       <circle cx="18" cy="46" r="8" fill="#111" stroke="#777" strokeWidth="2"/>
       <circle cx="82" cy="46" r="8" fill="#111" stroke="#777" strokeWidth="2"/>
       <path d="M5 43 L15 36 L28 33 L41 23 L58 18 L70 22 L81 30 L91 35 L95 43Z" fill={common.fill}/>
@@ -2324,7 +2329,7 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
 function BikeIcon({ bike }: { bike: Bike }) {
   if (bike.id === 'blitz') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full">
+      <svg viewBox="0 0 100 60" className="w-full h-full hs-vehicle-facing-right">
         <circle cx="25" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
         <circle cx="75" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
         <path d="M 25 45 L 40 30 L 60 30 L 75 45" fill="none" stroke={bike.color} strokeWidth="3"/>
@@ -2340,7 +2345,7 @@ function BikeIcon({ bike }: { bike: Bike }) {
   
   if (bike.id === 'apex') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full">
+      <svg viewBox="0 0 100 60" className="w-full h-full hs-vehicle-facing-right">
         <circle cx="22" cy="45" r="11" fill="#333" stroke="#555" strokeWidth="2"/>
         <circle cx="78" cy="45" r="11" fill="#333" stroke="#555" strokeWidth="2"/>
         <path d="M 22 45 L 38 28 L 62 28 L 78 45" fill="none" stroke={bike.color} strokeWidth="4"/>
@@ -2361,7 +2366,7 @@ function BikeIcon({ bike }: { bike: Bike }) {
   
   if (bike.id === 'chronos') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full">
+      <svg viewBox="0 0 100 60" className="w-full h-full hs-vehicle-facing-right">
         <circle cx="25" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
         <circle cx="75" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
         <path d="M 30 40 L 35 25 L 50 20 L 65 25 L 70 40 Z" fill={bike.color}/>
@@ -2379,7 +2384,7 @@ function BikeIcon({ bike }: { bike: Bike }) {
   
   if (bike.id === 'stratos') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full">
+      <svg viewBox="0 0 100 60" className="w-full h-full hs-vehicle-facing-right">
         <circle cx="23" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
         <circle cx="77" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
         <path d="M 25 42 L 30 22 L 48 16 L 68 22 L 75 42 Z" fill={bike.color}/>
@@ -2397,7 +2402,7 @@ function BikeIcon({ bike }: { bike: Bike }) {
   
   if (bike.id === 'zenith') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full">
+      <svg viewBox="0 0 100 60" className="w-full h-full hs-vehicle-facing-right">
         <circle cx="22" cy="45" r="10" fill="#222" stroke="#444" strokeWidth="1.5"/>
         <circle cx="78" cy="45" r="10" fill="#222" stroke="#444" strokeWidth="1.5"/>
         <line x1="22" y1="38" x2="22" y2="52" stroke="#555" strokeWidth="0.5"/>
