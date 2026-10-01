@@ -1797,6 +1797,20 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
   )
 }
 
+function CarExhaustIcon({ car }: { car: Car }) {
+  return (
+    <g aria-hidden="true">
+      <rect x="79" y="39.1" width="8.5" height="5.4" rx="2.5" fill="#111315" stroke="#5c6267" strokeWidth="0.8"/>
+      <rect x="89.5" y="39.1" width="8.5" height="5.4" rx="2.5" fill="#111315" stroke="#5c6267" strokeWidth="0.8"/>
+      <rect x="81.5" y="40.3" width="8" height="3.1" rx="1.55" fill="#c5c9cc" stroke="#777d82" strokeWidth="0.6"/>
+      <rect x="92" y="40.3" width="7" height="3.1" rx="1.55" fill="#c5c9cc" stroke="#777d82" strokeWidth="0.6"/>
+      <ellipse cx="89.1" cy="41.85" rx="1.25" ry="1.05" fill="#161719"/>
+      <ellipse cx="98.1" cy="41.85" rx="1.15" ry="1.05" fill="#161719"/>
+      <path d="M79 38.8 L98 38.8" stroke={car.accentColor} strokeWidth="1" opacity="0.72" strokeLinecap="round"/>
+    </g>
+  )
+}
+
 function CarIcon({ car }: { car: Car }) {
   const common = { fill: car.color, accent: car.accentColor }
 
@@ -1812,7 +1826,8 @@ function CarIcon({ car }: { car: Car }) {
         <rect x="18" y="35" width="10" height="3" rx="1.5" fill="#f4f4f4"/>
         <rect x="72" y="37" width="9" height="3" rx="1.5" fill="#d9343a"/>
         <path d="M69 29 L78 34 L81 37 L68 37Z" fill={common.accent} opacity="0.45"/>
-      </svg>
+      
+        <CarExhaustIcon car={car} /></svg>
     )
   }
 
@@ -1829,7 +1844,8 @@ function CarIcon({ car }: { car: Car }) {
         <rect x="76" y="39" width="10" height="3" rx="1" fill="#c7363d"/>
         <rect x="38" y="38" width="30" height="2" rx="1" fill="#dfe6ee" opacity="0.75"/>
         <path d="M22 31 L26 28 L30 31" stroke="#9ba8b4" strokeWidth="1.3" fill="none"/>
-      </svg>
+      
+        <CarExhaustIcon car={car} /></svg>
     )
   }
 
@@ -1846,7 +1862,8 @@ function CarIcon({ car }: { car: Car }) {
         <circle cx="82" cy="29" r="3.2" fill="#333" stroke="#8b8b8b" strokeWidth="1"/>
         <path d="M30 15 L37 11 L63 11 L69 15" fill="none" stroke={common.accent} strokeWidth="2"/>
         <path d="M14 42 L14 34 M86 42 L86 34" stroke="#6e7377" strokeWidth="2"/>
-      </svg>
+      
+        <CarExhaustIcon car={car} /></svg>
     )
   }
 
@@ -1863,7 +1880,8 @@ function CarIcon({ car }: { car: Car }) {
         <rect x="74" y="39" width="13" height="3" rx="1" fill="#d92f3b"/>
         <rect x="36" y="38" width="29" height="2" rx="1" fill="#c9cdd2"/>
         <path d="M68 25 L80 24 L84 27" stroke={common.accent} strokeWidth="2" fill="none"/>
-      </svg>
+      
+        <CarExhaustIcon car={car} /></svg>
     )
   }
 
@@ -1884,7 +1902,8 @@ function CarIcon({ car }: { car: Car }) {
       <path d="M4 43 L10 40 L16 40" stroke={common.accent} strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" opacity="0.95"/>
       <rect x="5" y="35.5" width="8" height="3.2" rx="1.6" fill="#fffbe7"/>
       <rect x="87" y="38.2" width="8" height="3.2" rx="1.6" fill="#ef3340"/>
-    </svg>
+    
+        <CarExhaustIcon car={car} /></svg>
   )
 }
 
@@ -2250,6 +2269,27 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
   )
 }
 // Bike icon component with distinct visuals for each bike
+function BikeExhaustIcon({ bike, side = 1, dual = false }: {
+  bike: Bike
+  side?: 1 | -1
+  dual?: boolean
+}) {
+  const color = bike.accentColor
+  const pipes = dual ? [-1, 1] : [side]
+  return (
+    <g aria-hidden="true">
+      {pipes.map((s) => (
+        <g key={s}>
+          <path d={s > 0 ? 'M53 38 C59 37 63 39 67 41' : 'M47 38 C41 37 37 39 33 41'} fill="none" stroke="#8b8f92" strokeWidth="2.2" strokeLinecap="round"/>
+          <rect x={s > 0 ? 61 : 24} y="39" width="15" height="4.8" rx="2.4" fill="#b9bdc1" stroke="#656b70" strokeWidth="0.8"/>
+          <rect x={s > 0 ? 63 : 28} y="38.1" width="9" height="1.5" rx="0.75" fill={color} opacity="0.92"/>
+          <ellipse cx={s > 0 ? 77.5 : 22} cy="41.4" rx="2.2" ry="1.8" fill="#17191b" stroke="#9aa0a5" strokeWidth="0.7"/>
+        </g>
+      ))}
+    </g>
+  )
+}
+
 function BikeIcon({ bike }: { bike: Bike }) {
   if (bike.id === 'blitz') {
     return (
@@ -2263,7 +2303,8 @@ function BikeIcon({ bike }: { bike: Bike }) {
         <line x1="35" y1="25" x2="45" y2="20" stroke="#666" strokeWidth="2"/>
         <circle cx="45" cy="20" r="2" fill="#888"/>
         <circle cx="38" cy="28" r="3" fill="#ffffcc" opacity="0.8"/>
-      </svg>
+      
+        <BikeExhaustIcon bike={bike} /></svg>
     )
   }
   
@@ -2284,7 +2325,8 @@ function BikeIcon({ bike }: { bike: Bike }) {
         <circle cx="35" cy="26" r="4" fill="#ffffcc" opacity="0.8"/>
         <line x1="60" y1="38" x2="70" y2="42" stroke="#bbb" strokeWidth="2"/>
         <line x1="58" y1="40" x2="68" y2="44" stroke="#bbb" strokeWidth="2"/>
-      </svg>
+      
+        <BikeExhaustIcon bike={bike} dual /></svg>
     )
   }
   
@@ -2302,7 +2344,8 @@ function BikeIcon({ bike }: { bike: Bike }) {
         <circle cx="37" cy="28" r="2.5" fill="#ffffcc" opacity="0.9"/>
         <circle cx="42" cy="26" r="2.5" fill="#ffffcc" opacity="0.9"/>
         <line x1="62" y1="38" x2="68" y2="42" stroke="#aaa" strokeWidth="1.5"/>
-      </svg>
+      
+        <BikeExhaustIcon bike={bike} /></svg>
     )
   }
   
@@ -2320,7 +2363,8 @@ function BikeIcon({ bike }: { bike: Bike }) {
         <path d="M 33 26 L 38 24 L 38 28 Z" fill="#ffffcc" opacity="0.9"/>
         <line x1="65" y1="36" x2="73" y2="40" stroke="#999" strokeWidth="2"/>
         <line x1="40" y1="30" x2="60" y2="30" stroke={bike.accentColor} strokeWidth="1.5" opacity="0.7"/>
-      </svg>
+      
+        <BikeExhaustIcon bike={bike} /></svg>
     )
   }
   
@@ -2344,7 +2388,8 @@ function BikeIcon({ bike }: { bike: Bike }) {
         <line x1="66" y1="36" x2="74" y2="40" stroke="#888" strokeWidth="1.5"/>
         <line x1="38" y1="28" x2="62" y2="28" stroke={bike.accentColor} strokeWidth="1" opacity="0.8"/>
         <line x1="40" y1="32" x2="60" y2="32" stroke={bike.accentColor} strokeWidth="1" opacity="0.5"/>
-      </svg>
+      
+        <BikeExhaustIcon bike={bike} dual /></svg>
     )
   }
   
