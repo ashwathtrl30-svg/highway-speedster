@@ -1068,6 +1068,30 @@ function SkinSelector({ bikeId, isSelected }: { bikeId: string; isSelected: bool
 }
 
 // ============== GARAGE ==============
+const shouldMirrorGarageVehicle = (section: 'bikes' | 'cars', vehicleId: string) =>
+  section === 'bikes' || vehicleId !== 'saber-swift'
+
+function GarageVehicleArt({
+  section,
+  vehicleId,
+  children,
+  className = '',
+}: {
+  section: 'bikes' | 'cars'
+  vehicleId: string
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div
+      className={className}
+      style={shouldMirrorGarageVehicle(section, vehicleId) ? { transform: 'scaleX(-1)' } : undefined}
+    >
+      {children}
+    </div>
+  )
+}
+
 function GarageShowroomPreview({
   state,
   section,
@@ -1455,9 +1479,11 @@ function GarageShowroomPreview({
                 }}
               >
                 <div className="h-[88px] w-[168px] sm:h-[112px] sm:w-[208px]">
-                  {switchFx.section === 'bikes'
-                    ? <BikeIcon bike={switchFx.vehicle as Bike} />
-                    : <CarIcon car={switchFx.vehicle as Car} />}
+                  <GarageVehicleArt section={switchFx.section} vehicleId={switchFx.id} className="h-full w-full">
+                    {switchFx.section === 'bikes'
+                      ? <BikeIcon bike={switchFx.vehicle as Bike} />
+                      : <CarIcon car={switchFx.vehicle as Car} />}
+                  </GarageVehicleArt>
                 </div>
               </div>
             </div>
@@ -1494,9 +1520,11 @@ function GarageShowroomPreview({
                 }}
               >
                 <div className="h-[88px] w-[168px] sm:h-[112px] sm:w-[208px]">
-                  {isBike
-                    ? <BikeIcon bike={state.selectedBike} />
-                    : <CarIcon car={state.selectedCar} />}
+                  <GarageVehicleArt section={section} vehicleId={vehicleId as string} className="h-full w-full">
+                    {isBike
+                      ? <BikeIcon bike={state.selectedBike} />
+                      : <CarIcon car={state.selectedCar} />}
+                  </GarageVehicleArt>
                 </div>
               </div>
             </div>
@@ -1576,7 +1604,9 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
         <div className="absolute right-[13%] top-[14%] h-[72%] w-px bg-gradient-to-b from-transparent via-amber-300/20 to-transparent" style={{ animation: "hsGarageLightSweep 5.6s ease-in-out -1.7s infinite reverse" }} />
         <div className="absolute top-[18%] left-[-20%] h-px w-[58%] bg-gradient-to-r from-transparent via-amber-200/20 to-transparent" style={{ animation: "hsGarageReflection 7s linear infinite" }} />
         <div className="absolute right-[-6%] top-[15%] h-44 w-[42%] max-w-[360px] opacity-[0.13] saturate-50 sm:right-[2%] sm:top-[13%] sm:h-56 sm:w-[34%]" style={{ animation: "hsGarageVehicleDrift 7s ease-in-out infinite" }}>
-          {section === "bikes" ? <BikeIcon bike={state.selectedBike} /> : <CarIcon car={state.selectedCar} />}
+          <GarageVehicleArt section={section} vehicleId={section === 'bikes' ? state.selectedBike.id : state.selectedCar.id} className="h-full w-full">
+            {section === "bikes" ? <BikeIcon bike={state.selectedBike} /> : <CarIcon car={state.selectedCar} />}
+          </GarageVehicleArt>
         </div>
 
         {/* Multi-layer garage depth: ceiling bays, moving reflections and foreground particles. */}
@@ -1705,7 +1735,11 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
                     >
                       {isUnlocked ? (
                         <div className="w-full h-full transition-transform duration-300 group-hover:scale-[1.06]">
-                          <BikeIcon bike={bike} />
+                          <GarageVehicleArt section="bikes" vehicleId={bike.id} className="h-full w-full">
+                            <GarageVehicleArt section="bikes" vehicleId={bike.id} className="h-full w-full">
+                              <BikeIcon bike={bike} />
+                            </GarageVehicleArt>
+                          </GarageVehicleArt>
                         </div>
                       ) : (
                         <>
@@ -1808,7 +1842,11 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
                     >
                       {isUnlocked ? (
                         <div className="w-full h-full transition-transform duration-300 group-hover:scale-[1.06]">
-                          <CarIcon car={car} />
+                          <GarageVehicleArt section="cars" vehicleId={car.id} className="h-full w-full">
+                            <GarageVehicleArt section="cars" vehicleId={car.id} className="h-full w-full">
+                              <CarIcon car={car} />
+                            </GarageVehicleArt>
+                          </GarageVehicleArt>
                         </div>
                       ) : (
                         <>
