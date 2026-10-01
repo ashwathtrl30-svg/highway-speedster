@@ -5,50 +5,72 @@ const VEHICLE_FACING_RIGHT_STYLE = {
 } as const
 
 function BikeMenuRider({ compact = false }: { compact?: boolean }) {
-  const shoulderY = compact ? 24 : 23
-  const hipY = compact ? 35 : 34
   const scale = compact ? 0.92 : 1
+
   return (
     <g transform={`translate(0 0) scale(${scale})`}>
-      {/* Simple stickman rider: light-blue T-shirt + black pants. */}
-      <circle cx="49" cy="16.5" r="4.1" fill="#20252a" stroke="#0d0f11" strokeWidth="1" />
+      {/* Shared side-view rider: seated astride the motorcycle, leaning naturally toward the bars. */}
+      <circle cx="49.5" cy="15.8" r="4.1" fill="#20252a" stroke="#0d0f11" strokeWidth="1" />
+      <path d="M46.5 16.1 L52.2 16.1" stroke="#69747c" strokeWidth="1" strokeLinecap="round" />
 
-      {/* Far-side leg: drawn first, tucked inward and visually separated from the near leg. */}
+      {/* Far-side leg: darker and mostly behind the tank/frame so it reads as the opposite leg. */}
       <path
-        d={`M52.2 ${hipY} L53.8 38.2 L59.4 42.8`}
+        d="M51.5 34.2 L56.1 37.5 L59.1 42.1"
         fill="none"
         stroke="#17191c"
-        strokeWidth="2.2"
+        strokeWidth="2.05"
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity="0.55"
+        opacity="0.38"
       />
-      <circle cx="59.4" cy="42.8" r="1.05" fill="#101214" opacity="0.55" />
+      <circle cx="59.1" cy="42.1" r="0.95" fill="#101214" opacity="0.34" />
 
-      <path d={`M45.4 ${shoulderY + 1} Q49 ${shoulderY - 1} 52.6 ${shoulderY + 1} L55 ${hipY} Q49 ${hipY + 2} 43 ${hipY} Z`} fill="#8ec5e8" stroke="#5d8eaf" strokeWidth="0.7"/>
-
-      {/* Arms — forward and down to the bars. */}
-      <path d={`M45.6 ${shoulderY + 1} L41.2 26 L36.2 22.2`} fill="none" stroke="#8ec5e8" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d={`M52.4 ${shoulderY + 1} L48.1 26.4 L42.4 22.8`} fill="none" stroke="#8ec5e8" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" opacity="0.92"/>
-      <circle cx="36.2" cy="22.2" r="1.25" fill="#111315"/>
-      <circle cx="42.4" cy="22.8" r="1.25" fill="#111315"/>
-
-      {/* Near-side leg: prominent, bent around the frame toward the foot control. */}
+      {/* Torso: hips stay over the seat instead of floating above the rear of the bike. */}
       <path
-        d={`M45.4 ${hipY} L46.8 38.8 L40.2 44.2`}
+        d="M45.5 23.6 Q49.5 21.9 53.3 24 L55.4 33.6 Q49.7 36 44.2 33.4 Z"
+        fill="#8ec5e8"
+        stroke="#5d8eaf"
+        strokeWidth="0.7"
+      />
+
+      {/* Arms: both shoulders converge naturally toward the handlebars. */}
+      <path
+        d="M46.0 24.8 L42.2 27.2 L36.8 22.0"
+        fill="none"
+        stroke="#8ec5e8"
+        strokeWidth="2.15"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M52.6 24.4 L49.5 27.0 L42.9 22.7"
+        fill="none"
+        stroke="#8ec5e8"
+        strokeWidth="2.15"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity="0.94"
+      />
+      <circle cx="36.8" cy="22.0" r="1.2" fill="#111315" />
+      <circle cx="42.9" cy="22.7" r="1.2" fill="#111315" />
+
+      {/* Near-side leg: visible, bent at the knee and reaching the rear-set/foot-control area. */}
+      <path
+        d="M46.0 33.2 L52.6 37.0 L59.8 42.5"
         fill="none"
         stroke="#17191c"
-        strokeWidth="2.5"
+        strokeWidth="2.65"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <circle cx="40.2" cy="44.2" r="1.2" fill="#101214"/>
+      <circle cx="59.8" cy="42.5" r="1.15" fill="#101214" />
 
-      {/* Seat/frame occlusion cue: makes the far leg read as behind the bike rather than on the same side. */}
-      <path d="M44.6 33.2 Q49 31.8 54.4 34 L53.2 36.3 Q49 35.1 45.4 36 Z" fill="#22272b" opacity="0.9"/>
-
-      {/* Small helmet visor for a recognizable rider silhouette. */}
-      <path d="M46.1 15.8 L51.8 15.8" stroke="#5f6971" strokeWidth="1" strokeLinecap="round"/>
+      {/* Seat overlap cue: the rider is sitting ON the bike, not beside it. */}
+      <path
+        d="M44.2 33.0 Q49.5 31.5 55.3 33.5 L54.3 35.2 Q49.5 34.0 45.0 35.0 Z"
+        fill="#22272b"
+        opacity="0.96"
+      />
     </g>
   )
 }
