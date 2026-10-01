@@ -2,7 +2,9 @@ import { useRef, useMemo, useCallback, useEffect } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
+import { Html } from '@react-three/drei'
 import { getState, actions, useGameStore, type Bike, type Car } from './store'
+import { BikeIcon, CarIcon } from './VehicleArt'
 
 // Constants
 const LANE_WIDTH = 3.5
@@ -825,13 +827,12 @@ function ShieldBubble({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
 
 function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
   const meshRef = useRef<THREE.Group>(null)
-  const visualRef = useRef<THREE.Group>(null)
   const currentXRef = useRef(0)
   const tiltRef = useRef(0)
   const bikeRef = useRef(bike)
-  const wheelSpinRef = useRef(0)
   const shieldActive = useGameStore((s) => s.shieldActive)
   const vehicleMode = useGameStore((s) => s.vehicleMode)
+  const selectedSkin = useGameStore((s) => s.selectedSkin)
 
   useEffect(() => { bikeRef.current = bike }, [bike])
 
@@ -848,75 +849,47 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
     const tiltTarget = (targetX - currentXRef.current) * 0.12
     tiltRef.current += (tiltTarget - tiltRef.current) * 5 * delta
 
-    // Wheel spin
-    wheelSpinRef.current += state.speed * delta * 0.3
-
     if (meshRef.current) {
       meshRef.current.position.x = currentXRef.current
       meshRef.current.rotation.z = tiltRef.current
       meshRef.current.rotation.y = -tiltRef.current * 0.3
-      // Slight bobbing at high speed
-      meshRef.current.position.y = Math.sin(wheelSpinRef.current * 2) * 0.02 * (state.speed / 100)
-
-      // [GFX] Visual-only secondary lean and suspension compression.
-      if (visualRef.current) {
-        const speedNorm = THREE.MathUtils.clamp(state.speed / 100, 0, 1)
-        visualRef.current.rotation.z = tiltRef.current * 0.14
-        visualRef.current.rotation.y = -tiltRef.current * 0.05
-        visualRef.current.position.y =
-          Math.sin(wheelSpinRef.current * 1.4) * 0.008 * speedNorm
-        visualRef.current.scale.y = 1 - speedNorm * 0.018
-
-        // [GFX] Wheel rotation is visual-only and driven from existing speed.
-        visualRef.current.traverse((object) => {
-          if (object instanceof THREE.Mesh && object.name === 'player-wheel') {
-            object.rotation.x = wheelSpinRef.current
-          }
-        })
-      }
     }
   })
 
-  const renderBikeModel = () => {
-    switch (bike.id) {
-      case 'blitz': return <BlitzBike bike={bike} />
-      case 'apex': return <ApexBike bike={bike} />
-      case 'chronos': return <ChronosBike bike={bike} />
-      case 'stratos': return <StratosBike bike={bike} />
-      case 'zenith': return <ZenithBike bike={bike} />
-      default: return <BlitzBike bike={bike} />
-    }
-  }
-
-  const renderCarModel = () => {
-    switch (car.id) {
-      case 'kanto-zip': return <KantoZipCar car={car} />
-      case 'saber-swift': return <SaberSwiftCar car={car} />
-      case 'goliath-titan': return <GoliathTitanCar car={car} />
-      case 'kaiser-monarch': return <KaiserMonarchCar car={car} />
-      case 'scuderia-fury': return <ScuderiaFuryCar car={car} />
-      default: return <KantoZipCar car={car} />
-    }
-  }
-
-  useEffect(() => {
-    const root = meshRef.current
-    if (!root) return
-    root.traverse((object) => {
-      if (object instanceof THREE.Mesh) {
-        object.castShadow = true
-        object.receiveShadow = true
-      }
-    })
-  }, [bike.id, car.id, vehicleMode])
-
   return (
     <group ref={meshRef} position={[0, 0, PLAYER_Z]}>
-      <group ref={visualRef}>
-        {vehicleMode === 'car' ? renderCarModel() : renderBikeModel()}
-        <VehicleLightingAccents vehicleMode={vehicleMode} />
-        {shieldActive && <ShieldBubble vehicleMode={vehicleMode} />}
-      </group>
+      <Html
+        position={[0, 0.92, 0]}
+        center
+        sprite
+        zIndexRange={[10, 20]}
+        style={{
+          width: vehicleMode === 'car' ? '280px' : '260px',
+          height: vehicleMode === 'car' ? '168px' : '156px',
+          pointerEvents: 'none',
+          userSelect: 'none',
+          display: 'block',
+        }}
+      >
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            filter: 'drop-shadow(0 14px 12px rgba(0,0,0,.32))',
+          }}
+        >
+          {vehicleMode === 'car'
+            ? <CarIcon car={car} />
+            : <BikeIcon bike={bike} skin={selectedSkin} />}
+        </div>
+      </Html>
+
+      {/* Keep the existing dynamic 3D lighting/shield effects around the exact shared artwork. */}
+      <VehicleLightingAccents vehicleMode={vehicleMode} />
+      {shieldActive && <ShieldBubble vehicleMode={vehicleMode} />}
     </group>
   )
 }
