@@ -2457,98 +2457,76 @@ function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
     )
   }
   
-  if (bike.id === 'stratos' && skin === 'rainbow-finish') {
+  if (bike.id === 'stratos' && skin === 'candy-flat-blazed-green') {
     return (
       <svg viewBox="0 0 100 60" className="w-full h-full hs-vehicle-facing-right">
         <defs>
-          <linearGradient id="hsStratosRainbowBody" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#0b0d10" />
-            <stop offset="26%" stopColor="#161a20" />
-            <stop offset="42%" stopColor="#4d193c" />
-            <stop offset="55%" stopColor="#b72c28" />
-            <stop offset="67%" stopColor="#e29a20" />
-            <stop offset="79%" stopColor="#19a67d" />
-            <stop offset="90%" stopColor="#2488cf" />
-            <stop offset="100%" stopColor="#683fba" />
+          <linearGradient id="hsStratosGreenBlackBody" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#32373b" />
+            <stop offset="35%" stopColor="#171a1d" />
+            <stop offset="72%" stopColor="#0b0e11" />
+            <stop offset="100%" stopColor="#262b30" />
           </linearGradient>
-          <linearGradient id="hsStratosChromeRainbow" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#d6f7ff" />
-            <stop offset="18%" stopColor="#5ed8ff" />
-            <stop offset="36%" stopColor="#b778ff" />
-            <stop offset="55%" stopColor="#ff5d8f" />
-            <stop offset="72%" stopColor="#ffd34d" />
-            <stop offset="88%" stopColor="#5be49c" />
-            <stop offset="100%" stopColor="#5cb6ff" />
+          <linearGradient id="hsStratosGreenFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#8bf4aa" />
+            <stop offset="38%" stopColor="#35cf69" />
+            <stop offset="75%" stopColor="#16a34a" />
+            <stop offset="100%" stopColor="#0d6b35" />
           </linearGradient>
-          <linearGradient id="hsStratosTank" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#101318" />
-            <stop offset="36%" stopColor="#242a31" />
-            <stop offset="52%" stopColor="#a9517c" />
-            <stop offset="70%" stopColor="#2eb5bf" />
-            <stop offset="100%" stopColor="#101318" />
-          </linearGradient>
-          <linearGradient id="hsStratosFrame" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#72f0a5" />
-            <stop offset="45%" stopColor="#00a95f" />
-            <stop offset="100%" stopColor="#145c3b" />
+          <linearGradient id="hsStratosGreenTrim" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#16381f" />
+            <stop offset="48%" stopColor="#58e57d" />
+            <stop offset="100%" stopColor="#12331c" />
           </linearGradient>
         </defs>
 
-        <circle cx="23" cy="45" r="10" fill="#16181c" stroke="#4c555d" strokeWidth="1.8"/>
-        <circle cx="77" cy="45" r="10" fill="#16181c" stroke="#4c555d" strokeWidth="1.8"/>
+        <circle cx="23" cy="45" r="10" fill="#15171a" stroke="#50585d" strokeWidth="1.8"/>
+        <circle cx="77" cy="45" r="10" fill="#15171a" stroke="#50585d" strokeWidth="1.8"/>
 
-        {/* Green trellis/frame inspired by the Ninja H2's signature chassis. */}
+        {/* Candy Flat Blazed Green trellis/frame treatment. */}
         <path
           d="M23 45 C28 39 33 31 40 29 C47 27 59 29 65 33 C70 36 73 40 77 45"
           fill="none"
-          stroke="url(#hsStratosFrame)"
-          strokeWidth="3.4"
+          stroke="url(#hsStratosGreenFrame)"
+          strokeWidth="3.5"
           strokeLinecap="round"
         />
+        <path d="M31 39 L44 31 L61 32 L71 39" fill="none" stroke="#26b95a" strokeWidth="1.7" opacity=".9"/>
 
-        {/* Dark custom bodywork with a broad iridescent wrap. */}
+        {/* Mirror-coated matte spark black bodywork. */}
         <path
-          d="M23 44 L29 25 L40 18 L57 17 L68 23 L74 33 L77 43
-             C66 45 42 45 23 44Z"
-          fill="url(#hsStratosRainbowBody)"
+          d="M23 44 L29 25 L40 18 L57 17 L68 23 L74 33 L77 43 C66 45 42 45 23 44Z"
+          fill="url(#hsStratosGreenBlackBody)"
+        />
+        <path
+          d="M34 27 C38 21 45 18 52 18 C59 18 65 21 69 26 L62 31 C54 28 44 28 34 31Z"
+          fill="#22282d"
+        />
+        <path
+          d="M40 22 L48 17 L59 18 L65 23 L58 25 L46 24Z"
+          fill="#090b0e"
         />
 
-        {/* Holographic tank panel. */}
-        <path
-          d="M34 27 C38 21 45 18 52 18 C59 18 65 21 69 26
-             L62 31 C54 28 44 28 34 31Z"
-          fill="url(#hsStratosTank)"
-        />
+        {/* H2-style green graphic accents and pinstriping. */}
+        <path d="M30 33 L43 28 L46 31 L33 36Z" fill="#45dc73"/>
+        <path d="M42 28 L57 25 L61 28 L48 31Z" fill="#70ef95"/>
+        <path d="M57 25 L67 28 L69 31 L61 29Z" fill="#25bc59"/>
+        <path d="M59 31 L70 33 L73 36 L63 35Z" fill="url(#hsStratosGreenTrim)"/>
+        <path d="M35 38 L55 33 L61 36 L40 40Z" fill="#1f8f47" opacity=".9"/>
 
-        {/* Custom angular decal bands — multiple distinct colours, not a single gradient. */}
-        <path d="M31 33 L45 28 L49 31 L34 37Z" fill="#f04b3e" />
-        <path d="M43 27 L56 24 L60 27 L48 31Z" fill="#ffd24a" />
-        <path d="M54 24 L66 27 L68 30 L58 28Z" fill="#35d7b0" />
-        <path d="M58 30 L70 32 L73 35 L62 34Z" fill="#4bb7ff" />
-        <path d="M36 37 L57 33 L62 36 L40 40Z" fill="#7c4cff" opacity=".92" />
+        {/* Metallic highlights and carbon details. */}
+        <path d="M31 28 L48 22 L51 24 L34 31Z" fill="#b9c2c7" opacity=".62"/>
+        <path d="M43 39 L65 34 L69 36 L49 41Z" fill="#dce4e7" opacity=".18"/>
+        <path d="M64 37 L74 40 L72 42 L63 39Z" stroke="#6be68c" strokeWidth="1.8" fill="none"/>
 
-        {/* Bright white racing slash + secondary highlight. */}
-        <path d="M30 29 L48 23 L51 25 L33 32Z" fill="#ffffff" opacity=".88" />
-        <path d="M45 39 L65 34 L69 36 L49 41Z" fill="#ffffff" opacity=".32" />
+        {/* Headlight / cockpit and exhaust. */}
+        <path d="M33 26 L39 23 L39 28 L34 30Z" fill="#fff8cf" opacity=".98"/>
+        <path d="M66 35 L78 36 L82 39 L71 39Z" fill="#2bc462"/>
+        <circle cx="80" cy="38" r="1.5" fill="#101316"/>
 
-        {/* Dark carbon airbox and seat. */}
-        <path d="M40 22 L48 17 L59 18 L65 23 L58 25 L46 24Z" fill="#090b0f" />
-        <path d="M54 18 L64 20 L69 25 L63 26 L57 23Z" fill="#0a0d11" opacity=".95" />
-
-        {/* Bright headlight and metallic detail. */}
-        <path d="M33 26 L39 23 L39 28 L34 30Z" fill="#fff8cf" opacity=".98" />
-        <path d="M66 37 L74 40 L72 42 L64 39Z" stroke="url(#hsStratosChromeRainbow)" strokeWidth="2.2" fill="none" />
-        <path d="M61 41 L72 42" stroke="#dce5ea" strokeWidth="1.4" opacity=".65" />
-
-        {/* Iridescent exhaust tip. */}
-        <path d="M67 35 L78 36 L82 39 L71 39Z" fill="url(#hsStratosChromeRainbow)" />
-        <circle cx="80" cy="38" r="1.5" fill="#0d1013" />
-
-        {/* Small paint-flake highlights. */}
-        <circle cx="39" cy="33" r=".9" fill="#ffe75b" />
-        <circle cx="52" cy="29" r=".8" fill="#66e6ff" />
-        <circle cx="63" cy="31" r=".8" fill="#ff789d" />
-        <circle cx="47" cy="36" r=".7" fill="#8dffb2" />
+        {/* Small glossy paint reflections. */}
+        <path d="M29 25 C39 19 50 16 61 18" fill="none" stroke="#f4f7f8" strokeWidth="1.1" opacity=".24"/>
+        <path d="M31 36 C39 34 46 32 54 31" fill="none" stroke="#9ff8b7" strokeWidth="1" opacity=".45"/>
       </svg>
     )
   }
