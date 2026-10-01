@@ -46,7 +46,10 @@ export async function syncAnalyticsToSupabase(
   const safeCoins = Math.max(0, Math.floor(totalCoins))
 
   if (!cleanPlayerId || !cleanUsername) return
-  if (safePlaytime === 1 || safeHighScore === 1) return
+  if (
+    (safePlaytime < 0 || safePlaytime === 1) &&
+    (safeHighScore < 0 || safeHighScore === 1)
+  ) return
 
   if (!(await ensureSupabaseAuth())) return
   const { data: session } = await supabase.auth.getSession()
@@ -205,8 +208,12 @@ export async function saveUserGameProgress(
         player_id: playerId.trim(),
         auth_user_id: authData.user.id,
         username: username.trim(),
-        playtime_seconds: Math.max(Number(existing?.playtime_seconds || 0), Math.floor(progress.totalPlaytime)),
-        high_score: Math.max(Number(existing?.high_score || 0), Math.floor(progress.highScore)),
+        ...(Math.max(Number(existing?.playtime_seconds || 0), Math.floor(progress.totalPlaytime)) !== 1
+          ? { playtime_seconds: Math.max(Number(existing?.playtime_seconds || 0), Math.floor(progress.totalPlaytime)) }
+          : {}),
+        ...(Math.max(Number(existing?.high_score || 0), Math.floor(progress.highScore)) !== 1
+          ? { high_score: Math.max(Number(existing?.high_score || 0), Math.floor(progress.highScore)) }
+          : {}),
         // total_coins is the player's current spendable balance. Keep it in sync with game_progress.
         total_coins: Math.max(0, Math.floor(progress.totalCoins)),
         game_progress: progress,
