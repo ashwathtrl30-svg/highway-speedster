@@ -917,6 +917,35 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
   )
 }
 
+function StickmanArm({
+  start,
+  end,
+  color = '#8ec5e8',
+  width = 0.07,
+}: {
+  start: [number, number, number]
+  end: [number, number, number]
+  color?: string
+  width?: number
+}) {
+  const a = new THREE.Vector3(...start)
+  const b = new THREE.Vector3(...end)
+  const direction = new THREE.Vector3().subVectors(b, a)
+  const length = direction.length()
+  const midpoint = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5)
+  const quaternion = new THREE.Quaternion().setFromUnitVectors(
+    new THREE.Vector3(0, 1, 0),
+    direction.normalize()
+  )
+
+  return (
+    <mesh position={midpoint} quaternion={quaternion}>
+      <cylinderGeometry args={[width, width * 0.92, length, 8]} />
+      <meshStandardMaterial color={color} roughness={0.85} />
+    </mesh>
+  )
+}
+
 // ============== BLITZ BIKE (Modern Neo-Retro Cruiser) ==============
 function BlitzBike({ bike }: { bike: Bike }) {
   return (
@@ -1020,14 +1049,16 @@ function BlitzBike({ bike }: { bike: Bike }) {
           <boxGeometry args={[0.2, 0.08, 0.05]} />
           <meshStandardMaterial color="#111111" metalness={0.9} roughness={0.1} />
         </mesh>
-        {/* Arms */}
-        <mesh position={[-0.28, 0.05, -0.2]} rotation={[0.6, 0, 0.2]}>
-          <boxGeometry args={[0.1, 0.4, 0.1]} />
-          <meshStandardMaterial color="#8ec5e8" />
+        {/* Stickman arms — hands meet the handlebars. */}
+        <StickmanArm start={[-0.14, 0.22, -0.05]} end={[-0.30, -0.05, -0.82]} />
+        <StickmanArm start={[0.14, 0.22, -0.05]} end={[0.30, -0.05, -0.82]} />
+        <mesh position={[-0.30, -0.05, -0.82]}>
+          <sphereGeometry args={[0.065, 8, 6]} />
+          <meshStandardMaterial color="#111111" roughness={0.9} />
         </mesh>
-        <mesh position={[0.28, 0.05, -0.2]} rotation={[0.6, 0, -0.2]}>
-          <boxGeometry args={[0.1, 0.4, 0.1]} />
-          <meshStandardMaterial color="#8ec5e8" />
+        <mesh position={[0.30, -0.05, -0.82]}>
+          <sphereGeometry args={[0.065, 8, 6]} />
+          <meshStandardMaterial color="#111111" roughness={0.9} />
         </mesh>
         {/* Legs */}
         <mesh position={[-0.12, -0.35, 0.1]} rotation={[0.3, 0, 0]}>
@@ -1163,13 +1194,16 @@ function ApexBike({ bike }: { bike: Bike }) {
           <boxGeometry args={[0.2, 0.08, 0.05]} />
           <meshStandardMaterial color="#111111" metalness={0.9} roughness={0.1} />
         </mesh>
-        <mesh position={[-0.28, 0.05, -0.2]} rotation={[0.6, 0, 0.2]}>
-          <boxGeometry args={[0.1, 0.4, 0.1]} />
-          <meshStandardMaterial color="#8ec5e8" />
+        {/* Stickman arms — hands meet the wider cruiser bar. */}
+        <StickmanArm start={[-0.15, 0.24, -0.04]} end={[-0.38, -0.05, -0.89]} />
+        <StickmanArm start={[0.15, 0.24, -0.04]} end={[0.38, -0.05, -0.89]} />
+        <mesh position={[-0.38, -0.05, -0.89]}>
+          <sphereGeometry args={[0.065, 8, 6]} />
+          <meshStandardMaterial color="#111111" roughness={0.9} />
         </mesh>
-        <mesh position={[0.28, 0.05, -0.2]} rotation={[0.6, 0, -0.2]}>
-          <boxGeometry args={[0.1, 0.4, 0.1]} />
-          <meshStandardMaterial color="#8ec5e8" />
+        <mesh position={[0.38, -0.05, -0.89]}>
+          <sphereGeometry args={[0.065, 8, 6]} />
+          <meshStandardMaterial color="#111111" roughness={0.9} />
         </mesh>
         <mesh position={[-0.12, -0.35, 0.1]} rotation={[0.3, 0, 0]}>
           <boxGeometry args={[0.12, 0.45, 0.12]} />
@@ -1250,10 +1284,26 @@ function ChronosBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color="#555555" metalness={0.85} />
       </mesh>
 
-      {/* Handlebar - clip-ons, low */}
-      <mesh position={[0, 0.88, -0.7]} rotation={[0.35, 0, 0]}>
-        <boxGeometry args={[0.55, 0.04, 0.04]} />
-        <meshStandardMaterial color="#444444" metalness={0.9} roughness={0.2} />
+      {/* Handlebar - clearly visible split clip-ons */}
+      <mesh position={[0, 0.90, -0.69]}>
+        <boxGeometry args={[0.18, 0.055, 0.12]} />
+        <meshStandardMaterial color="#666a6d" metalness={0.95} roughness={0.12} />
+      </mesh>
+      <mesh position={[-0.20, 0.90, -0.70]} rotation={[0.35, 0, 0]}>
+        <cylinderGeometry args={[0.024, 0.024, 0.22, 8]} rotation={[0, 0, Math.PI / 2]} />
+        <meshStandardMaterial color="#3d4145" metalness={0.92} roughness={0.16} />
+      </mesh>
+      <mesh position={[0.20, 0.90, -0.70]} rotation={[0.35, 0, 0]}>
+        <cylinderGeometry args={[0.024, 0.024, 0.22, 8]} rotation={[0, 0, Math.PI / 2]} />
+        <meshStandardMaterial color="#3d4145" metalness={0.92} roughness={0.16} />
+      </mesh>
+      <mesh position={[-0.33, 0.90, -0.71]} rotation={[0.35, 0, 0]}>
+        <cylinderGeometry args={[0.04, 0.04, 0.16, 8]} rotation={[0, 0, Math.PI / 2]} />
+        <meshStandardMaterial color="#111315" roughness={0.92} />
+      </mesh>
+      <mesh position={[0.33, 0.90, -0.71]} rotation={[0.35, 0, 0]}>
+        <cylinderGeometry args={[0.04, 0.04, 0.16, 8]} rotation={[0, 0, Math.PI / 2]} />
+        <meshStandardMaterial color="#111315" roughness={0.92} />
       </mesh>
       
       {/* Mirrors - integrated */}
@@ -1302,13 +1352,16 @@ function ChronosBike({ bike }: { bike: Bike }) {
           <boxGeometry args={[0.18, 0.07, 0.05]} />
           <meshStandardMaterial color="#111111" metalness={0.9} roughness={0.1} />
         </mesh>
-        <mesh position={[-0.25, 0, -0.25]} rotation={[0.7, 0, 0.15]}>
-          <boxGeometry args={[0.1, 0.38, 0.1]} />
-          <meshStandardMaterial color="#8ec5e8" />
+        {/* Stickman arms — both hands locked onto the clip-ons. */}
+        <StickmanArm start={[-0.15, 0.23, -0.04]} end={[-0.30, -0.06, -0.82]} />
+        <StickmanArm start={[0.15, 0.23, -0.04]} end={[0.30, -0.06, -0.82]} />
+        <mesh position={[-0.30, -0.06, -0.82]}>
+          <sphereGeometry args={[0.06, 8, 6]} />
+          <meshStandardMaterial color="#111111" roughness={0.9} />
         </mesh>
-        <mesh position={[0.25, 0, -0.25]} rotation={[0.7, 0, -0.15]}>
-          <boxGeometry args={[0.1, 0.38, 0.1]} />
-          <meshStandardMaterial color="#8ec5e8" />
+        <mesh position={[0.30, -0.06, -0.82]}>
+          <sphereGeometry args={[0.06, 8, 6]} />
+          <meshStandardMaterial color="#111111" roughness={0.9} />
         </mesh>
         <mesh position={[-0.1, -0.32, 0.05]} rotation={[0.4, 0, 0]}>
           <boxGeometry args={[0.11, 0.42, 0.11]} />
@@ -1471,13 +1524,16 @@ function StratosBike({ bike }: { bike: Bike }) {
           <boxGeometry args={[0.17, 0.065, 0.045]} />
           <meshStandardMaterial color="#111111" metalness={0.9} roughness={0.1} />
         </mesh>
-        <mesh position={[-0.24, -0.02, -0.26]} rotation={[0.75, 0, 0.15]}>
-          <boxGeometry args={[0.095, 0.36, 0.095]} />
-          <meshStandardMaterial color="#8ec5e8" />
+        {/* Stickman arms — hands meet the visible Stratos clip-ons. */}
+        <StickmanArm start={[-0.14, 0.22, -0.04]} end={[-0.40, 0.01, -0.66]} />
+        <StickmanArm start={[0.14, 0.22, -0.04]} end={[0.40, 0.01, -0.66]} />
+        <mesh position={[-0.40, 0.01, -0.66]}>
+          <sphereGeometry args={[0.06, 8, 6]} />
+          <meshStandardMaterial color="#111111" roughness={0.9} />
         </mesh>
-        <mesh position={[0.24, -0.02, -0.26]} rotation={[0.75, 0, -0.15]}>
-          <boxGeometry args={[0.095, 0.36, 0.095]} />
-          <meshStandardMaterial color="#8ec5e8" />
+        <mesh position={[0.40, 0.01, -0.66]}>
+          <sphereGeometry args={[0.06, 8, 6]} />
+          <meshStandardMaterial color="#111111" roughness={0.9} />
         </mesh>
         <mesh position={[-0.09, -0.34, 0.04]} rotation={[0.45, 0, 0]}>
           <boxGeometry args={[0.1, 0.4, 0.1]} />
@@ -1648,13 +1704,16 @@ function ZenithBike({ bike }: { bike: Bike }) {
           <boxGeometry args={[0.16, 0.06, 0.04]} />
           <meshStandardMaterial color="#050505" metalness={0.95} roughness={0.08} />
         </mesh>
-        <mesh position={[-0.22, -0.04, -0.28]} rotation={[0.8, 0, 0.15]}>
-          <boxGeometry args={[0.09, 0.34, 0.09]} />
-          <meshStandardMaterial color="#8ec5e8" />
+        {/* Stickman arms — hands meet the Zenith hyperbike clip-ons. */}
+        <StickmanArm start={[-0.14, 0.22, -0.04]} end={[-0.40, 0.04, -0.63]} />
+        <StickmanArm start={[0.14, 0.22, -0.04]} end={[0.40, 0.04, -0.63]} />
+        <mesh position={[-0.40, 0.04, -0.63]}>
+          <sphereGeometry args={[0.06, 8, 6]} />
+          <meshStandardMaterial color="#111111" roughness={0.9} />
         </mesh>
-        <mesh position={[0.22, -0.04, -0.28]} rotation={[0.8, 0, -0.15]}>
-          <boxGeometry args={[0.09, 0.34, 0.09]} />
-          <meshStandardMaterial color="#8ec5e8" />
+        <mesh position={[0.40, 0.04, -0.63]}>
+          <sphereGeometry args={[0.06, 8, 6]} />
+          <meshStandardMaterial color="#111111" roughness={0.9} />
         </mesh>
         <mesh position={[-0.08, -0.36, 0.02]} rotation={[0.5, 0, 0]}>
           <boxGeometry args={[0.095, 0.38, 0.095]} />
