@@ -4,6 +4,34 @@ const VEHICLE_FACING_RIGHT_STYLE = {
   display: 'block',
 } as const
 
+function BikeMenuRider({ compact = false }: { compact?: boolean }) {
+  const shoulderY = compact ? 24 : 23
+  const hipY = compact ? 35 : 34
+  const scale = compact ? 0.92 : 1
+  return (
+    <g transform={`translate(0 0) scale(${scale})`}>
+      {/* Simple stickman rider: light-blue T-shirt + black pants. */}
+      <circle cx="49" cy="16.5" r="4.1" fill="#20252a" stroke="#0d0f11" strokeWidth="1" />
+      <path d={`M45.4 ${shoulderY + 1} Q49 ${shoulderY - 1} 52.6 ${shoulderY + 1} L55 ${hipY} Q49 ${hipY + 2} 43 ${hipY} Z`} fill="#8ec5e8" stroke="#5d8eaf" strokeWidth="0.7"/>
+      
+      {/* Arms — forward and down to the bars. */}
+      <path d={`M45.6 ${shoulderY + 1} L41.2 26 L36.2 22.2`} fill="none" stroke="#8ec5e8" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d={`M52.4 ${shoulderY + 1} L48.1 26.4 L42.4 22.8`} fill="none" stroke="#8ec5e8" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" opacity="0.92"/>
+      <circle cx="36.2" cy="22.2" r="1.25" fill="#111315"/>
+      <circle cx="42.4" cy="22.8" r="1.25" fill="#111315"/>
+      
+      {/* Bent legs — seated naturally on the saddle/foot controls. */}
+      <path d={`M45 ${hipY} L49 39 L42.5 43.5`} fill="none" stroke="#17191c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d={`M53 ${hipY} L56 39 L50.5 43.5`} fill="none" stroke="#17191c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="42.5" cy="43.5" r="1.2" fill="#101214"/>
+      <circle cx="50.5" cy="43.5" r="1.2" fill="#101214"/>
+      
+      {/* Small helmet visor for a recognizable rider silhouette. */}
+      <path d="M46.1 15.8 L51.8 15.8" stroke="#5f6971" strokeWidth="1" strokeLinecap="round"/>
+    </g>
+  )
+}
+
 export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
   if (bike.id === 'blitz') {
     return (
@@ -17,6 +45,7 @@ export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
         <line x1="35" y1="25" x2="45" y2="20" stroke="#666" strokeWidth="2"/>
         <circle cx="45" cy="20" r="2" fill="#888"/>
         <circle cx="38" cy="28" r="3" fill="#ffffcc" opacity="0.8"/>
+        <BikeMenuRider />
       </g></svg>
     )
   }
@@ -38,6 +67,7 @@ export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
         <circle cx="35" cy="26" r="4" fill="#ffffcc" opacity="0.8"/>
         <line x1="60" y1="38" x2="70" y2="42" stroke="#bbb" strokeWidth="2"/>
         <line x1="58" y1="40" x2="68" y2="44" stroke="#bbb" strokeWidth="2"/>
+        <BikeMenuRider />
       </g></svg>
     )
   }
@@ -56,6 +86,7 @@ export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
         <circle cx="37" cy="28" r="2.5" fill="#ffffcc" opacity="0.9"/>
         <circle cx="42" cy="26" r="2.5" fill="#ffffcc" opacity="0.9"/>
         <line x1="62" y1="38" x2="68" y2="42" stroke="#aaa" strokeWidth="1.5"/>
+        <BikeMenuRider />
       </g></svg>
     )
   }
@@ -142,6 +173,7 @@ export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
         {/* Small glossy paint reflections. */}
         <path d="M29 25 C39 19 50 16 61 18" fill="none" stroke="#f4f7f8" strokeWidth="1.1" opacity=".24"/>
         <path d="M31 36 C39 34 46 32 54 31" fill="none" stroke="#9ff8b7" strokeWidth="1" opacity=".45"/>
+        <BikeMenuRider />
       </g></svg>
     )
   }
@@ -172,6 +204,7 @@ export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
         <path d="M 33 26 L 38 24 L 38 28 Z" fill="#ffffcc" opacity="0.9"/>
         <line x1="65" y1="36" x2="73" y2="40" stroke="#999" strokeWidth="2"/>
         <line x1="40" y1="30" x2="60" y2="30" stroke={bike.accentColor} strokeWidth="1.5" opacity="0.7"/>
+        <BikeMenuRider />
       </g></svg>
     )
   }
@@ -244,6 +277,7 @@ export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
         <path d="M67 38 L78 40 L74 42 L64 40Z" fill="#d2d6d7"/>
         <path d="M67 35 L78 37" stroke="#e1e5e6" strokeWidth="1.4" opacity=".55"/>
         <circle cx="73" cy="30" r="1.3" fill="#ffffff" opacity=".9"/>
+        <BikeMenuRider />
       </g></svg>
     )
   }
@@ -312,6 +346,7 @@ export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
         <path d="M69 27 L74 28 L76 30 L70 30Z" fill="#159447"/>
         <path d="M73 27 L77 29 L79 31 L74 30Z" fill="#e21b2e"/>
         <rect x="62" y="34" width="7" height="1.4" rx=".7" fill="#f3f4f4" opacity=".7"/>
+        <BikeMenuRider />
       </g></svg>
     )
   }
@@ -349,6 +384,7 @@ export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
         <line x1="66" y1="36" x2="74" y2="40" stroke="#888" strokeWidth="1.5"/>
         <line x1="38" y1="28" x2="62" y2="28" stroke={bike.accentColor} strokeWidth="1" opacity="0.8"/>
         <line x1="40" y1="32" x2="60" y2="32" stroke={bike.accentColor} strokeWidth="1" opacity="0.5"/>
+        <BikeMenuRider />
       </g></svg>
     )
   }
