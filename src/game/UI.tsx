@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGameStore, actions, BIKES, CARS, BIKE_SKINS, SKIN_NAMES, SKIN_SWATCHES, SKIN_COLORS, CAR_COLORS, getState, type Bike, type Car, type BikeSkin, type CarColorOption, type GameData, type PowerUpType } from './store'
 import { BikeIcon, CarIcon } from './VehicleArt'
-import { fetchAllAnalytics, fetchMyPlaytimeRank } from '../supabase'
+import { fetchLeaderboardAnalytics, fetchMyPlaytimeRank } from '../supabase'
 import { HighScoreAnalytics } from '../HighScoreAnalytics'
 
 // ============== LOADING SCREEN ==============
@@ -284,20 +284,30 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
   const state = useGameStore()
   type Filter = '7d' | '30d' | '90d' | '180d' | '365d' | 'all'
   const [timeFilter, setTimeFilter] = useState<Filter>('all')
-  const [analytics, setAnalytics] = useState<{ users: any[]; events: any[] }>({ users: [], events: [] })
+  const [analytics, setAnalytics] = useState<{
+    users: Array<{ player_id: string; username: string; playtime_seconds: number; is_me: boolean }>
+  }>({ users: [] })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let mounted = true
+
     const load = async () => {
       setLoading(true)
-      const data = await fetchAllAnalytics()
-      setAnalytics(data)
+      const data = await fetchLeaderboardAnalytics(timeFilter)
+      if (!mounted) return
+      setAnalytics({ users: data.users })
       setLoading(false)
     }
-    load()
-    const interval = setInterval(load, 10000)
-    return () => clearInterval(interval)
-  }, [])
+
+    void load()
+    const interval = window.setInterval(load, 10000)
+
+    return () => {
+      mounted = false
+      window.clearInterval(interval)
+    }
+  }, [timeFilter])
 
   const formatTime = (seconds: number) => {
     const total = Math.max(0, Math.floor(seconds || 0))
@@ -311,7 +321,8 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
     return `${secs}s`
   }
 
-  const filterLabel: Record<Filter, string> = {    '7d': 'Last 7 Days',
+  const filterLabel: Record<Filter, string> = {
+    '7d': 'Last 7 Days',
     '30d': 'Last 30 Days',
     '90d': 'Last 3 Months',
     '180d': 'Last 6 Months',
@@ -319,54 +330,22 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
     all: 'Overall'
   }
 
-  const getStartDate = (filter: Filter): { start: Date | null; end: Date | null } => {
-    const now = new Date()
-    if (filter === 'all') return { start: null, end: null }
-    const days = filter === '7d' ? 7 : filter === '30d' ? 30 : filter === '90d' ? 90 : filter === '180d' ? 180 : 365
-    return { start: new Date(now.getTime() - days * 86400000), end: null }
-  }
-
-  const { start, end } = getStartDate(timeFilter)
-
-  // The repository/game was created on September 25, 2026. Until a time-window
-  // moves past that date, every duration filter contains the game's full lifetime.
-  // Use the preserved cumulative totals for those windows so they cannot be lower
-  // than Overall simply because the event log was introduced later.
-  const GAME_LAUNCH_AT = new Date('2026-09-25T17:19:37Z')
-  const windowContainsEntireGameLifetime =
-    timeFilter === 'all' || (start !== null && start <= GAME_LAUNCH_AT)
-
-  const filteredEvents = analytics.events.filter((event: any) => {
-    const date = new Date(event.recorded_at)
-    return (!start || date >= start) && (!end || date < end)
-  })
-
-  const periodByUser = filteredEvents.reduce((map: Record<string, number>, event: any) => {
-    map[event.username] = (map[event.username] || 0) + Number(event.seconds || 0)
-    return map
-  }, {})
-
-  // The Supabase RPC already returns one row per player_id. Keep those rows
-  // separate here so two players with the same username are both displayed.
-  const overallLeaderboard = analytics.users
-    .map((user: any) => ({
-      username: String(user.username || '').trim(),
-      seconds: Math.max(0, Number(user.playtime_seconds || 0)),
+  const leaderboard = analytics.users
+    .filter((user) => user.username.trim())
+    .map((user) => ({
+      playerId: user.player_id,
+      username: user.username.trim(),
+      seconds: Math.max(0, Math.trunc(Number(user.playtime_seconds || 0))),
+      isMe: Boolean(user.is_me),
     }))
-    .filter((user) => user.username)
     .sort((a, b) => {
       if (b.seconds !== a.seconds) return b.seconds - a.seconds
-      return a.username.localeCompare(b.username)
+      if (a.username !== b.username) return a.username.localeCompare(b.username)
+      return a.playerId.localeCompare(b.playerId)
     })
 
-  const leaderboard = windowContainsEntireGameLifetime
-    ? overallLeaderboard
-    : Object.entries(periodByUser)
-        .map(([username, seconds]) => ({ username, seconds: Math.max(0, Number(seconds || 0)) }))
-        .sort((a, b) => b.seconds - a.seconds)
-
   const totalPlaytime = leaderboard.reduce((sum, user) => sum + user.seconds, 0)
-  const totalUsers = analytics.users.length
+  const totalUsers = leaderboard.length
 
   return (
     <div className="hs-screen-enter absolute inset-0 flex flex-col bg-gradient-to-b from-gray-900 via-gray-950 to-black overflow-y-auto">
@@ -428,9 +407,9 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
           <div className="space-y-2">
             {leaderboard.map((user, index) => (
               <div
-                key={user.username}
+                key={user.playerId || `${user.username}-${index}`}
                 className={`rounded-xl p-3 sm:p-4 border ${
-                  user.username === state.username
+                  user.isMe || user.username === state.username && !leaderboard.some((row) => row.isMe)
                     ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/40'
                     : 'bg-white/[0.03] border-white/10'
                 }`}
