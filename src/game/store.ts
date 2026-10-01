@@ -27,7 +27,14 @@ export interface Car {
   inspiration: string
 }
 
-export type BikeSkin = 'black' | 'blue' | 'red' | 'silver' | 'gold'
+export type BikeSkin =
+  | 'black' | 'blue' | 'red' | 'silver' | 'gold'
+  | 'drifter-blue' | 'getaway-orange' | 'marine' | 'matte-black'
+  | 'aurora-green' | 'charcoal-black' | 'rock-matte-black' | 'canyon-red'
+  | 'metallic-galaxy-gray' | 'pearl-vigor-blue' | 'candy-daring-red' | 'glass-sparkle-black'
+  | 'mirror-coated-matte-spark-black' | 'mirror-coated-spark-black-carbon-edition' | 'custom-midnight' | 'rainbow-finish'
+  | 'ducati-red' | 'tricolore-livery' | 'racing-black' | 'winter-test'
+
 
 export interface CarColorOption {
   id: string
@@ -88,11 +95,11 @@ function getCarColorOption(carId: string, colorId?: string): CarColorOption | nu
 
 
 export const BIKE_SKINS: Record<string, BikeSkin[]> = {
-  blitz: ['black', 'blue', 'red'],
-  apex: ['black', 'blue', 'red'],
-  chronos: ['black', 'blue', 'red'],
-  stratos: ['black', 'blue', 'red', 'silver'],
-  zenith: ['black', 'blue', 'red', 'silver', 'gold'],
+  blitz: ['drifter-blue', 'getaway-orange', 'marine', 'matte-black'],
+  apex: ['aurora-green', 'charcoal-black', 'rock-matte-black', 'canyon-red'],
+  chronos: ['metallic-galaxy-gray', 'pearl-vigor-blue', 'candy-daring-red', 'glass-sparkle-black'],
+  stratos: ['mirror-coated-matte-spark-black', 'mirror-coated-spark-black-carbon-edition', 'custom-midnight', 'rainbow-finish'],
+  zenith: ['ducati-red', 'tricolore-livery', 'racing-black', 'winter-test'],
 }
 
 export const SKIN_COLORS: Record<BikeSkin, { color: string; accentColor: string }> = {
@@ -101,7 +108,95 @@ export const SKIN_COLORS: Record<BikeSkin, { color: string; accentColor: string 
   red: { color: '#991b1b', accentColor: '#ef4444' },
   silver: { color: '#6b7280', accentColor: '#9ca3af' },
   gold: { color: '#b8860b', accentColor: '#ffd700' },
+
+  'drifter-blue': { color: '#1f6fc4', accentColor: '#70b6f5' },
+  'getaway-orange': { color: '#e66a1f', accentColor: '#ffb15c' },
+  marine: { color: '#164e63', accentColor: '#3b82a0' },
+  'matte-black': { color: '#111315', accentColor: '#35383d' },
+
+  'aurora-green': { color: '#2e7d5b', accentColor: '#75c99f' },
+  'charcoal-black': { color: '#232629', accentColor: '#565c61' },
+  'rock-matte-black': { color: '#17191b', accentColor: '#444a4f' },
+  'canyon-red': { color: '#9e2d2d', accentColor: '#e16a62' },
+
+  'metallic-galaxy-gray': { color: '#59616a', accentColor: '#aeb6bf' },
+  'pearl-vigor-blue': { color: '#2f6fba', accentColor: '#90c3f5' },
+  'candy-daring-red': { color: '#c5212a', accentColor: '#ff6c72' },
+  'glass-sparkle-black': { color: '#0d1014', accentColor: '#49505a' },
+
+  'mirror-coated-matte-spark-black': { color: '#25282a', accentColor: '#a4abb0' },
+  'mirror-coated-spark-black-carbon-edition': { color: '#16191c', accentColor: '#6f767c' },
+  'custom-midnight': { color: '#101a2c', accentColor: '#49627f' },
+  'rainbow-finish': { color: '#6446a5', accentColor: '#53c7a2' },
+
+  'ducati-red': { color: '#c9141d', accentColor: '#ff686d' },
+  'tricolore-livery': { color: '#c81422', accentColor: '#f4f4f4' },
+  'racing-black': { color: '#111315', accentColor: '#4a4f54' },
+  'winter-test': { color: '#e9edf1', accentColor: '#b7c0c8' },
 }
+
+export const SKIN_NAMES: Record<BikeSkin, string> = {
+  black: 'Black',
+  blue: 'Blue',
+  red: 'Red',
+  silver: 'Silver',
+  gold: 'Gold',
+  'drifter-blue': 'Drifter Blue',
+  'getaway-orange': 'Getaway Orange',
+  marine: 'Marine',
+  'matte-black': 'Matte Black',
+  'aurora-green': 'Aurora Green',
+  'charcoal-black': 'Charcoal Black',
+  'rock-matte-black': 'Rock Matte Black',
+  'canyon-red': 'Canyon Red',
+  'metallic-galaxy-gray': 'Metallic Galaxy Gray',
+  'pearl-vigor-blue': 'Pearl Vigor Blue',
+  'candy-daring-red': 'Candy Daring Red',
+  'glass-sparkle-black': 'Glass Sparkle Black',
+  'mirror-coated-matte-spark-black': 'Mirror Coated Matte Spark Black',
+  'mirror-coated-spark-black-carbon-edition': 'Mirror Coated Spark Black (Carbon Edition)',
+  'custom-midnight': 'Custom Midnight',
+  'rainbow-finish': 'Rainbow Finish',
+  'ducati-red': 'Ducati Red',
+  'tricolore-livery': 'Tricolore Livery',
+  'racing-black': 'Racing Black',
+  'winter-test': 'Winter Test',
+}
+
+export const SKIN_SWATCHES: Record<BikeSkin, string> = {
+  black: '#1a1a1a', blue: '#1e40af', red: '#991b1b', silver: '#9ca3af', gold: '#ffd700',
+  'drifter-blue': '#2878c7', 'getaway-orange': '#f07a2a', marine: '#1d647d', 'matte-black': '#111315',
+  'aurora-green': '#3d946f', 'charcoal-black': '#2a2d30', 'rock-matte-black': '#191b1d', 'canyon-red': '#a93434',
+  'metallic-galaxy-gray': 'linear-gradient(145deg,#9aa2aa,#4c545c)',
+  'pearl-vigor-blue': 'linear-gradient(145deg,#93c6f4,#2c6db5)',
+  'candy-daring-red': 'linear-gradient(145deg,#ff5b64,#bd1922)',
+  'glass-sparkle-black': 'linear-gradient(145deg,#5b636c,#090c10)',
+  'mirror-coated-matte-spark-black': 'linear-gradient(145deg,#8d959b,#171a1c)',
+  'mirror-coated-spark-black-carbon-edition': 'linear-gradient(145deg,#59636b,#0d1013)',
+  'custom-midnight': 'linear-gradient(145deg,#314b70,#0d1627)',
+  'rainbow-finish': 'linear-gradient(135deg,#e85a7a 0%,#f0c34e 24%,#58c487 48%,#4da4e8 72%,#8b5cf6 100%)',
+  'ducati-red': '#c9141d',
+  'tricolore-livery': 'linear-gradient(90deg,#c81422 0 38%,#f2f2f2 38% 66%,#2c8a52 66% 100%)',
+  'racing-black': '#111315',
+  'winter-test': 'linear-gradient(145deg,#f5f7f8 0 58%,#22262b 58% 78%,#c99a34 78% 100%)',
+}
+
+function normalizeBikeSkinSelections(raw: Record<string, unknown> = {}): Record<string, BikeSkin> {
+  return Object.fromEntries(
+    BIKES.map((bike) => {
+      const available = BIKE_SKINS[bike.id] || []
+      const saved = typeof raw[bike.id] === 'string' ? raw[bike.id] as BikeSkin : null
+      const valid = saved && available.includes(saved)
+      return [bike.id, valid ? saved : available[0]]
+    })
+  )
+}
+
+function getBikeSkinOption(bikeId: string, skinId?: string): BikeSkin {
+  const available = BIKE_SKINS[bikeId] || []
+  return (skinId && available.includes(skinId as BikeSkin) ? skinId as BikeSkin : available[0])
+}
+
 
 export const BIKES: Bike[] = [
   {
@@ -359,7 +454,9 @@ function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHig
         carHighScore,
         unlockedBikes,
         unlockedCars,
-        bikeSkins: data.bikeSkins || { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' },
+        bikeSkins: normalizeBikeSkinSelections(
+          data.bikeSkins && typeof data.bikeSkins === 'object' ? data.bikeSkins : {}
+        ),
         totalCoins: data.totalCoins || data.coins || 0,
         inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0, ...(data.inventory || {}) },
         username: data.username || '',
@@ -368,7 +465,10 @@ function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHig
         playtimeHistory: data.playtimeHistory || [],
         vehicleMode: data.vehicleMode === 'car' ? 'car' : 'bike',
         selectedBikeId: typeof data.selectedBikeId === 'string' && BIKES.some((bike) => bike.id === migrate(data.selectedBikeId)) ? migrate(data.selectedBikeId) : BIKES[0].id,
-        selectedSkin: typeof data.selectedSkin === 'string' ? data.selectedSkin as BikeSkin : 'black',
+        selectedSkin: getBikeSkinOption(
+          migrate(data.selectedBikeId && typeof data.selectedBikeId === 'string' ? data.selectedBikeId : BIKES[0].id),
+          typeof data.selectedSkin === 'string' ? data.selectedSkin : undefined
+        ),
         selectedCarId,
         carColors,
         selectedCarColor,
@@ -376,7 +476,8 @@ function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHig
     }
   } catch (e) { /* ignore */ }
   const defaultCarColors = normalizeCarColorSelections()
-  return { highScore: 0, bikeHighScore: 0, carHighScore: 0, unlockedBikes: ['blitz'], unlockedCars: ['kanto-zip'], bikeSkins: { blitz: 'black', apex: 'black', chronos: 'black', stratos: 'black', zenith: 'black' }, totalCoins: 0, inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }, username: '', totalPlaytime: 0, userPlaytime: {}, playtimeHistory: [], vehicleMode: 'bike', selectedBikeId: BIKES[0].id, selectedCarId: CARS[0].id, selectedSkin: 'black', carColors: defaultCarColors, selectedCarColor: defaultCarColors[CARS[0].id] }
+  const defaultBikeSkins = normalizeBikeSkinSelections()
+  return { highScore: 0, bikeHighScore: 0, carHighScore: 0, unlockedBikes: ['blitz'], unlockedCars: ['kanto-zip'], bikeSkins: defaultBikeSkins, totalCoins: 0, inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }, username: '', totalPlaytime: 0, userPlaytime: {}, playtimeHistory: [], vehicleMode: 'bike', selectedBikeId: BIKES[0].id, selectedCarId: CARS[0].id, selectedSkin: defaultBikeSkins[BIKES[0].id], carColors: defaultCarColors, selectedCarColor: defaultCarColors[CARS[0].id] }
 }
 
 function saveProgress(highScore: number, unlockedBikes: string[], bikeSkins: Record<string, BikeSkin>, totalCoins: number, inventory: PowerUpInventory, username: string, totalPlaytime: number, userPlaytime: Record<string, number>, playtimeHistory: PlaytimeEntry[]) {
@@ -428,7 +529,7 @@ type Listener = () => void
 const savedProgress = loadSavedProgress()
 const initialBike = BIKES[0]
 const initialSkin = savedProgress.bikeSkins[initialBike.id] || 'black'
-const initialColors = SKIN_COLORS[initialSkin]
+const initialColors = SKIN_COLORS[getBikeSkinOption(initialBike.id, initialSkin)]
 const initialCar = CARS.find((car) => car.id === savedProgress.selectedCarId) || CARS[0]
 const initialCarColor = getCarColorOption(initialCar.id, savedProgress.selectedCarColor)
 const defaultInventory = { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }
@@ -582,9 +683,12 @@ async function loadCloudProgress(username: string) {
       ? cloud.selectedCarColor
       : carColors[carId]
   const carColor = getCarColorOption(carId, selectedCarColor)
-  const bikeSkin = typeof cloud.selectedSkin === 'string' && BIKE_SKINS[bikeId]?.includes(cloud.selectedSkin as BikeSkin)
-    ? cloud.selectedSkin as BikeSkin
-    : (cloud.bikeSkins?.[bikeId] as BikeSkin) || current.bikeSkins[bikeId] || 'black'
+  const bikeSkin = getBikeSkinOption(
+    bikeId,
+    typeof cloud.selectedSkin === 'string' ? cloud.selectedSkin : undefined
+      || (cloud.bikeSkins?.[bikeId] as BikeSkin)
+      || current.bikeSkins[bikeId]
+  )
   const bike = BIKES.find((item) => item.id === bikeId) || BIKES[0]
   const colors = SKIN_COLORS[bikeSkin]
 
@@ -772,7 +876,7 @@ export const actions = {
   setPlayerX(x: number) { setState({ playerX: x }) },
 
   selectBike(bike: Bike) {
-    const skin = state.bikeSkins[bike.id] || 'black'
+    const skin = getBikeSkinOption(bike.id, state.bikeSkins[bike.id])
     const colors = SKIN_COLORS[skin]
     setState({ 
       selectedBike: { ...bike, color: colors.color, accentColor: colors.accentColor },
@@ -832,6 +936,7 @@ export const actions = {
   },
 
   selectSkin(bikeId: string, skin: BikeSkin) {
+    if (!(BIKE_SKINS[bikeId] || []).includes(skin)) return
     const colors = SKIN_COLORS[skin]
     const newBikeSkins = { ...state.bikeSkins, [bikeId]: skin }
     const updates: Partial<GameData> = { bikeSkins: newBikeSkins }
