@@ -826,9 +826,6 @@ export function MainMenu() {
         <div className="hs-menu-enter relative w-full max-w-3xl text-center">
           {/* Strong title treatment */}
           <div className="mb-4 sm:mb-5">
-            <p className="mb-2 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.38em] text-amber-200/55">
-              Fast Indian Highway Arcade
-            </p>
             <h1 className="hs-title text-5xl sm:text-7xl md:text-8xl font-black leading-[0.82] tracking-[-0.06em] text-white">
               HIGHWAY
             </h1>
