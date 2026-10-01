@@ -12,20 +12,41 @@ function BikeMenuRider({ compact = false }: { compact?: boolean }) {
     <g transform={`translate(0 0) scale(${scale})`}>
       {/* Simple stickman rider: light-blue T-shirt + black pants. */}
       <circle cx="49" cy="16.5" r="4.1" fill="#20252a" stroke="#0d0f11" strokeWidth="1" />
+
+      {/* Far-side leg: drawn first, tucked inward and visually separated from the near leg. */}
+      <path
+        d={`M52.2 ${hipY} L53.8 38.2 L59.4 42.8`}
+        fill="none"
+        stroke="#17191c"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity="0.55"
+      />
+      <circle cx="59.4" cy="42.8" r="1.05" fill="#101214" opacity="0.55" />
+
       <path d={`M45.4 ${shoulderY + 1} Q49 ${shoulderY - 1} 52.6 ${shoulderY + 1} L55 ${hipY} Q49 ${hipY + 2} 43 ${hipY} Z`} fill="#8ec5e8" stroke="#5d8eaf" strokeWidth="0.7"/>
-      
+
       {/* Arms — forward and down to the bars. */}
       <path d={`M45.6 ${shoulderY + 1} L41.2 26 L36.2 22.2`} fill="none" stroke="#8ec5e8" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"/>
       <path d={`M52.4 ${shoulderY + 1} L48.1 26.4 L42.4 22.8`} fill="none" stroke="#8ec5e8" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" opacity="0.92"/>
       <circle cx="36.2" cy="22.2" r="1.25" fill="#111315"/>
       <circle cx="42.4" cy="22.8" r="1.25" fill="#111315"/>
-      
-      {/* Bent legs — seated naturally on the saddle/foot controls. */}
-      <path d={`M45 ${hipY} L49 39 L42.5 43.5`} fill="none" stroke="#17191c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d={`M53 ${hipY} L56 39 L50.5 43.5`} fill="none" stroke="#17191c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-      <circle cx="42.5" cy="43.5" r="1.2" fill="#101214"/>
-      <circle cx="50.5" cy="43.5" r="1.2" fill="#101214"/>
-      
+
+      {/* Near-side leg: prominent, bent around the frame toward the foot control. */}
+      <path
+        d={`M45.4 ${hipY} L46.8 38.8 L40.2 44.2`}
+        fill="none"
+        stroke="#17191c"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="40.2" cy="44.2" r="1.2" fill="#101214"/>
+
+      {/* Seat/frame occlusion cue: makes the far leg read as behind the bike rather than on the same side. */}
+      <path d="M44.6 33.2 Q49 31.8 54.4 34 L53.2 36.3 Q49 35.1 45.4 36 Z" fill="#22272b" opacity="0.9"/>
+
       {/* Small helmet visor for a recognizable rider silhouette. */}
       <path d="M46.1 15.8 L51.8 15.8" stroke="#5f6971" strokeWidth="1" strokeLinecap="round"/>
     </g>
