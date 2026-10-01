@@ -909,7 +909,7 @@ export function MainMenu() {
               style={{ animation: 'hsMenuGlow 3.7s ease-in-out infinite' }}
             />
             <div className="absolute inset-0 pointer-events-none z-[4]" aria-hidden="true">
-              <div className="absolute left-[24%] top-[53%] h-7 w-7 sm:left-[25%] sm:top-[53%]">
+              <div className="absolute left-[30%] top-[53%] h-7 w-7 sm:left-[31%] sm:top-[53%]">
                 <span className="absolute -inset-3 rounded-full bg-slate-200/10 blur-xl" />
                 {[0, 1, 2, 3, 4, 5].map((i) => (
                   <span
