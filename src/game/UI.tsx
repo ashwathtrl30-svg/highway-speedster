@@ -630,17 +630,43 @@ export function MainMenu() {
           50% { transform: translateY(-7px) rotate(1deg); }
         }
         @keyframes hsMenuExhaustSmoke {
-          0% { transform: translate3d(0, 2px, 0) scale(.42); opacity: 0; filter: blur(1.5px); }
-          12% { opacity: .24; }
-          44% { opacity: .18; }
-          100% { transform: translate3d(18px, -34px, 0) scale(1.55); opacity: 0; filter: blur(5px); }
+          0% { transform: translate3d(0, 4px, 0) scale(.34); opacity: 0; filter: blur(1px); }
+          10% { opacity: .72; }
+          34% { opacity: .54; }
+          68% { opacity: .28; }
+          100% { transform: translate3d(28px, -48px, 0) scale(1.8); opacity: 0; filter: blur(6px); }
         }
         .hs-menu-exhaust-smoke {
-          animation: hsMenuExhaustSmoke 2.35s ease-out infinite;
+          animation: hsMenuExhaustSmoke 2.65s ease-out infinite;
           transform-origin: center;
+          mix-blend-mode: screen;
+        }
+        .hs-menu-hero-glow {
+          background:
+            radial-gradient(circle at 50% 72%, rgba(255,178,72,.24) 0%, rgba(255,143,48,.10) 22%, transparent 48%),
+            radial-gradient(circle at 73% 42%, rgba(111,180,219,.25) 0%, transparent 34%),
+            linear-gradient(180deg, rgba(19,31,41,.97) 0%, rgba(25,38,48,.94) 48%, rgba(10,15,19,.98) 100%);
+        }
+        .hs-menu-hero-surface {
+          background:
+            linear-gradient(180deg, transparent 0%, transparent 55%, rgba(255,187,87,.10) 55.5%, transparent 56.5%),
+            repeating-linear-gradient(90deg, transparent 0 11%, rgba(255,255,255,.055) 11.15% 11.35%, transparent 11.6% 28%),
+            repeating-linear-gradient(180deg, transparent 0 20px, rgba(255,188,94,.045) 21px, transparent 22px 44px);
+          mask-image: linear-gradient(to bottom, transparent 0%, black 22%, black 100%);
+          animation: hsMenuRoadRush 2.9s linear infinite;
+          opacity: .9;
+        }
+        .hs-menu-hero-horizon {
+          box-shadow: 0 0 45px rgba(255,186,95,.22), 0 0 90px rgba(84,150,190,.12);
+          animation: hsMenuHorizonPulse 4.2s ease-in-out infinite;
+        }
+        .hs-menu-smoke-core {
+          background: radial-gradient(circle at 34% 30%, rgba(255,255,255,.98) 0%, rgba(232,238,240,.82) 28%, rgba(193,206,212,.56) 56%, rgba(135,151,160,.10) 100%);
+          box-shadow: 0 0 18px rgba(224,235,241,.34), 0 0 36px rgba(178,196,207,.16);
         }
         @media (prefers-reduced-motion: reduce) {
-          .hs-menu-exhaust-smoke { animation: none; opacity: .12; transform: scale(.9); }
+          .hs-menu-exhaust-smoke { animation: none; opacity: .42; transform: scale(.9); }
+          .hs-menu-hero-surface { animation: none; }
         }
         @keyframes hsMenuGlow {
           0%, 100% { opacity: .18; transform: scale(.94); }
@@ -868,18 +894,22 @@ export function MainMenu() {
           </div>
 
           {/* Hero vehicle stage — existing selected vehicle, no new ownership state. */}
-          <div className="hs-menu-enter hs-menu-enter-delay relative mx-auto mb-5 sm:mb-6 h-[170px] sm:h-[215px] w-full max-w-xl overflow-hidden rounded-[28px] border border-white/10 bg-black/20 backdrop-blur-[2px]">
-            <div className="absolute inset-x-10 bottom-5 h-10 rounded-[50%] border border-white/[0.08] bg-white/[0.025]" />
+          <div className="hs-menu-enter hs-menu-enter-delay relative mx-auto mb-5 sm:mb-6 h-[170px] sm:h-[215px] w-full max-w-xl overflow-hidden rounded-[28px] border border-slate-200/10 bg-slate-950/80 backdrop-blur-[2px]">
+            <div className="absolute inset-0 hs-menu-hero-glow" />
+            <div className="absolute inset-x-0 top-[20%] h-[52%] hs-menu-hero-surface pointer-events-none" />
+            <div className="absolute left-1/2 top-[44%] h-px w-[62%] -translate-x-1/2 rounded-full bg-amber-200/30 hs-menu-hero-horizon pointer-events-none" />
+            <div className="absolute inset-x-10 bottom-5 h-10 rounded-[50%] border border-white/[0.12] bg-white/[0.05]" />
             <div
               className="absolute bottom-8 left-1/2 h-20 w-52 sm:w-64 -translate-x-1/2 rounded-[50%] bg-amber-300/10 blur-2xl"
               style={{ animation: 'hsMenuGlow 3.7s ease-in-out infinite' }}
             />
-            <div className="absolute inset-0 pointer-events-none z-[1]" aria-hidden="true">
-              <div className="absolute left-[66%] top-[53%] h-5 w-5 sm:left-[67%] sm:top-[53%]">
+            <div className="absolute inset-0 pointer-events-none z-[4]" aria-hidden="true">
+              <div className="absolute left-[65%] top-[53%] h-7 w-7 sm:left-[66%] sm:top-[53%]">
+                <span className="absolute -inset-3 rounded-full bg-slate-200/10 blur-xl" />
                 {[0, 1, 2, 3, 4, 5].map((i) => (
                   <span
                     key={i}
-                    className="hs-menu-exhaust-smoke absolute left-0 top-0 block rounded-full bg-slate-200/30 shadow-[0_0_18px_rgba(210,218,224,.18)]"
+                    className="hs-menu-exhaust-smoke hs-menu-smoke-core absolute left-0 top-0 block rounded-full"
                     style={{
                       width: `${7 + (i % 3) * 3}px`,
                       height: `${7 + (i % 3) * 3}px`,
@@ -891,7 +921,7 @@ export function MainMenu() {
             </div>
             <div
               key={heroVehicle.id}
-              className="absolute inset-0 flex items-center justify-center"
+              className="absolute inset-0 z-[8] flex items-center justify-center"
               style={{ animation: 'hsMenuVehicleIn 240ms ease-out' }}
             >
               <div
