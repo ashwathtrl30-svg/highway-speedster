@@ -1290,19 +1290,19 @@ function ChronosBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color="#666a6d" metalness={0.95} roughness={0.12} />
       </mesh>
       <mesh position={[-0.20, 0.90, -0.70]} rotation={[0.35, 0, 0]}>
-        <cylinderGeometry args={[0.024, 0.024, 0.22, 8]} rotation={[0, 0, Math.PI / 2]} />
+        <cylinderGeometry args={[0.024, 0.024, 0.22, 8]} />
         <meshStandardMaterial color="#3d4145" metalness={0.92} roughness={0.16} />
       </mesh>
       <mesh position={[0.20, 0.90, -0.70]} rotation={[0.35, 0, 0]}>
-        <cylinderGeometry args={[0.024, 0.024, 0.22, 8]} rotation={[0, 0, Math.PI / 2]} />
+        <cylinderGeometry args={[0.024, 0.024, 0.22, 8]} />
         <meshStandardMaterial color="#3d4145" metalness={0.92} roughness={0.16} />
       </mesh>
       <mesh position={[-0.33, 0.90, -0.71]} rotation={[0.35, 0, 0]}>
-        <cylinderGeometry args={[0.04, 0.04, 0.16, 8]} rotation={[0, 0, Math.PI / 2]} />
+        <cylinderGeometry args={[0.04, 0.04, 0.16, 8]} />
         <meshStandardMaterial color="#111315" roughness={0.92} />
       </mesh>
       <mesh position={[0.33, 0.90, -0.71]} rotation={[0.35, 0, 0]}>
-        <cylinderGeometry args={[0.04, 0.04, 0.16, 8]} rotation={[0, 0, Math.PI / 2]} />
+        <cylinderGeometry args={[0.04, 0.04, 0.16, 8]} />
         <meshStandardMaterial color="#111315" roughness={0.92} />
       </mesh>
       
@@ -1452,19 +1452,19 @@ function StratosBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color="#777b80" metalness={0.96} roughness={0.1} />
       </mesh>
       <mesh position={[-0.22, 0.94, -0.56]} rotation={[0.18, 0, 0]}>
-        <cylinderGeometry args={[0.025, 0.025, 0.28, 10]} rotation={[0, 0, Math.PI / 2]} />
+        <cylinderGeometry args={[0.025, 0.025, 0.28, 10]} />
         <meshStandardMaterial color="#3e4144" metalness={0.92} roughness={0.16} />
       </mesh>
       <mesh position={[0.22, 0.94, -0.56]} rotation={[0.18, 0, 0]}>
-        <cylinderGeometry args={[0.025, 0.025, 0.28, 10]} rotation={[0, 0, Math.PI / 2]} />
+        <cylinderGeometry args={[0.025, 0.025, 0.28, 10]} />
         <meshStandardMaterial color="#3e4144" metalness={0.92} roughness={0.16} />
       </mesh>
       <mesh position={[-0.38, 0.95, -0.54]} rotation={[0.18, 0, 0]}>
-        <cylinderGeometry args={[0.043, 0.043, 0.16, 10]} rotation={[0, 0, Math.PI / 2]} />
+        <cylinderGeometry args={[0.043, 0.043, 0.16, 10]} />
         <meshStandardMaterial color="#101113" roughness={0.92} />
       </mesh>
       <mesh position={[0.38, 0.95, -0.54]} rotation={[0.18, 0, 0]}>
-        <cylinderGeometry args={[0.043, 0.043, 0.16, 10]} rotation={[0, 0, Math.PI / 2]} />
+        <cylinderGeometry args={[0.043, 0.043, 0.16, 10]} />
         <meshStandardMaterial color="#101113" roughness={0.92} />
       </mesh>
       {/* Brake/clutch control levers */}
@@ -1624,19 +1624,19 @@ function ZenithBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color="#9a9fa3" metalness={0.98} roughness={0.08} />
       </mesh>
       <mesh position={[-0.24, 0.94, -0.6]} rotation={[0.2, 0, 0]}>
-        <cylinderGeometry args={[0.026, 0.026, 0.3, 10]} rotation={[0, 0, Math.PI / 2]} />
+        <cylinderGeometry args={[0.026, 0.026, 0.3, 10]} />
         <meshStandardMaterial color="#2a2d30" metalness={0.96} roughness={0.1} />
       </mesh>
       <mesh position={[0.24, 0.94, -0.6]} rotation={[0.2, 0, 0]}>
-        <cylinderGeometry args={[0.026, 0.026, 0.3, 10]} rotation={[0, 0, Math.PI / 2]} />
+        <cylinderGeometry args={[0.026, 0.026, 0.3, 10]} />
         <meshStandardMaterial color="#2a2d30" metalness={0.96} roughness={0.1} />
       </mesh>
       <mesh position={[-0.4, 0.96, -0.58]} rotation={[0.2, 0, 0]}>
-        <cylinderGeometry args={[0.045, 0.045, 0.17, 10]} rotation={[0, 0, Math.PI / 2]} />
+        <cylinderGeometry args={[0.045, 0.045, 0.17, 10]} />
         <meshStandardMaterial color="#090a0b" roughness={0.94} />
       </mesh>
       <mesh position={[0.4, 0.96, -0.58]} rotation={[0.2, 0, 0]}>
-        <cylinderGeometry args={[0.045, 0.045, 0.17, 10]} rotation={[0, 0, Math.PI / 2]} />
+        <cylinderGeometry args={[0.045, 0.045, 0.17, 10]} />
         <meshStandardMaterial color="#090a0b" roughness={0.94} />
       </mesh>
       {/* Brembo-style lever silhouettes without logos */}
