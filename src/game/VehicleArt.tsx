@@ -1,15 +1,13 @@
 import type { Bike, Car, BikeSkin } from './store'
 
 const VEHICLE_FACING_RIGHT_STYLE = {
-  transform: 'scaleX(-1)',
-  transformOrigin: 'center',
   display: 'block',
 } as const
 
 export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
   if (bike.id === 'blitz') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}>
+      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}><g transform="translate(100 0) scale(-1 1)">
         <circle cx="25" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
         <circle cx="75" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
         <path d="M 25 45 L 40 30 L 60 30 L 75 45" fill="none" stroke={bike.color} strokeWidth="3"/>
@@ -19,13 +17,13 @@ export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
         <line x1="35" y1="25" x2="45" y2="20" stroke="#666" strokeWidth="2"/>
         <circle cx="45" cy="20" r="2" fill="#888"/>
         <circle cx="38" cy="28" r="3" fill="#ffffcc" opacity="0.8"/>
-      </svg>
+      </g></svg>
     )
   }
   
   if (bike.id === 'apex') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}>
+      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}><g transform="translate(100 0) scale(-1 1)">
         <circle cx="22" cy="45" r="11" fill="#333" stroke="#555" strokeWidth="2"/>
         <circle cx="78" cy="45" r="11" fill="#333" stroke="#555" strokeWidth="2"/>
         <path d="M 22 45 L 38 28 L 62 28 L 78 45" fill="none" stroke={bike.color} strokeWidth="4"/>
@@ -40,13 +38,13 @@ export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
         <circle cx="35" cy="26" r="4" fill="#ffffcc" opacity="0.8"/>
         <line x1="60" y1="38" x2="70" y2="42" stroke="#bbb" strokeWidth="2"/>
         <line x1="58" y1="40" x2="68" y2="44" stroke="#bbb" strokeWidth="2"/>
-      </svg>
+      </g></svg>
     )
   }
   
   if (bike.id === 'chronos') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}>
+      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}><g transform="translate(100 0) scale(-1 1)">
         <circle cx="25" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
         <circle cx="75" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
         <path d="M 30 40 L 35 25 L 50 20 L 65 25 L 70 40 Z" fill={bike.color}/>
@@ -58,13 +56,13 @@ export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
         <circle cx="37" cy="28" r="2.5" fill="#ffffcc" opacity="0.9"/>
         <circle cx="42" cy="26" r="2.5" fill="#ffffcc" opacity="0.9"/>
         <line x1="62" y1="38" x2="68" y2="42" stroke="#aaa" strokeWidth="1.5"/>
-      </svg>
+      </g></svg>
     )
   }
   
   if (bike.id === 'stratos' && skin === 'candy-flat-blazed-green') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}>
+      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}><g transform="translate(100 0) scale(-1 1)">
         <defs>
           <linearGradient id="hsStratosGreenBlackBody" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#32373b" />
@@ -87,6 +85,18 @@ export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
 
         <circle cx="23" cy="45" r="10" fill="#15171a" stroke="#50585d" strokeWidth="1.8"/>
         <circle cx="77" cy="45" r="10" fill="#15171a" stroke="#50585d" strokeWidth="1.8"/>
+        {/* Clearly visible racing cockpit: clip-on bar, grips and mirrors. */}
+        <path d="M37 22 L33 15 L41 14" fill="none" stroke="#9aa1a6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M29 14 L42 14" stroke="#25292d" strokeWidth="2.2" strokeLinecap="round"/>
+        <path d="M28 13 L25 12" stroke="#0d1012" strokeWidth="2.2" strokeLinecap="round"/>
+        <path d="M43 13 L46 12" stroke="#0d1012" strokeWidth="2.2" strokeLinecap="round"/>
+        <path d="M29 14 L27 10" stroke="#858b90" strokeWidth="1.2" strokeLinecap="round"/>
+        <path d="M43 13 L45 9" stroke="#858b90" strokeWidth="1.2" strokeLinecap="round"/>
+        <ellipse cx="26.5" cy="9.5" rx="2.7" ry="1.5" fill="#171a1d" stroke="#6f777d" strokeWidth="0.7"/>
+        <ellipse cx="45.5" cy="8.5" rx="2.7" ry="1.5" fill="#171a1d" stroke="#6f777d" strokeWidth="0.7"/>
+        <path d="M31 15 L29 16" stroke="#c2c7ca" strokeWidth="1" strokeLinecap="round"/>
+        <path d="M40 15 L42 16" stroke="#c2c7ca" strokeWidth="1" strokeLinecap="round"/>
+
 
         {/* Candy Flat Blazed Green trellis/frame treatment. */}
         <path
@@ -132,15 +142,27 @@ export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
         {/* Small glossy paint reflections. */}
         <path d="M29 25 C39 19 50 16 61 18" fill="none" stroke="#f4f7f8" strokeWidth="1.1" opacity=".24"/>
         <path d="M31 36 C39 34 46 32 54 31" fill="none" stroke="#9ff8b7" strokeWidth="1" opacity=".45"/>
-      </svg>
+      </g></svg>
     )
   }
 
   if (bike.id === 'stratos') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}>
+      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}><g transform="translate(100 0) scale(-1 1)">
         <circle cx="23" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
         <circle cx="77" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
+        {/* Clearly visible racing cockpit: clip-on bar, grips and mirrors. */}
+        <path d="M37 22 L33 15 L41 14" fill="none" stroke="#9aa1a6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M29 14 L42 14" stroke="#25292d" strokeWidth="2.2" strokeLinecap="round"/>
+        <path d="M28 13 L25 12" stroke="#0d1012" strokeWidth="2.2" strokeLinecap="round"/>
+        <path d="M43 13 L46 12" stroke="#0d1012" strokeWidth="2.2" strokeLinecap="round"/>
+        <path d="M29 14 L27 10" stroke="#858b90" strokeWidth="1.2" strokeLinecap="round"/>
+        <path d="M43 13 L45 9" stroke="#858b90" strokeWidth="1.2" strokeLinecap="round"/>
+        <ellipse cx="26.5" cy="9.5" rx="2.7" ry="1.5" fill="#171a1d" stroke="#6f777d" strokeWidth="0.7"/>
+        <ellipse cx="45.5" cy="8.5" rx="2.7" ry="1.5" fill="#171a1d" stroke="#6f777d" strokeWidth="0.7"/>
+        <path d="M31 15 L29 16" stroke="#c2c7ca" strokeWidth="1" strokeLinecap="round"/>
+        <path d="M40 15 L42 16" stroke="#c2c7ca" strokeWidth="1" strokeLinecap="round"/>
+
         <path d="M 25 42 L 30 22 L 48 16 L 68 22 L 75 42 Z" fill={bike.color}/>
         <path d="M 32 40 L 35 25 L 48 20 L 63 25 L 68 40 Z" fill={bike.accentColor}/>
         <path d="M 36 22 L 42 14 L 54 14 L 58 22" fill="#222" opacity="0.6"/>
@@ -150,13 +172,13 @@ export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
         <path d="M 33 26 L 38 24 L 38 28 Z" fill="#ffffcc" opacity="0.9"/>
         <line x1="65" y1="36" x2="73" y2="40" stroke="#999" strokeWidth="2"/>
         <line x1="40" y1="30" x2="60" y2="30" stroke={bike.accentColor} strokeWidth="1.5" opacity="0.7"/>
-      </svg>
+      </g></svg>
     )
   }
   
   if (bike.id === 'zenith' && skin === 'tricolore-livery') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}>
+      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}><g transform="translate(100 0) scale(-1 1)">
         <defs>
           <linearGradient id="hsZenithTriWhite" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#ffffff" />
@@ -177,6 +199,19 @@ export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
 
         <circle cx="22" cy="45" r="10" fill="#17191c" stroke="#596168" strokeWidth="1.6"/>
         <circle cx="78" cy="45" r="10" fill="#17191c" stroke="#596168" strokeWidth="1.6"/>
+        {/* Hyperbike racing cockpit: substantial top clamp, clip-ons, grips and mirrors. */}
+        <path d="M40 18 L37 12 L45 11" fill="none" stroke="#bcc2c6" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M32 11 L46 11" stroke="#1b1e22" strokeWidth="2.5" strokeLinecap="round"/>
+        <path d="M31 10 L28 9" stroke="#07090b" strokeWidth="2.4" strokeLinecap="round"/>
+        <path d="M47 10 L50 9" stroke="#07090b" strokeWidth="2.4" strokeLinecap="round"/>
+        <path d="M33 11 L30 6.5" stroke="#9aa0a5" strokeWidth="1.25" strokeLinecap="round"/>
+        <path d="M46 10.5 L49 6" stroke="#9aa0a5" strokeWidth="1.25" strokeLinecap="round"/>
+        <ellipse cx="29.5" cy="6.2" rx="3" ry="1.6" fill="#0b0d10" stroke="#777e84" strokeWidth="0.75"/>
+        <ellipse cx="49.5" cy="5.7" rx="3" ry="1.6" fill="#0b0d10" stroke="#777e84" strokeWidth="0.75"/>
+        <circle cx="40" cy="11" r="2.1" fill="#777d82" opacity=".95"/>
+        <path d="M34 12 L32 13" stroke="#d7dbde" strokeWidth="1" strokeLinecap="round"/>
+        <path d="M45 12 L47 13" stroke="#d7dbde" strokeWidth="1" strokeLinecap="round"/>
+
 
         {/* White Panigale-style fairing base. */}
         <path
@@ -209,13 +244,13 @@ export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
         <path d="M67 38 L78 40 L74 42 L64 40Z" fill="#d2d6d7"/>
         <path d="M67 35 L78 37" stroke="#e1e5e6" strokeWidth="1.4" opacity=".55"/>
         <circle cx="73" cy="30" r="1.3" fill="#ffffff" opacity=".9"/>
-      </svg>
+      </g></svg>
     )
   }
 
   if (bike.id === 'zenith' && skin === 'winter-test') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}>
+      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}><g transform="translate(100 0) scale(-1 1)">
         <defs>
           <linearGradient id="hsZenithWinterBlack" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#2a2e32" />
@@ -231,6 +266,19 @@ export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
 
         <circle cx="22" cy="45" r="10" fill="#111316" stroke="#4b5359" strokeWidth="1.6"/>
         <circle cx="78" cy="45" r="10" fill="#111316" stroke="#4b5359" strokeWidth="1.6"/>
+        {/* Hyperbike racing cockpit: substantial top clamp, clip-ons, grips and mirrors. */}
+        <path d="M40 18 L37 12 L45 11" fill="none" stroke="#bcc2c6" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M32 11 L46 11" stroke="#1b1e22" strokeWidth="2.5" strokeLinecap="round"/>
+        <path d="M31 10 L28 9" stroke="#07090b" strokeWidth="2.4" strokeLinecap="round"/>
+        <path d="M47 10 L50 9" stroke="#07090b" strokeWidth="2.4" strokeLinecap="round"/>
+        <path d="M33 11 L30 6.5" stroke="#9aa0a5" strokeWidth="1.25" strokeLinecap="round"/>
+        <path d="M46 10.5 L49 6" stroke="#9aa0a5" strokeWidth="1.25" strokeLinecap="round"/>
+        <ellipse cx="29.5" cy="6.2" rx="3" ry="1.6" fill="#0b0d10" stroke="#777e84" strokeWidth="0.75"/>
+        <ellipse cx="49.5" cy="5.7" rx="3" ry="1.6" fill="#0b0d10" stroke="#777e84" strokeWidth="0.75"/>
+        <circle cx="40" cy="11" r="2.1" fill="#777d82" opacity=".95"/>
+        <path d="M34 12 L32 13" stroke="#d7dbde" strokeWidth="1" strokeLinecap="round"/>
+        <path d="M45 12 L47 13" stroke="#d7dbde" strokeWidth="1" strokeLinecap="round"/>
+
 
         {/* Matte-black Winter Test fairings. */}
         <path
@@ -264,15 +312,28 @@ export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
         <path d="M69 27 L74 28 L76 30 L70 30Z" fill="#159447"/>
         <path d="M73 27 L77 29 L79 31 L74 30Z" fill="#e21b2e"/>
         <rect x="62" y="34" width="7" height="1.4" rx=".7" fill="#f3f4f4" opacity=".7"/>
-      </svg>
+      </g></svg>
     )
   }
 
   if (bike.id === 'zenith') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}>
+      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}><g transform="translate(100 0) scale(-1 1)">
         <circle cx="22" cy="45" r="10" fill="#222" stroke="#444" strokeWidth="1.5"/>
         <circle cx="78" cy="45" r="10" fill="#222" stroke="#444" strokeWidth="1.5"/>
+        {/* Hyperbike racing cockpit: substantial top clamp, clip-ons, grips and mirrors. */}
+        <path d="M40 18 L37 12 L45 11" fill="none" stroke="#bcc2c6" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M32 11 L46 11" stroke="#1b1e22" strokeWidth="2.5" strokeLinecap="round"/>
+        <path d="M31 10 L28 9" stroke="#07090b" strokeWidth="2.4" strokeLinecap="round"/>
+        <path d="M47 10 L50 9" stroke="#07090b" strokeWidth="2.4" strokeLinecap="round"/>
+        <path d="M33 11 L30 6.5" stroke="#9aa0a5" strokeWidth="1.25" strokeLinecap="round"/>
+        <path d="M46 10.5 L49 6" stroke="#9aa0a5" strokeWidth="1.25" strokeLinecap="round"/>
+        <ellipse cx="29.5" cy="6.2" rx="3" ry="1.6" fill="#0b0d10" stroke="#777e84" strokeWidth="0.75"/>
+        <ellipse cx="49.5" cy="5.7" rx="3" ry="1.6" fill="#0b0d10" stroke="#777e84" strokeWidth="0.75"/>
+        <circle cx="40" cy="11" r="2.1" fill="#777d82" opacity=".95"/>
+        <path d="M34 12 L32 13" stroke="#d7dbde" strokeWidth="1" strokeLinecap="round"/>
+        <path d="M45 12 L47 13" stroke="#d7dbde" strokeWidth="1" strokeLinecap="round"/>
+
         <line x1="22" y1="38" x2="22" y2="52" stroke="#555" strokeWidth="0.5"/>
         <line x1="15" y1="45" x2="29" y2="45" stroke="#555" strokeWidth="0.5"/>
         <line x1="78" y1="38" x2="78" y2="52" stroke="#555" strokeWidth="0.5"/>
@@ -288,7 +349,7 @@ export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
         <line x1="66" y1="36" x2="74" y2="40" stroke="#888" strokeWidth="1.5"/>
         <line x1="38" y1="28" x2="62" y2="28" stroke={bike.accentColor} strokeWidth="1" opacity="0.8"/>
         <line x1="40" y1="32" x2="60" y2="32" stroke={bike.accentColor} strokeWidth="1" opacity="0.5"/>
-      </svg>
+      </g></svg>
     )
   }
   
@@ -300,7 +361,7 @@ export function CarIcon({ car }: { car: Car }) {
 
   if (car.id === 'kanto-zip') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}>
+      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}><g transform="translate(100 0) scale(-1 1)">
         <circle cx="23" cy="46" r="9" fill="#222" stroke="#777" strokeWidth="2"/>
         <circle cx="77" cy="46" r="9" fill="#222" stroke="#777" strokeWidth="2"/>
         <path d="M13 43 L18 33 L28 31 L38 22 L56 21 L66 25 L73 33 L84 38 L87 43Z" fill={common.fill}/>
@@ -310,13 +371,13 @@ export function CarIcon({ car }: { car: Car }) {
         <rect x="18" y="35" width="10" height="3" rx="1.5" fill="#f4f4f4"/>
         <rect x="72" y="37" width="9" height="3" rx="1.5" fill="#d9343a"/>
         <path d="M69 29 L78 34 L81 37 L68 37Z" fill={common.accent} opacity="0.45"/>
-      </svg>
+      </g></svg>
     )
   }
 
   if (car.id === 'saber-swift') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}>
+      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}><g transform="translate(100 0) scale(-1 1)">
         <circle cx="19" cy="47" r="9" fill="#1d1d1d" stroke="#777" strokeWidth="2"/>
         <circle cx="81" cy="47" r="9" fill="#1d1d1d" stroke="#777" strokeWidth="2"/>
         <path d="M9 43 L16 35 L29 32 L39 25 L61 25 L72 30 L79 34 L90 38 L92 43Z" fill={common.fill}/>
@@ -327,13 +388,13 @@ export function CarIcon({ car }: { car: Car }) {
         <rect x="76" y="39" width="10" height="3" rx="1" fill="#c7363d"/>
         <rect x="38" y="38" width="30" height="2" rx="1" fill="#dfe6ee" opacity="0.75"/>
         <path d="M70 31 L74 28 L78 31" stroke="#9ba8b4" strokeWidth="1.3" fill="none"/>
-      </svg>
+      </g></svg>
     )
   }
 
   if (car.id === 'goliath-titan') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}>
+      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}><g transform="translate(100 0) scale(-1 1)">
         <circle cx="19" cy="47" r="10.5" fill="#202020" stroke="#777" strokeWidth="2"/>
         <circle cx="81" cy="47" r="10.5" fill="#202020" stroke="#777" strokeWidth="2"/>
         <path d="M10 44 L14 28 L24 24 L24 16 L68 16 L77 22 L82 27 L88 30 L91 44Z" fill={common.fill}/>
@@ -344,13 +405,13 @@ export function CarIcon({ car }: { car: Car }) {
         <circle cx="82" cy="29" r="3.2" fill="#333" stroke="#8b8b8b" strokeWidth="1"/>
         <path d="M30 15 L37 11 L63 11 L69 15" fill="none" stroke={common.accent} strokeWidth="2"/>
         <path d="M14 42 L14 34 M86 42 L86 34" stroke="#6e7377" strokeWidth="2"/>
-      </svg>
+      </g></svg>
     )
   }
 
   if (car.id === 'kaiser-monarch') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}>
+      <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}><g transform="translate(100 0) scale(-1 1)">
         <circle cx="19" cy="46" r="9" fill="#191919" stroke="#777" strokeWidth="2"/>
         <circle cx="81" cy="46" r="9" fill="#191919" stroke="#777" strokeWidth="2"/>
         <path d="M8 43 L17 33 L29 30 L45 20 L62 18 L74 23 L82 30 L92 36 L94 43Z" fill={common.fill}/>
@@ -361,13 +422,13 @@ export function CarIcon({ car }: { car: Car }) {
         <rect x="74" y="39" width="13" height="3" rx="1" fill="#d92f3b"/>
         <rect x="36" y="38" width="29" height="2" rx="1" fill="#c9cdd2"/>
         <path d="M68 25 L80 24 L84 27" stroke={common.accent} strokeWidth="2" fill="none"/>
-      </svg>
+      </g></svg>
     )
   }
 
   // Scuderia Fury — very low wedge supercar with a long nose, wide stance and rear wing.
   return (
-    <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}>
+    <svg viewBox="0 0 100 60" className="w-full h-full" style={VEHICLE_FACING_RIGHT_STYLE}><g transform="translate(100 0) scale(-1 1)">
       <circle cx="18" cy="46" r="8" fill="#111" stroke="#777" strokeWidth="2"/>
       <circle cx="82" cy="46" r="8" fill="#111" stroke="#777" strokeWidth="2"/>
       <path d="M5 43 L15 36 L28 33 L41 23 L58 18 L70 22 L81 30 L91 35 L95 43Z" fill={common.fill}/>
@@ -379,6 +440,6 @@ export function CarIcon({ car }: { car: Car }) {
       <rect x="70" y="39" width="18" height="2.5" rx="1" fill="#e12d3b"/>
       <path d="M59 21 L87 21 L89 24 L61 24Z" fill="#111"/>
       <path d="M8 42 L14 39 M92 42 L86 39" stroke={common.accent} strokeWidth="2"/>
-    </svg>
+    </g></svg>
   )
 }
