@@ -19,4 +19,10 @@ assert.equal(
   'a vehicle that stays after the collision window must not register a collision'
 )
 
+assert.equal(
+  sweptSegmentOverlapsRange(0, 4, 1.5, 2.5),
+  true,
+  'the same swept check must catch a player crossing laterally through a traffic vehicle'
+)
+
 console.log('collision regression tests passed')
