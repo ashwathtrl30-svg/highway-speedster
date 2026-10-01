@@ -1802,7 +1802,7 @@ function CarIcon({ car }: { car: Car }) {
 
   if (car.id === 'kanto-zip') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full hs-car-facing-left" style={{ direction: 'ltr', transform: 'scaleX(1)', transformOrigin: 'center' }}>
+      <svg viewBox="0 0 100 60" className="w-full h-full" aria-hidden="true"><g transform="translate(0 0) scale(1 1)" transform-origin="50 30">
         <circle cx="23" cy="46" r="9" fill="#222" stroke="#777" strokeWidth="2"/>
         <circle cx="77" cy="46" r="9" fill="#222" stroke="#777" strokeWidth="2"/>
         <path d="M13 43 L18 33 L28 31 L38 22 L56 21 L66 25 L73 33 L84 38 L87 43Z" fill={common.fill}/>
@@ -1812,13 +1812,13 @@ function CarIcon({ car }: { car: Car }) {
         <rect x="18" y="35" width="10" height="3" rx="1.5" fill="#f4f4f4"/>
         <rect x="72" y="37" width="9" height="3" rx="1.5" fill="#d9343a"/>
         <path d="M69 29 L78 34 L81 37 L68 37Z" fill={common.accent} opacity="0.45"/>
-      </svg>
+      </g></svg>
     )
   }
 
   if (car.id === 'saber-swift') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full hs-car-facing-left" style={{ direction: 'ltr', transform: 'scaleX(1)', transformOrigin: 'center' }}>
+      <svg viewBox="0 0 100 60" className="w-full h-full" aria-hidden="true"><g transform="translate(0 0) scale(1 1)" transform-origin="50 30">
         <circle cx="19" cy="47" r="9" fill="#1d1d1d" stroke="#777" strokeWidth="2"/>
         <circle cx="81" cy="47" r="9" fill="#1d1d1d" stroke="#777" strokeWidth="2"/>
         <path d="M9 43 L16 35 L29 32 L39 25 L61 25 L72 30 L79 34 L90 38 L92 43Z" fill={common.fill}/>
@@ -1829,13 +1829,13 @@ function CarIcon({ car }: { car: Car }) {
         <rect x="76" y="39" width="10" height="3" rx="1" fill="#c7363d"/>
         <rect x="38" y="38" width="30" height="2" rx="1" fill="#dfe6ee" opacity="0.75"/>
         <path d="M22 31 L26 28 L30 31" stroke="#9ba8b4" strokeWidth="1.3" fill="none"/>
-      </svg>
+      </g></svg>
     )
   }
 
   if (car.id === 'goliath-titan') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full hs-car-facing-left" style={{ direction: 'ltr', transform: 'scaleX(1)', transformOrigin: 'center' }}>
+      <svg viewBox="0 0 100 60" className="w-full h-full" aria-hidden="true"><g transform="translate(0 0) scale(1 1)" transform-origin="50 30">
         <circle cx="19" cy="47" r="10.5" fill="#202020" stroke="#777" strokeWidth="2"/>
         <circle cx="81" cy="47" r="10.5" fill="#202020" stroke="#777" strokeWidth="2"/>
         <path d="M10 44 L14 28 L24 24 L24 16 L68 16 L77 22 L82 27 L88 30 L91 44Z" fill={common.fill}/>
@@ -1846,13 +1846,13 @@ function CarIcon({ car }: { car: Car }) {
         <circle cx="82" cy="29" r="3.2" fill="#333" stroke="#8b8b8b" strokeWidth="1"/>
         <path d="M30 15 L37 11 L63 11 L69 15" fill="none" stroke={common.accent} strokeWidth="2"/>
         <path d="M14 42 L14 34 M86 42 L86 34" stroke="#6e7377" strokeWidth="2"/>
-      </svg>
+      </g></svg>
     )
   }
 
   if (car.id === 'kaiser-monarch') {
     return (
-      <svg viewBox="0 0 100 60" className="w-full h-full hs-car-facing-left" style={{ direction: 'ltr', transform: 'scaleX(1)', transformOrigin: 'center' }}>
+      <svg viewBox="0 0 100 60" className="w-full h-full" aria-hidden="true"><g transform="translate(0 0) scale(1 1)" transform-origin="50 30">
         <circle cx="19" cy="46" r="9" fill="#191919" stroke="#777" strokeWidth="2"/>
         <circle cx="81" cy="46" r="9" fill="#191919" stroke="#777" strokeWidth="2"/>
         <path d="M8 43 L17 33 L29 30 L45 20 L62 18 L74 23 L82 30 L92 36 L94 43Z" fill={common.fill}/>
@@ -1863,13 +1863,13 @@ function CarIcon({ car }: { car: Car }) {
         <rect x="74" y="39" width="13" height="3" rx="1" fill="#d92f3b"/>
         <rect x="36" y="38" width="29" height="2" rx="1" fill="#c9cdd2"/>
         <path d="M68 25 L80 24 L84 27" stroke={common.accent} strokeWidth="2" fill="none"/>
-      </svg>
+      </g></svg>
     )
   }
 
   // Scuderia Fury — very low wedge supercar with a long nose, wide stance and rear wing.
   return (
-    <svg viewBox="0 0 100 60" className="w-full h-full hs-car-facing-left" style={{ direction: 'ltr', transform: 'scaleX(1)', transformOrigin: 'center' }}>
+    <svg viewBox="0 0 100 60" className="w-full h-full" aria-hidden="true"><g transform="translate(0 0) scale(1 1)" transform-origin="50 30">
       <circle cx="18" cy="46" r="8" fill="#111" stroke="#777" strokeWidth="2"/>
       <circle cx="82" cy="46" r="8" fill="#111" stroke="#777" strokeWidth="2"/>
       <path d="M5 43 L15 36 L28 33 L41 23 L58 18 L70 22 L81 30 L91 35 L95 43Z" fill={common.fill}/>
@@ -1881,7 +1881,7 @@ function CarIcon({ car }: { car: Car }) {
       <rect x="70" y="39" width="18" height="2.5" rx="1" fill="#e12d3b"/>
       <path d="M59 21 L87 21 L89 24 L61 24Z" fill="#111"/>
       <path d="M8 42 L14 39 M92 42 L86 39" stroke={common.accent} strokeWidth="2"/>
-    </svg>
+    </g></svg>
   )
 }
 
