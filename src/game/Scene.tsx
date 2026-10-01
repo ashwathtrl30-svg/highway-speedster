@@ -921,45 +921,6 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
   )
 }
 
-function BikeExhaust({ bike, side = 1, dual = false }: {
-  bike: Bike
-  side?: 1 | -1
-  dual?: boolean
-}) {
-  const sides = dual ? [-1, 1] : [side]
-  return (
-    <>
-      {sides.map((s) => {
-        const x = s * 0.30
-        return (
-          <group key={s}>
-            <mesh position={[s * 0.22, 0.34, 0.27]} rotation={[Math.PI / 2 - 0.10, 0, 0]}>
-              <cylinderGeometry args={[0.028, 0.034, 0.50, 12]} />
-              <meshStandardMaterial color="#777777" metalness={0.96} roughness={0.11} />
-            </mesh>
-            <mesh position={[x, 0.37, 0.56]} rotation={[Math.PI / 2 - 0.05, 0, 0]}>
-              <cylinderGeometry args={[0.070, 0.080, 0.38, 18]} />
-              <meshStandardMaterial color="#b9b9b9" metalness={0.97} roughness={0.09} />
-            </mesh>
-            <mesh position={[x, 0.445, 0.50]} rotation={[0, 0, s * 0.08]}>
-              <boxGeometry args={[0.11, 0.025, 0.24]} />
-              <meshStandardMaterial color={bike.accentColor} metalness={0.78} roughness={0.18} />
-            </mesh>
-            <mesh position={[x, 0.39, 0.77]} rotation={[Math.PI / 2 - 0.05, 0, 0]}>
-              <cylinderGeometry args={[0.049, 0.049, 0.025, 18]} />
-              <meshStandardMaterial color="#171717" metalness={0.45} roughness={0.38} />
-            </mesh>
-            <mesh position={[s * 0.285, 0.44, 0.40]}>
-              <boxGeometry args={[0.025, 0.11, 0.10]} />
-              <meshStandardMaterial color="#454545" metalness={0.88} roughness={0.20} />
-            </mesh>
-          </group>
-        )
-      })}
-    </>
-  )
-}
-
 // ============== BLITZ BIKE (Modern Neo-Retro Cruiser) ==============
 function BlitzBike({ bike }: { bike: Bike }) {
   return (
@@ -1042,7 +1003,11 @@ function BlitzBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color="#ff0000" emissive="#ff0000" emissiveIntensity={2} />
       </mesh>
 
-      <BikeExhaust bike={bike} />
+      {/* Exhaust - single pipe */}
+      <mesh position={[0.28, 0.26, 0.45]} rotation={[0.08, 0, 0]}>
+        <cylinderGeometry args={[0.03, 0.045, 0.85, 8]} />
+        <meshStandardMaterial color="#aaaaaa" metalness={0.95} roughness={0.1} />
+      </mesh>
 
       {/* Rider */}
       <group position={[0, 1.02, 0.12]}>
@@ -1178,7 +1143,15 @@ function ApexBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color="#ff0000" emissive="#ff0000" emissiveIntensity={2} />
       </mesh>
 
-      <BikeExhaust bike={bike} dual />
+      {/* Exhaust - dual pipes, chrome */}
+      <mesh position={[0.32, 0.28, 0.48]} rotation={[0.1, 0, 0]}>
+        <cylinderGeometry args={[0.04, 0.055, 0.9, 8]} />
+        <meshStandardMaterial color="#cccccc" metalness={0.95} roughness={0.08} />
+      </mesh>
+      <mesh position={[-0.32, 0.28, 0.48]} rotation={[0.1, 0, 0]}>
+        <cylinderGeometry args={[0.04, 0.055, 0.9, 8]} />
+        <meshStandardMaterial color="#cccccc" metalness={0.95} roughness={0.08} />
+      </mesh>
 
       {/* Rider */}
       <group position={[0, 1.05, 0.15]}>
@@ -1348,7 +1321,19 @@ function ChronosBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color="#ff0000" emissive="#ff0000" emissiveIntensity={2.5} />
       </mesh>
 
-      <BikeExhaust bike={bike} />
+      {/* Side exhaust: header + metal muffler + dark outlet */}
+      <mesh position={[0.26, 0.34, 0.18]} rotation={[Math.PI / 2 - 0.20, 0, 0]} scale={[0.028, 0.028, 0.40]}>
+        <cylinderGeometry args={[1, 1, 1, 12]} />
+        <meshStandardMaterial color="#777777" metalness={0.95} roughness={0.10} />
+      </mesh>
+      <mesh position={[0.29, 0.37, 0.53]} rotation={[Math.PI / 2 - 0.08, 0, 0]} scale={[0.070, 0.070, 0.30]}>
+        <cylinderGeometry args={[1, 1, 1, 16]} />
+        <meshStandardMaterial color="#a9a9a9" metalness={0.97} roughness={0.09} />
+      </mesh>
+      <mesh position={[0.29, 0.38, 0.70]} rotation={[Math.PI / 2 - 0.08, 0, 0]} scale={[0.048, 0.048, 0.018]}>
+        <cylinderGeometry args={[1, 1, 1, 16]} />
+        <meshStandardMaterial color="#151515" metalness={0.35} roughness={0.4} />
+      </mesh>
 
       {/* Rider */}
       <group position={[0, 0.98, 0.16]}>
@@ -1519,7 +1504,19 @@ function StratosBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color="#ff0000" emissive="#ff0000" emissiveIntensity={3} />
       </mesh>
 
-      <BikeExhaust bike={bike} />
+      {/* Full side exhaust: header and prominent muffler */}
+      <mesh position={[0.25, 0.34, 0.18]} rotation={[Math.PI / 2 - 0.16, 0, 0]} scale={[0.03, 0.03, 0.43]}>
+        <cylinderGeometry args={[1, 1, 1, 12]} />
+        <meshStandardMaterial color="#7f7f7f" metalness={0.96} roughness={0.10} />
+      </mesh>
+      <mesh position={[0.28, 0.38, 0.56]} rotation={[Math.PI / 2 - 0.04, 0, 0]} scale={[0.075, 0.075, 0.33]}>
+        <cylinderGeometry args={[1, 1, 1, 16]} />
+        <meshStandardMaterial color="#b8b8b8" metalness={0.97} roughness={0.08} />
+      </mesh>
+      <mesh position={[0.28, 0.39, 0.75]} rotation={[Math.PI / 2 - 0.04, 0, 0]} scale={[0.052, 0.052, 0.018]}>
+        <cylinderGeometry args={[1, 1, 1, 16]} />
+        <meshStandardMaterial color="#161616" metalness={0.35} roughness={0.42} />
+      </mesh>
 
       {/* Rider */}
       <group position={[0, 0.99, 0.15]}>
@@ -1697,7 +1694,23 @@ function ZenithBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color="#ff0000" emissive="#ff0000" emissiveIntensity={3.5} />
       </mesh>
 
-      <BikeExhaust bike={bike} dual />
+      {/* Twin under-tail exhausts: clearly visible round cans and outlets */}
+      <mesh position={[-0.16, 0.40, 0.52]} rotation={[Math.PI / 2 - 0.13, 0, 0]} scale={[0.060, 0.060, 0.30]}>
+        <cylinderGeometry args={[1, 1, 1, 16]} />
+        <meshStandardMaterial color="#a7a7a7" metalness={0.97} roughness={0.08} />
+      </mesh>
+      <mesh position={[0.16, 0.40, 0.52]} rotation={[Math.PI / 2 - 0.13, 0, 0]} scale={[0.060, 0.060, 0.30]}>
+        <cylinderGeometry args={[1, 1, 1, 16]} />
+        <meshStandardMaterial color="#a7a7a7" metalness={0.97} roughness={0.08} />
+      </mesh>
+      <mesh position={[-0.16, 0.41, 0.69]} rotation={[Math.PI / 2 - 0.13, 0, 0]} scale={[0.038, 0.038, 0.018]}>
+        <cylinderGeometry args={[1, 1, 1, 16]} />
+        <meshStandardMaterial color="#151515" metalness={0.35} roughness={0.4} />
+      </mesh>
+      <mesh position={[0.16, 0.41, 0.69]} rotation={[Math.PI / 2 - 0.13, 0, 0]} scale={[0.038, 0.038, 0.018]}>
+        <cylinderGeometry args={[1, 1, 1, 16]} />
+        <meshStandardMaterial color="#151515" metalness={0.35} roughness={0.4} />
+      </mesh>
 
       {/* Rider */}
       <group position={[0, 0.96, 0.12]}>
@@ -1735,48 +1748,6 @@ function ZenithBike({ bike }: { bike: Bike }) {
 }
 
 // ============== CARS ==============
-function CarExhaustTips({ shape, car }: {
-  shape: 'hatch' | 'sedan' | 'suv' | 'gt' | 'exotic'
-  car: Car
-}) {
-  const dimensions = {
-    hatch: [1.55, 1.0, 3.2],
-    sedan: [1.65, 1.0, 4.2],
-    suv: [1.9, 1.35, 4.6],
-    gt: [1.85, 1.05, 4.7],
-    exotic: [1.9, 0.9, 4.4],
-  } as const
-  const [w, h, l] = dimensions[shape]
-  const tipRadius = shape === 'suv' ? 0.075 : shape === 'exotic' ? 0.062 : 0.055
-  const xOffset = w * 0.30
-  const rearZ = l / 2 + 0.055
-
-  return (
-    <>
-      {[-1, 1].map((s) => (
-        <group key={s}>
-          <mesh position={[s * xOffset, h * 0.25, l / 2 + 0.035]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[tipRadius * 1.35, tipRadius * 1.35, 0.035, 16]} />
-            <meshStandardMaterial color="#17191b" metalness={0.55} roughness={0.30} />
-          </mesh>
-          <mesh position={[s * xOffset, h * 0.25, rearZ]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[tipRadius, tipRadius * 1.08, 0.15, 18]} />
-            <meshStandardMaterial color="#b8bcc0" metalness={0.97} roughness={0.10} />
-          </mesh>
-          <mesh position={[s * xOffset, h * 0.25, l / 2 + 0.14]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[tipRadius * 0.72, tipRadius * 0.72, 0.018, 18]} />
-            <meshStandardMaterial color="#111111" metalness={0.25} roughness={0.42} />
-          </mesh>
-          <mesh position={[s * xOffset, h * 0.30, l / 2 + 0.018]}>
-            <boxGeometry args={[0.18, 0.025, 0.045]} />
-            <meshStandardMaterial color={car.accentColor} metalness={0.62} roughness={0.24} />
-          </mesh>
-        </group>
-      ))}
-    </>
-  )
-}
-
 // Stylized, logo-free models inspired by the requested real-world proportions.
 
 function CarBase({ car, shape = 'sedan' }: { car: Car; shape?: 'hatch' | 'sedan' | 'suv' | 'gt' | 'exotic' }) {
@@ -1824,7 +1795,6 @@ function CarBase({ car, shape = 'sedan' }: { car: Car; shape?: 'hatch' | 'sedan'
           ))}
         </group>
       ))}
-      <CarExhaustTips shape={shape} car={car} />
       <mesh position={[-w * 0.3, h * 0.36, -l / 2 - 0.01]}>
         <boxGeometry args={[w * 0.2, h * 0.12, 0.05]} />
         <meshStandardMaterial color="#ffffdc" emissive="#fff6b0" emissiveIntensity={1.2} />
