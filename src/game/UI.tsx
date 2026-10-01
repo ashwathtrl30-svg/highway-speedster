@@ -346,27 +346,24 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
     return map
   }, {})
 
-  // Overall must not undercount the event history. Playtime events are written
-  // in 30-second batches and the cumulative user row can briefly lag behind.
-  // Reconcile both sources without double-counting by taking the larger total
-  // for each user. This preserves all existing cumulative/legacy playtime.
-  const allEventByUser = analytics.events.reduce((map: Record<string, number>, event: any) => {
-    map[event.username] = (map[event.username] || 0) + Number(event.seconds || 0)
-    return map
-  }, {})
+  // The Supabase RPC already returns one row per player_id. Keep those rows
+  // separate here so two players with the same username are both displayed.
+  const overallLeaderboard = analytics.users
+    .map((user: any) => ({
+      username: String(user.username || '').trim(),
+      seconds: Math.max(0, Number(user.playtime_seconds || 0)),
+    }))
+    .filter((user) => user.username)
+    .sort((a, b) => {
+      if (b.seconds !== a.seconds) return b.seconds - a.seconds
+      return a.username.localeCompare(b.username)
+    })
 
-  const overallByUser = analytics.users.reduce((map: Record<string, number>, user: any) => {
-    map[user.username] = Math.max(map[user.username] || 0, Number(user.playtime_seconds || 0))
-    return map
-  }, {})
-
-  Object.entries(allEventByUser).forEach(([username, seconds]) => {
-    overallByUser[username] = Math.max(overallByUser[username] || 0, Number(seconds || 0))
-  })
-
-  const leaderboard = Object.entries(windowContainsEntireGameLifetime ? overallByUser : periodByUser)
-    .map(([username, seconds]) => ({ username, seconds }))
-    .sort((a, b) => b.seconds - a.seconds)
+  const leaderboard = windowContainsEntireGameLifetime
+    ? overallLeaderboard
+    : Object.entries(periodByUser)
+        .map(([username, seconds]) => ({ username, seconds: Math.max(0, Number(seconds || 0)) }))
+        .sort((a, b) => b.seconds - a.seconds)
 
   const totalPlaytime = leaderboard.reduce((sum, user) => sum + user.seconds, 0)
   const totalUsers = analytics.users.length
