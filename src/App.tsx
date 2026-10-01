@@ -31,7 +31,7 @@ function App() {
   if (window.location.pathname === '/highscores') return <HighScoreAnalytics />
 
   return (
-    <div className="w-full h-full relative overflow-hidden bg-black">
+    <div className="w-full h-full relative overflow-hidden bg-black touch-none">
       <div className="absolute inset-0"><GameScene /></div>
       {!loaded && <LoadingScreen />}
       <MainMenu />
