@@ -833,6 +833,7 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
   const shieldActive = useGameStore((s) => s.shieldActive)
   const vehicleMode = useGameStore((s) => s.vehicleMode)
   const selectedSkin = useGameStore((s) => s.selectedSkin)
+  const gameState = useGameStore((s) => s.gameState)
 
   useEffect(() => { bikeRef.current = bike }, [bike])
 
@@ -857,7 +858,7 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
   })
 
   return (
-    <group ref={meshRef} position={[0, 0, PLAYER_Z]}>
+    <group ref={meshRef} position={[0, 0, PLAYER_Z]} visible={gameState !== 'menu'}>
       <Html
         position={[0, 0.92, 0]}
         center
