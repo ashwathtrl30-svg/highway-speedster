@@ -629,6 +629,7 @@ function buildCloudProgress(): CloudGameProgress | null {
     carColors: current.carColors,
     selectedCarColor: current.selectedCarColor,
     nameEditsUsed: current.nameEditsUsed,
+    usernameChangeCount: current.nameEditsUsed,
     totalPlaytime: current.totalPlaytime,
     userPlaytime: current.userPlaytime,
     playtimeHistory: current.playtimeHistory,
@@ -666,7 +667,7 @@ async function loadCloudProgress(username = state.username): Promise<boolean> {
   }
 
   const resolvedUsername = cloud.username.trim() || username.trim()
-  const resolvedNameEditsUsed = Math.max(0, Math.min(2, Number(cloud.nameEditsUsed || 0)))
+  const resolvedNameEditsUsed = Math.max(0, Math.min(2, Number(cloud.nameEditsUsed ?? cloud.usernameChangeCount ?? 0)))
   const current = getState()
   if (username.trim() && current.username.trim() && current.username.trim() !== username.trim()) {
     cloudHydratingUser = ''
