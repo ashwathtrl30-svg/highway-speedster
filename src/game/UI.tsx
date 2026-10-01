@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useGameStore, actions, BIKES, CARS, BIKE_SKINS, CAR_COLORS, getState, type Bike, type Car, type BikeSkin, type CarColorOption, type GameData, type PowerUpType } from './store'
+import { useGameStore, actions, BIKES, CARS, BIKE_SKINS, SKIN_NAMES, SKIN_SWATCHES, SKIN_COLORS, CAR_COLORS, getState, type Bike, type Car, type BikeSkin, type CarColorOption, type GameData, type PowerUpType } from './store'
 import { fetchAllAnalytics, fetchMyPlaytimeRank } from '../supabase'
 import { HighScoreAnalytics } from '../HighScoreAnalytics'
 
@@ -1034,18 +1034,8 @@ export function MainMenu() {
 function SkinSelector({ bikeId, isSelected }: { bikeId: string; isSelected: boolean }) {
   const state = useGameStore()
   const availableSkins = BIKE_SKINS[bikeId] || []
-  // Only the currently selected bike's equipped skin gets an active highlight.
-  // Other bikes may retain saved skin choices internally, but they must not
-  // visually appear selected while another bike is active.
+  // Only the currently selected bike's equipped paint gets an active highlight.
   const currentSkin = isSelected ? state.selectedSkin : null
-
-  const skinDisplayColors: Record<string, string> = {
-    black: '#1a1a1a',
-    blue: '#1e40af',
-    red: '#991b1b',
-    silver: '#9ca3af',
-    gold: '#ffd700',
-  }
 
   return (
     <div className="mt-1.5 flex items-center gap-1">
@@ -1058,14 +1048,19 @@ function SkinSelector({ bikeId, isSelected }: { bikeId: string; isSelected: bool
             className={`w-5 h-5 sm:w-6 sm:h-6 rounded-md border-2 transition-all active:scale-90 ${
               isActive ? 'border-white scale-110' : 'border-gray-600 hover:border-gray-400'
             }`}
-            style={{ backgroundColor: skinDisplayColors[skin] }}
-            title={skin.charAt(0).toUpperCase() + skin.slice(1)}
+            style={{
+              background: SKIN_SWATCHES[skin],
+              boxShadow: isActive ? `0 0 12px ${SKIN_COLORS[skin]?.color || '#ffffff'}66` : undefined,
+            }}
+            title={SKIN_NAMES[skin] || skin}
+            aria-label={SKIN_NAMES[skin] || skin}
           />
         )
       })}
     </div>
   )
 }
+
 
 function CarColorSelector({ carId, isSelected }: { carId: string; isSelected: boolean }) {
   const state = useGameStore()
