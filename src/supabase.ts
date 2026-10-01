@@ -147,6 +147,7 @@ export interface CloudGameProgress {
   selectedBikeId: string
   selectedCarId: string
   selectedSkin: string
+  nameEditsUsed: number
   totalPlaytime: number
   userPlaytime: Record<string, number>
   playtimeHistory: Array<{ date: string; seconds: number }>
