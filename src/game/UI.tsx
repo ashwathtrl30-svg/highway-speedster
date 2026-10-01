@@ -590,6 +590,7 @@ export function MainMenu() {
   const [showStore, setShowStore] = useState(false)
   const [showPowerUpSelection, setShowPowerUpSelection] = useState(false)
   const [showStats, setShowStats] = useState(false)
+  const [showAccount, setShowAccount] = useState(false)
   const [navTransition, setNavTransition] = useState<'garage' | 'store' | null>(null)
   const navTransitionTimerRef = useRef<number | null>(null)
   const tapCountRef = useRef(0)
@@ -669,6 +670,10 @@ export function MainMenu() {
 
   if (showStats) {
     return <StatsScreen onBack={() => setShowStats(false)} />
+  }
+
+  if (showAccount) {
+    return <AccountProfile onBack={() => setShowAccount(false)} />
   }
 
   if (showBikes) {
@@ -963,11 +968,17 @@ export function MainMenu() {
       </div>
 
       {state.username && (
-        <div className="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 z-30">
-          <div className="rounded-full border border-white/10 bg-black/25 px-4 py-2 backdrop-blur-xl shadow-lg">
-            <p className="text-white font-bold text-sm sm:text-base">👤 {state.username}</p>
-          </div>
-        </div>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            setShowAccount(true)
+          }}
+          className="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 z-30 rounded-full border border-white/10 bg-black/25 px-4 py-2 backdrop-blur-xl shadow-lg transition-all hover:bg-white/[0.08] hover:border-white/20 active:scale-[0.98]"
+          aria-label="Open account settings"
+        >
+          <span className="text-white font-bold text-sm sm:text-base">👤 {state.username}</span>
+        </button>
       )}
 
       <div className="relative z-10 flex min-h-full flex-col items-center justify-center px-4 py-8 sm:py-10">
@@ -1031,25 +1042,7 @@ export function MainMenu() {
             </div>
           </div>
 
-          {state.username && <div className="hs-menu-enter hs-menu-enter-delay-2 mb-3"><PlaytimeRankCard username={state.username} /></div>}
-          {state.username && getCurrentPlayerId() && (
-            <div className="hs-menu-enter hs-menu-enter-delay-2 mb-4 w-full max-w-md rounded-2xl border border-white/10 bg-black/25 px-4 py-3 backdrop-blur-xl">
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0 text-left">
-                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40">Account ID</p>
-                  <p className="mt-1 break-all font-mono text-[10px] leading-4 text-white/65">{getCurrentPlayerId()}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    void navigator.clipboard?.writeText(getCurrentPlayerId())
-                  }}
-                  className="shrink-0 rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2 text-[10px] font-black text-white/70 hover:bg-white/[0.1]"
-                >COPY</button>
-              </div>
-            </div>
-          )}
+
 
           {state.highScore > 0 && (
             <button
