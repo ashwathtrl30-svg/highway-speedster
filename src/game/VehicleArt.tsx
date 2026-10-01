@@ -15,7 +15,7 @@ function BikeMenuRider({ compact = false }: { compact?: boolean }) {
 
       {/* Far-side leg: darker and mostly behind the tank/frame so it reads as the opposite leg. */}
       <path
-        d="M51.5 34.2 L56.1 37.5 L59.1 42.1"
+        d="M51.5 34.2 L58.0 37.0 L52.0 42.0"
         fill="none"
         stroke="#17191c"
         strokeWidth="2.05"
@@ -23,7 +23,7 @@ function BikeMenuRider({ compact = false }: { compact?: boolean }) {
         strokeLinejoin="round"
         opacity="0.38"
       />
-      <circle cx="59.1" cy="42.1" r="0.95" fill="#101214" opacity="0.34" />
+      <circle cx="52.0" cy="42.0" r="0.95" fill="#101214" opacity="0.34" />
 
       {/* Torso: hips stay over the seat instead of floating above the rear of the bike. */}
       <path
@@ -56,14 +56,14 @@ function BikeMenuRider({ compact = false }: { compact?: boolean }) {
 
       {/* Near-side leg: visible, bent at the knee and reaching the rear-set/foot-control area. */}
       <path
-        d="M46.0 33.2 L52.6 37.0 L59.8 42.5"
+        d="M46.0 33.2 L57.0 37.2 L50.8 42.6"
         fill="none"
         stroke="#17191c"
         strokeWidth="2.65"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <circle cx="59.8" cy="42.5" r="1.15" fill="#101214" />
+      <circle cx="50.8" cy="42.6" r="1.15" fill="#101214" />
 
       {/* Seat overlap cue: the rider is sitting ON the bike, not beside it. */}
       <path
