@@ -1935,29 +1935,35 @@ function TrafficRenderer({ vehiclesRef, getDimensions }: {
   useFrame(() => {
     if (!groupRef.current) return
     const vehicles = vehiclesRef.current
-    
+    const state = getState()
+
+    // Traffic visual scale follows the car-scale reference even while the
+    // player is riding a bike. The player's bike size is untouched.
+    const trafficReferenceLength =
+      state.vehicleMode === 'car'
+        ? getPlayerVisualLength(state)
+        : getPlayerVisualLength({ ...state, vehicleMode: 'car' })
+
     const existingIds = new Set<number>()
-    
+
     vehicles.forEach((v) => {
       existingIds.add(v.id)
-      
+
       let mesh = meshCacheRef.current.get(v.id)
       if (!mesh) {
         mesh = createVehicleMesh(v.type, v.color, getDimensions)
 
-        // Visual-only normalization: every traffic vehicle is scaled so its
-        // longitudinal size matches the currently ridden player vehicle.
-        // Collision dimensions and gameplay calculations remain unchanged.
-        const targetLength = getPlayerVisualLength(getState())
+        // Visual-only normalization: traffic keeps the same relative sizing
+        // used when driving a car, never the shorter bike reference length.
         const trafficLength = Math.max(getDimensions(v.type)[2], 0.01)
-        mesh.scale.setScalar(targetLength / trafficLength)
+        mesh.scale.setScalar(trafficReferenceLength / trafficLength)
 
         meshCacheRef.current.set(v.id, mesh)
         groupRef.current!.add(mesh)
       }
-      const targetLength = getPlayerVisualLength(getState())
+
       const trafficLength = Math.max(getDimensions(v.type)[2], 0.01)
-      const normalizedScale = targetLength / trafficLength
+      const normalizedScale = trafficReferenceLength / trafficLength
       if (Math.abs(mesh.scale.x - normalizedScale) > 0.001) {
         mesh.scale.setScalar(normalizedScale)
       }
