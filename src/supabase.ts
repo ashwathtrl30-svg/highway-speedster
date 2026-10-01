@@ -103,9 +103,9 @@ export async function recordPlaytimeEvent(playerId: string, username: string, se
 
 export async function fetchAllAnalytics() {
   try {
-    const { data, error } = await supabase.rpc('get_public_playtime_leaderboard', { p_period: 'all', p_limit: 500 })
+    const { data, error } = await supabase.rpc('get_public_playtime_leaderboard_v2', { p_period: 'all', p_limit: 500 })
     if (error) throw error
-    return { users: (data || []).map((u: any) => ({ username: String(u.username || ''), playtime_seconds: Number(u.seconds || 0), is_me: Boolean(u.is_me) })), events: [] }
+    return { users: (data || []).map((u: any) => ({ player_id: String(u.player_id || ''), username: String(u.username || ''), playtime_seconds: Number(u.seconds || 0), is_me: Boolean(u.is_me) })), events: [] }
   } catch (error) {
     console.error('Error fetching analytics:', error)
     return { users: [], events: [] }
@@ -259,9 +259,10 @@ export async function fetchHighScoreLeaderboard(): Promise<Array<{ username: str
 
 export async function fetchLeaderboardAnalytics(period: 'all'|'7d'|'30d'|'90d'|'180d'|'365d' = 'all') {
   try {
-    const { data, error } = await supabase.rpc('get_public_playtime_leaderboard', { p_period: period, p_limit: 500 })
+    const { data, error } = await supabase.rpc('get_public_playtime_leaderboard_v2', { p_period: period, p_limit: 500 })
     if (error) throw error
     return { users: (data || []).map((u: any) => ({
+      player_id: String(u.player_id || ''),
       username: String(u.username || ''),
       playtime_seconds: Number(u.seconds || 0),
       is_me: Boolean(u.is_me)
