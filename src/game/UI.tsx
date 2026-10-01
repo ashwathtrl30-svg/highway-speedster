@@ -2299,63 +2299,54 @@ function BikeIcon({ bike }: { bike: Bike }) {
   if (bike.id === 'chronos') {
     return (
       <svg viewBox="0 0 100 60" className="w-full h-full">
-        <circle cx="25" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
-        <circle cx="75" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
-        <path d="M 30 40 L 35 25 L 50 20 L 65 25 L 70 40 Z" fill={bike.color}/>
-        <path d="M 35 38 L 38 27 L 50 23 L 62 27 L 65 38 Z" fill={bike.accentColor}/>
-        <path d="M 40 25 L 45 18 L 55 18 L 60 25" fill="#333" opacity="0.5"/>
-        <ellipse cx="58" cy="32" rx="8" ry="3" fill="#1a1a1a"/>
-        <path d="M 65 30 L 72 35 L 70 40" fill={bike.color}/>
-        <line x1="38" y1="22" x2="45" y2="20" stroke="#666" strokeWidth="1.5"/>
-        <circle cx="37" cy="28" r="2.5" fill="#ffffcc" opacity="0.9"/>
-        <circle cx="42" cy="26" r="2.5" fill="#ffffcc" opacity="0.9"/>
-        <line x1="62" y1="38" x2="68" y2="42" stroke="#aaa" strokeWidth="1.5"/>
+        <circle cx="24" cy="45" r="10" fill="#262626" stroke="#5f666b" strokeWidth="1.8"/>
+        <circle cx="76" cy="45" r="10" fill="#262626" stroke="#5f666b" strokeWidth="1.8"/>
+        <path d="M24 45 C28 38 31 31 37 28 C43 24 55 23 63 27 C69 30 72 36 76 45" fill="none" stroke={bike.color} strokeWidth="3.2" strokeLinecap="round"/>
+        <path d="M30 39 C32 32 37 24 45 20 C54 16 65 20 70 28 C72 31 73 35 75 39 C68 41 60 42 50 42 C42 42 35 41 30 39Z" fill={bike.color}/>
+        <path d="M35 34 C37 27 43 21 50 19 C58 18 64 21 68 27 C64 29 57 30 50 30 C44 30 39 29 35 34Z" fill={bike.accentColor} opacity="0.9"/>
+        <path d="M43 21 C48 17 57 17 62 20 L66 25 L47 25Z" fill="#1a1f24" opacity="0.9"/>
+        <path d="M30 40 C40 43 59 44 70 40 L73 43 C60 47 41 47 28 43Z" fill="#111318"/>
+        <circle cx="35" cy="27" r="2.8" fill="#fff9cf" opacity="0.95"/>
+        <path d="M34 24 L41 20" stroke="#92979b" strokeWidth="1.6" strokeLinecap="round"/>
       </svg>
     )
   }
-  
-  if (bike.id === 'stratos') {
+
+if (bike.id === 'stratos') {
     return (
       <svg viewBox="0 0 100 60" className="w-full h-full">
-        <circle cx="23" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
-        <circle cx="77" cy="45" r="10" fill="#333" stroke="#555" strokeWidth="1.5"/>
-        <path d="M 25 42 L 30 22 L 48 16 L 68 22 L 75 42 Z" fill={bike.color}/>
-        <path d="M 32 40 L 35 25 L 48 20 L 63 25 L 68 40 Z" fill={bike.accentColor}/>
-        <path d="M 36 22 L 42 14 L 54 14 L 58 22" fill="#222" opacity="0.6"/>
-        <ellipse cx="60" cy="30" rx="9" ry="2.5" fill="#1a1a1a"/>
-        <path d="M 68 28 L 78 32 L 75 40" fill={bike.color}/>
-        <line x1="35" y1="20" x2="44" y2="17" stroke="#555" strokeWidth="1.5"/>
-        <path d="M 33 26 L 38 24 L 38 28 Z" fill="#ffffcc" opacity="0.9"/>
-        <line x1="65" y1="36" x2="73" y2="40" stroke="#999" strokeWidth="2"/>
-        <line x1="40" y1="30" x2="60" y2="30" stroke={bike.accentColor} strokeWidth="1.5" opacity="0.7"/>
+        <circle cx="23" cy="45" r="10" fill="#292929" stroke="#60676c" strokeWidth="1.8"/>
+        <circle cx="77" cy="45" r="10" fill="#292929" stroke="#60676c" strokeWidth="1.8"/>
+        <path d="M23 45 C28 39 33 31 40 29 C47 27 59 29 65 33 C70 36 73 40 77 45" fill="none" stroke={bike.color} strokeWidth="3" strokeLinecap="round"/>
+        <ellipse cx="48" cy="30" rx="16" ry="8.5" fill={bike.color}/>
+        <ellipse cx="49" cy="28.5" rx="12" ry="6" fill={bike.accentColor}/>
+        <path d="M35 34 C39 31 57 31 65 34 L62 39 L38 39Z" fill="#17191b"/>
+        <path d="M60 25 C66 25 70 28 72 33 L66 36 L61 32Z" fill="#242a30"/>
+        <path d="M34 24 C40 21 49 20 56 22 L62 27 L43 27Z" fill="#20262b"/>
+        <circle cx="69" cy="28" r="2.7" fill="#fff9cf" opacity="0.95"/>
+        <path d="M68 25 L62 21" stroke="#969ba0" strokeWidth="1.6" strokeLinecap="round"/>
       </svg>
     )
   }
-  
-  if (bike.id === 'zenith') {
+
+if (bike.id === 'zenith') {
     return (
       <svg viewBox="0 0 100 60" className="w-full h-full">
-        <circle cx="22" cy="45" r="10" fill="#222" stroke="#444" strokeWidth="1.5"/>
-        <circle cx="78" cy="45" r="10" fill="#222" stroke="#444" strokeWidth="1.5"/>
-        <line x1="22" y1="38" x2="22" y2="52" stroke="#555" strokeWidth="0.5"/>
-        <line x1="15" y1="45" x2="29" y2="45" stroke="#555" strokeWidth="0.5"/>
-        <line x1="78" y1="38" x2="78" y2="52" stroke="#555" strokeWidth="0.5"/>
-        <line x1="71" y1="45" x2="85" y2="45" stroke="#555" strokeWidth="0.5"/>
-        <path d="M 22 43 L 28 18 L 46 12 L 70 18 L 78 43 Z" fill={bike.color}/>
-        <path d="M 30 41 L 33 22 L 46 16 L 64 22 L 70 41 Z" fill={bike.accentColor}/>
-        <path d="M 34 18 L 40 10 L 52 10 L 56 18" fill="#111" opacity="0.7"/>
-        <ellipse cx="62" cy="28" rx="10" ry="2" fill="#0a0a0a"/>
-        <path d="M 70 25 L 82 28 L 78 40" fill={bike.color}/>
-        <line x1="33" y1="16" x2="42" y2="13" stroke="#444" strokeWidth="1.5"/>
-        <rect x="30" y="22" width="8" height="2" rx="1" fill="#ffffcc" opacity="0.9"/>
-        <line x1="68" y1="34" x2="76" y2="38" stroke="#888" strokeWidth="1.5"/>
-        <line x1="66" y1="36" x2="74" y2="40" stroke="#888" strokeWidth="1.5"/>
-        <line x1="38" y1="28" x2="62" y2="28" stroke={bike.accentColor} strokeWidth="1" opacity="0.8"/>
-        <line x1="40" y1="32" x2="60" y2="32" stroke={bike.accentColor} strokeWidth="1" opacity="0.5"/>
+        <circle cx="22" cy="45" r="10" fill="#222" stroke="#555c61" strokeWidth="1.8"/>
+        <circle cx="78" cy="45" r="10" fill="#222" stroke="#555c61" strokeWidth="1.8"/>
+        <path d="M22 45 C28 39 32 28 39 24 C47 19 60 19 68 24 C74 28 76 36 78 45" fill="none" stroke={bike.color} strokeWidth="3.4" strokeLinecap="round"/>
+        <path d="M28 42 C30 34 32 25 41 18 C49 13 62 16 69 23 C73 27 74 34 76 41 C65 44 42 45 28 42Z" fill={bike.color}/>
+        <path d="M34 35 C35 27 40 21 47 18 C54 17 62 19 68 25 C63 28 58 29 51 29 C44 29 38 28 34 35Z" fill={bike.accentColor} opacity="0.88"/>
+        <path d="M40 19 C48 14 59 14 65 18 L69 24 L46 24Z" fill="#11161b" opacity="0.95"/>
+        <path d="M29 41 C41 45 63 45 74 41 L76 44 C62 48 40 48 27 44Z" fill="#0d0f12"/>
+        <path d="M35 25 L42 20" stroke="#8b9196" strokeWidth="1.5" strokeLinecap="round"/>
+        <rect x="33" y="25" width="9" height="2.8" rx="1.4" fill="#fff9cf" opacity="0.95"/>
+        <circle cx="68" cy="29" r="2" fill="#24282d"/>
       </svg>
     )
   }
-  
+
+
   return <span className="text-2xl sm:text-3xl">🏍️</span>
 }
 
