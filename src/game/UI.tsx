@@ -997,8 +997,11 @@ function GarageShowroomPreview({
   section: 'bikes' | 'cars'
 }) {
   const isBike = section === 'bikes'
-  const vehicle = isBike ? state.selectedBike : state.selectedCar
-  const vehicleId = vehicle.id
+  const isSectionSelected = state.vehicleMode === section
+  const vehicle = isSectionSelected
+    ? (isBike ? state.selectedBike : state.selectedCar)
+    : null
+  const vehicleId = vehicle?.id ?? null
 
   type GarageVehicleSnapshot = {
     section: 'bikes' | 'cars'
@@ -1006,27 +1009,45 @@ function GarageShowroomPreview({
     id: string
   }
 
-  const previousVehicleRef = useRef<GarageVehicleSnapshot>({
-    section,
-    vehicle,
-    id: vehicleId,
-  })
+  const previousVehicleRef = useRef<GarageVehicleSnapshot | null>(
+    isSectionSelected
+      ? { section, vehicle: vehicle as Bike | Car, id: vehicleId as string }
+      : null
+  )
   const switchNonceRef = useRef(0)
   const [switchFx, setSwitchFx] = useState<GarageVehicleSnapshot | null>(null)
 
   useEffect(() => {
     const previous = previousVehicleRef.current
-    const changed = previous.section !== section || previous.id !== vehicleId
 
-    if (!changed) return
+    // Changing the BIKES/CARS filter must not select the previously saved
+    // vehicle from the other category.
+    if (!isSectionSelected || !vehicle) {
+      previousVehicleRef.current = null
+      setSwitchFx(null)
+      return
+    }
+
+    const changedSameSection =
+      previous !== null &&
+      previous.section === section &&
+      previous.id !== vehicleId
 
     const nonce = ++switchNonceRef.current
-    setSwitchFx(previous)
+
+    if (changedSameSection) {
+      setSwitchFx(previous)
+    } else {
+      setSwitchFx(null)
+    }
+
     previousVehicleRef.current = {
       section,
       vehicle,
       id: vehicleId,
     }
+
+    if (!changedSameSection) return
 
     const timer = window.setTimeout(() => {
       if (switchNonceRef.current === nonce) {
@@ -1035,7 +1056,7 @@ function GarageShowroomPreview({
     }, 470)
 
     return () => window.clearTimeout(timer)
-  }, [section, vehicleId])
+  }, [section, vehicleId, isSectionSelected])
 
   return (
     <div className="mx-3 sm:mx-4 mt-3 sm:mt-4">
@@ -1284,44 +1305,60 @@ function GarageShowroomPreview({
           </div>
         )}
 
-        {/* Vehicle turntable / arrival stage */}
-        <div
-          key={`garage-vehicle-${section}-${vehicleId}-${switchNonceRef.current}`}
-          className="absolute left-1/2 bottom-14 z-[22] h-[138px] w-[210px] sm:h-[164px] sm:w-[260px] -translate-x-1/2"
-          style={{
-            animation: switchFx
-              ? 'hsGarageSwitchNew 470ms cubic-bezier(.16,.8,.18,1) both'
-              : 'hsGarageVehicleIn 240ms ease-out',
-            perspective: '900px',
-          }}
-        >
+        {/* Vehicle turntable / arrival stage. A category with no
+            active selection stays visibly empty until the player picks a vehicle. */}
+        {vehicle ? (
           <div
-            className="absolute inset-0 flex items-center justify-center"
+            key={`garage-vehicle-${section}-${vehicleId}-${switchNonceRef.current}`}
+            className="absolute left-1/2 bottom-14 z-[22] h-[138px] w-[210px] sm:h-[164px] sm:w-[260px] -translate-x-1/2"
             style={{
-              transformStyle: 'preserve-3d',
-              animation: 'hsGarageTurntable 7.5s ease-in-out infinite',
+              animation: switchFx
+                ? 'hsGarageSwitchNew 470ms cubic-bezier(.16,.8,.18,1) both'
+                : 'hsGarageVehicleIn 240ms ease-out',
+              perspective: '900px',
             }}
           >
             <div
-              className="h-[104px] w-[178px] sm:h-[126px] sm:w-[218px] rounded-2xl flex items-center justify-center"
+              className="absolute inset-0 flex items-center justify-center"
               style={{
-                background: `linear-gradient(145deg, ${vehicle.color}1f, ${vehicle.accentColor}12)`,
-                boxShadow: `0 16px 42px ${vehicle.color}16`,
+                transformStyle: 'preserve-3d',
+                animation: 'hsGarageTurntable 7.5s ease-in-out infinite',
               }}
             >
-              <div className="h-[88px] w-[168px] sm:h-[112px] sm:w-[208px]">
-                {isBike ? <BikeIcon bike={state.selectedBike} /> : <CarIcon car={state.selectedCar} />}
+              <div
+                className="h-[104px] w-[178px] sm:h-[126px] sm:w-[218px] rounded-2xl flex items-center justify-center"
+                style={{
+                  background: `linear-gradient(145deg, ${vehicle.color}1f, ${vehicle.accentColor}12)`,
+                  boxShadow: `0 16px 42px ${vehicle.color}16`,
+                }}
+              >
+                <div className="h-[88px] w-[168px] sm:h-[112px] sm:w-[208px]">
+                  {isBike
+                    ? <BikeIcon bike={state.selectedBike} />
+                    : <CarIcon car={state.selectedCar} />}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="absolute inset-x-0 bottom-14 z-[22] flex flex-col items-center justify-center text-center pointer-events-none">
+            <div className="h-20 w-32 sm:h-24 sm:w-40 rounded-[50%] border border-white/[0.08] bg-white/[0.02] shadow-[0_16px_42px_rgba(0,0,0,.25)]" />
+            <p className="mt-2 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em] text-white/28">
+              Select a {isBike ? 'bike' : 'car'} below
+            </p>
+          </div>
+        )}
 
         {/* Showroom metadata */}
         <div className="absolute left-4 top-4 sm:left-5 sm:top-5">
           <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.24em] text-white/40 font-semibold">
             {isBike ? 'Bike Showroom' : 'Car Showroom'}
           </p>
-          <p className="mt-1 text-sm sm:text-base font-black text-white">{vehicle.name}</p>
+          {vehicle ? (
+            <p className="mt-1 text-sm sm:text-base font-black text-white">{vehicle.name}</p>
+          ) : (
+            <p className="mt-1 text-sm sm:text-base font-black text-white/40">No {isBike ? 'bike' : 'car'} selected</p>
+          )}
         </div>
       </div>
     </div>
