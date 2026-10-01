@@ -1192,74 +1192,77 @@ function ApexBike({ bike }: { bike: Bike }) {
 function ChronosBike({ bike }: { bike: Bike }) {
   return (
     <>
-      {/* Aerodynamic central fairing: rounded, tapered silhouette instead of a rectangular block */}
-      <group position={[0, 0.56, -0.08]}>
-        <mesh scale={[0.42, 0.46, 1.0]}>
-          <sphereGeometry args={[0.62, 20, 14]} />
-          <meshStandardMaterial color={bike.color} metalness={0.72} roughness={0.22} />
+      {/* Hayabusa-inspired silhouette: broad, rounded aerodynamic front and flowing rear body */}
+      <group position={[0, 0.56, -0.04]}>
+        <mesh scale={[0.42, 0.40, 0.94]}>
+          <sphereGeometry args={[0.64, 24, 16]} />
+          <meshStandardMaterial color={bike.color} metalness={0.72} roughness={0.20} />
         </mesh>
-        {/* Lower belly pan */}
+        <mesh position={[0, 0.02, -0.60]} scale={[0.31, 0.30, 0.43]}>
+          <sphereGeometry args={[1, 22, 14]} />
+          <meshStandardMaterial color={bike.accentColor} metalness={0.75} roughness={0.18} />
+        </mesh>
         <mesh position={[0, -0.18, 0.18]} scale={[0.34, 0.18, 0.62]}>
-          <sphereGeometry args={[0.58, 16, 10]} />
-          <meshStandardMaterial color={bike.color} metalness={0.68} roughness={0.24} />
+          <sphereGeometry args={[0.62, 20, 14]} />
+          <meshStandardMaterial color={bike.color} metalness={0.68} roughness={0.23} />
         </mesh>
       </group>
 
-      {/* Fuel tank - broad at the rider, tapered toward the steering head */}
-      <mesh position={[0, 0.78, -0.06]} scale={[0.34, 0.27, 0.58]}>
-        <sphereGeometry args={[1, 20, 14]} />
-        <meshStandardMaterial color={bike.accentColor} metalness={0.78} roughness={0.18} />
+      {/* Sculpted fuel tank */}
+      <mesh position={[0, 0.80, 0.02]} scale={[0.35, 0.27, 0.56]}>
+        <sphereGeometry args={[1, 24, 16]} />
+        <meshStandardMaterial color={bike.accentColor} metalness={0.78} roughness={0.16} />
       </mesh>
-      <mesh position={[0, 0.72, 0.02]} scale={[0.12, 0.035, 0.34]}>
-        <sphereGeometry args={[1, 16, 10]} />
-        <meshStandardMaterial color={bike.color} metalness={0.65} roughness={0.24} />
-      </mesh>
-
-      {/* Sport tail and raised pillion */}
-      <mesh position={[0, 0.65, 0.68]} scale={[0.26, 0.18, 0.48]}>
+      <mesh position={[0, 0.73, 0.03]} scale={[0.13, 0.035, 0.36]}>
         <sphereGeometry args={[1, 18, 12]} />
-        <meshStandardMaterial color={bike.color} metalness={0.72} roughness={0.22} />
+        <meshStandardMaterial color={bike.color} metalness={0.62} roughness={0.23} />
       </mesh>
-      <mesh position={[0, 0.73, 0.38]} scale={[0.27, 0.055, 0.36]}>
+
+      {/* Long, rounded rear cowl */}
+      <mesh position={[0, 0.65, 0.71]} scale={[0.25, 0.17, 0.48]}>
+        <sphereGeometry args={[1, 22, 14]} />
+        <meshStandardMaterial color={bike.color} metalness={0.74} roughness={0.20} />
+      </mesh>
+      <mesh position={[0, 0.74, 0.39]} scale={[0.28, 0.05, 0.34]}>
+        <sphereGeometry args={[1, 18, 12]} />
+        <meshStandardMaterial color="#111111" roughness={0.90} />
+      </mesh>
+
+      {/* Engine and frame */}
+      <mesh position={[0, 0.33, 0.10]} scale={[0.30, 0.22, 0.40]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="#202020" metalness={0.90} roughness={0.20} />
+      </mesh>
+      <mesh position={[0.19, 0.49, 0.10]} rotation={[0, 0.15, -0.24]} scale={[0.045, 0.05, 0.58]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="#3b3b3b" metalness={0.84} roughness={0.20} />
+      </mesh>
+      <mesh position={[-0.19, 0.49, 0.10]} rotation={[0, -0.15, 0.24]} scale={[0.045, 0.05, 0.58]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="#3b3b3b" metalness={0.84} roughness={0.20} />
+      </mesh>
+
+      {/* Smooth front suspension and rounded nose */}
+      <mesh position={[-0.11, 0.57, -0.78]} rotation={[0.18, 0, -0.02]} scale={[0.052, 0.70, 0.052]}>
+        <cylinderGeometry args={[1, 1, 1, 12]} />
+        <meshStandardMaterial color="#858585" metalness={0.92} roughness={0.14} />
+      </mesh>
+      <mesh position={[0.11, 0.57, -0.78]} rotation={[0.18, 0, 0.02]} scale={[0.052, 0.70, 0.052]}>
+        <cylinderGeometry args={[1, 1, 1, 12]} />
+        <meshStandardMaterial color="#858585" metalness={0.92} roughness={0.14} />
+      </mesh>
+      <mesh position={[0, 0.86, -0.70]} scale={[0.27, 0.045, 0.17]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="#303030" metalness={0.82} roughness={0.20} />
+      </mesh>
+
+      {/* Windscreen integrated into fairing */}
+      <mesh position={[0, 0.88, -0.57]} rotation={[0.38, 0, 0]} scale={[0.22, 0.11, 0.025]}>
         <sphereGeometry args={[1, 16, 10]} />
-        <meshStandardMaterial color="#111111" roughness={0.9} />
+        <meshStandardMaterial color="#111111" metalness={0.25} roughness={0.30} transparent opacity={0.78} />
       </mesh>
 
-      {/* Exposed engine and frame spine */}
-      <mesh position={[0, 0.34, 0.10]} scale={[0.30, 0.22, 0.40]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#202020" metalness={0.9} roughness={0.2} />
-      </mesh>
-      <mesh position={[0.19, 0.48, 0.12]} rotation={[0, 0.18, -0.28]} scale={[0.045, 0.055, 0.62]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#3a3a3a" metalness={0.82} roughness={0.22} />
-      </mesh>
-      <mesh position={[-0.19, 0.48, 0.12]} rotation={[0, -0.18, 0.28]} scale={[0.045, 0.055, 0.62]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#3a3a3a" metalness={0.82} roughness={0.22} />
-      </mesh>
-
-      {/* Radiator / intake area */}
-      <mesh position={[0, 0.40, -0.42]} scale={[0.24, 0.14, 0.05]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#121212" metalness={0.55} roughness={0.42} />
-      </mesh>
-
-      {/* Front forks - two realistic fork legs */}
-      <mesh position={[-0.12, 0.56, -0.78]} rotation={[0.18, 0, -0.03]} scale={[0.055, 0.70, 0.055]}>
-        <cylinderGeometry args={[1, 1, 1, 12]} />
-        <meshStandardMaterial color="#858585" metalness={0.92} roughness={0.14} />
-      </mesh>
-      <mesh position={[0.12, 0.56, -0.78]} rotation={[0.18, 0, 0.03]} scale={[0.055, 0.70, 0.055]}>
-        <cylinderGeometry args={[1, 1, 1, 12]} />
-        <meshStandardMaterial color="#858585" metalness={0.92} roughness={0.14} />
-      </mesh>
-      <mesh position={[0, 0.86, -0.74]} scale={[0.27, 0.045, 0.18]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#303030" metalness={0.82} roughness={0.2} />
-      </mesh>
-
-      {/* Front wheel - tire, alloy rim, hub and brake disc */}
+      {/* Wheels */}
       <mesh name="player-wheel" position={[0, 0.25, -0.97]} rotation={[0, Math.PI / 2, 0]}>
         <torusGeometry args={[0.25, 0.075, 12, 24]} />
         <meshStandardMaterial color="#0e0e0e" roughness={0.88} />
@@ -1268,51 +1271,39 @@ function ChronosBike({ bike }: { bike: Bike }) {
         <cylinderGeometry args={[0.17, 0.17, 0.06, 16]} />
         <meshStandardMaterial color="#686868" metalness={0.88} roughness={0.18} />
       </mesh>
-      <mesh position={[0.032, 0.25, -0.97]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.115, 0.115, 0.018, 16]} />
-        <meshStandardMaterial color="#b3b3b3" metalness={0.82} roughness={0.2} />
-      </mesh>
-
-      {/* Rear wheel - wider performance tire */}
-      <mesh name="player-wheel" position={[0, 0.25, 0.89]} rotation={[0, Math.PI / 2, 0]}>
+      <mesh name="player-wheel" position={[0, 0.25, 0.90]} rotation={[0, Math.PI / 2, 0]}>
         <torusGeometry args={[0.27, 0.10, 12, 24]} />
         <meshStandardMaterial color="#0d0d0d" roughness={0.88} />
       </mesh>
-      <mesh name="player-wheel" position={[0, 0.25, 0.89]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, 0.90]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.20, 0.20, 0.12, 16]} />
         <meshStandardMaterial color="#5f5f5f" metalness={0.88} roughness={0.18} />
-      </mesh>
-      <mesh position={[0.06, 0.25, 0.89]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.125, 0.125, 0.02, 16]} />
-        <meshStandardMaterial color="#b3b3b3" metalness={0.82} roughness={0.2} />
       </mesh>
 
       {/* Swingarm */}
       <mesh position={[0.13, 0.38, 0.46]} rotation={[0.02, 0.06, -0.18]} scale={[0.06, 0.07, 0.58]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#343434" metalness={0.82} roughness={0.2} />
+        <meshStandardMaterial color="#343434" metalness={0.82} roughness={0.20} />
       </mesh>
       <mesh position={[-0.13, 0.38, 0.46]} rotation={[0.02, -0.06, 0.18]} scale={[0.06, 0.07, 0.58]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#343434" metalness={0.82} roughness={0.2} />
+        <meshStandardMaterial color="#343434" metalness={0.82} roughness={0.20} />
       </mesh>
 
-      {/* Clip-on handlebar and mirrors */}
-      <mesh position={[0, 0.87, -0.61]} rotation={[0.30, 0, 0]} scale={[0.36, 0.022, 0.025]}>
+      {/* Clip-ons, mirrors and lighting */}
+      <mesh position={[0, 0.89, -0.60]} rotation={[0.28, 0, 0]} scale={[0.36, 0.022, 0.025]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#2a2a2a" metalness={0.9} roughness={0.16} />
+        <meshStandardMaterial color="#2a2a2a" metalness={0.90} roughness={0.16} />
       </mesh>
-      <mesh position={[-0.28, 0.91, -0.66]} scale={[0.055, 0.025, 0.08]}>
-        <sphereGeometry args={[1, 1, 1]} />
+      <mesh position={[-0.28, 0.92, -0.66]} scale={[0.055, 0.025, 0.075]}>
+        <sphereGeometry args={[1, 12, 10]} />
         <meshStandardMaterial color="#8c8c8c" metalness={0.92} roughness={0.15} />
       </mesh>
-      <mesh position={[0.28, 0.91, -0.66]} scale={[0.055, 0.025, 0.08]}>
-        <sphereGeometry args={[1, 1, 1]} />
+      <mesh position={[0.28, 0.92, -0.66]} scale={[0.055, 0.025, 0.075]}>
+        <sphereGeometry args={[1, 12, 10]} />
         <meshStandardMaterial color="#8c8c8c" metalness={0.92} roughness={0.15} />
       </mesh>
-
-      {/* Headlight and rear light */}
-      <mesh position={[0, 0.69, -1.11]} scale={[0.16, 0.07, 0.045]}>
+      <mesh position={[0, 0.69, -1.10]} scale={[0.16, 0.07, 0.045]}>
         <sphereGeometry args={[1, 16, 10]} />
         <meshStandardMaterial color="#ffffff" emissive="#ffffee" emissiveIntensity={3.5} />
       </mesh>
@@ -1321,21 +1312,7 @@ function ChronosBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color="#ff0000" emissive="#ff0000" emissiveIntensity={2.5} />
       </mesh>
 
-      {/* Side exhaust: header + metal muffler + dark outlet */}
-      <mesh position={[0.26, 0.34, 0.18]} rotation={[Math.PI / 2 - 0.20, 0, 0]} scale={[0.028, 0.028, 0.40]}>
-        <cylinderGeometry args={[1, 1, 1, 12]} />
-        <meshStandardMaterial color="#777777" metalness={0.95} roughness={0.10} />
-      </mesh>
-      <mesh position={[0.29, 0.37, 0.53]} rotation={[Math.PI / 2 - 0.08, 0, 0]} scale={[0.070, 0.070, 0.30]}>
-        <cylinderGeometry args={[1, 1, 1, 16]} />
-        <meshStandardMaterial color="#a9a9a9" metalness={0.97} roughness={0.09} />
-      </mesh>
-      <mesh position={[0.29, 0.38, 0.70]} rotation={[Math.PI / 2 - 0.08, 0, 0]} scale={[0.048, 0.048, 0.018]}>
-        <cylinderGeometry args={[1, 1, 1, 16]} />
-        <meshStandardMaterial color="#151515" metalness={0.35} roughness={0.4} />
-      </mesh>
-
-      {/* Rider */}
+      {/* Rider in a relaxed sport-touring tuck */}
       <group position={[0, 0.98, 0.16]}>
         <mesh position={[0, 0.11, 0]} rotation={[0.18, 0, 0]} scale={[0.20, 0.27, 0.15]}>
           <sphereGeometry args={[1, 12, 10]} />
@@ -1344,10 +1321,6 @@ function ChronosBike({ bike }: { bike: Bike }) {
         <mesh position={[0, 0.44, -0.12]} scale={[0.14, 0.17, 0.14]}>
           <sphereGeometry args={[1, 12, 10]} />
           <meshStandardMaterial color={bike.accentColor} metalness={0.55} roughness={0.22} />
-        </mesh>
-        <mesh position={[0, 0.42, -0.20]} scale={[0.10, 0.035, 0.025]}>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color="#111111" metalness={0.9} roughness={0.12} />
         </mesh>
         <mesh position={[-0.17, -0.03, -0.20]} rotation={[0.65, 0, 0.12]} scale={[0.055, 0.18, 0.055]}>
           <boxGeometry args={[1, 1, 1]} />
@@ -1370,93 +1343,74 @@ function ChronosBike({ bike }: { bike: Bike }) {
   )
 }
 
-// ============== STRATOS BIKE (High-Performance Streetfighter) ==============
 function StratosBike({ bike }: { bike: Bike }) {
   return (
     <>
-      {/* Streetfighter tank and compact front body */}
-      <mesh position={[0, 0.72, -0.10]} scale={[0.38, 0.30, 0.62]}>
-        <sphereGeometry args={[1, 20, 14]} />
+      {/* Rounded streetfighter body: compact, upright and muscular rather than pointed */}
+      <mesh position={[0, 0.72, -0.10]} scale={[0.40, 0.29, 0.56]}>
+        <sphereGeometry args={[1, 22, 16]} />
         <meshStandardMaterial color={bike.color} metalness={0.80} roughness={0.18} />
       </mesh>
-      <mesh position={[0, 0.60, -0.58]} scale={[0.30, 0.30, 0.42]}>
-        <sphereGeometry args={[1, 18, 12]} />
-        <meshStandardMaterial color={bike.accentColor} metalness={0.78} roughness={0.18} />
+      <mesh position={[0, 0.59, -0.56]} scale={[0.27, 0.22, 0.34]}>
+        <sphereGeometry args={[1, 20, 14]} />
+        <meshStandardMaterial color={bike.accentColor} metalness={0.76} roughness={0.20} />
       </mesh>
 
-      {/* Compact tail with pronounced seat */}
-      <mesh position={[0, 0.61, 0.67]} scale={[0.24, 0.18, 0.46]}>
+      {/* Tank knee recess and compact tail */}
+      <mesh position={[0, 0.75, 0.06]} scale={[0.30, 0.10, 0.44]}>
         <sphereGeometry args={[1, 18, 12]} />
+        <meshStandardMaterial color={bike.color} metalness={0.72} roughness={0.22} />
+      </mesh>
+      <mesh position={[0, 0.63, 0.67]} scale={[0.25, 0.18, 0.45]}>
+        <sphereGeometry args={[1, 20, 14]} />
         <meshStandardMaterial color={bike.color} metalness={0.78} roughness={0.19} />
       </mesh>
-      <mesh position={[0, 0.72, 0.37]} scale={[0.28, 0.06, 0.34]}>
-        <sphereGeometry args={[1, 16, 10]} />
+      <mesh position={[0, 0.72, 0.38]} scale={[0.28, 0.06, 0.34]}>
+        <sphereGeometry args={[1, 18, 12]} />
         <meshStandardMaterial color="#0b0b0b" roughness={0.94} />
       </mesh>
 
-      {/* Exposed twin-cylinder engine */}
-      <mesh position={[0, 0.34, 0.08]} scale={[0.30, 0.24, 0.36]}>
+      {/* Exposed engine + rounded frame */}
+      <mesh position={[0, 0.34, 0.08]} scale={[0.31, 0.23, 0.36]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color="#181818" metalness={0.92} roughness={0.18} />
       </mesh>
-      <mesh position={[-0.17, 0.31, 0.08]} scale={[0.10, 0.18, 0.22]}>
-        <cylinderGeometry args={[1, 1, 1, 12]} />
-        <meshStandardMaterial color="#313131" metalness={0.88} roughness={0.22} />
-      </mesh>
-      <mesh position={[0.17, 0.31, 0.08]} scale={[0.10, 0.18, 0.22]}>
-        <cylinderGeometry args={[1, 1, 1, 12]} />
-        <meshStandardMaterial color="#313131" metalness={0.88} roughness={0.22} />
-      </mesh>
-      {/* Engine cooling fins */}
-      <mesh position={[0, 0.49, 0.08]} scale={[0.27, 0.018, 0.28]}>
+      <mesh position={[-0.18, 0.50, -0.02]} rotation={[0, -0.22, 0.25]} scale={[0.045, 0.05, 0.54]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#4a4a4a" metalness={0.75} roughness={0.24} />
+        <meshStandardMaterial color="#4a4a4a" metalness={0.90} roughness={0.18} />
+      </mesh>
+      <mesh position={[0.18, 0.50, -0.02]} rotation={[0, 0.22, -0.25]} scale={[0.045, 0.05, 0.54]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="#4a4a4a" metalness={0.90} roughness={0.18} />
       </mesh>
 
-      {/* Trellis-style frame bars */}
-      <mesh position={[0.18, 0.50, -0.02]} rotation={[0, 0.28, -0.32]} scale={[0.045, 0.05, 0.58]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#4a4a4a" metalness={0.9} roughness={0.18} />
-      </mesh>
-      <mesh position={[-0.18, 0.50, -0.02]} rotation={[0, -0.28, 0.32]} scale={[0.045, 0.05, 0.58]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#4a4a4a" metalness={0.9} roughness={0.18} />
-      </mesh>
-
-      {/* Radiator */}
-      <mesh position={[0, 0.46, -0.46]} rotation={[0.2, 0, 0]} scale={[0.29, 0.12, 0.045]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#101010" metalness={0.55} roughness={0.38} />
-      </mesh>
-
-      {/* Front forks and triple clamp */}
-      <mesh position={[-0.12, 0.56, -0.83]} rotation={[0.18, 0, -0.02]} scale={[0.052, 0.72, 0.052]}>
+      {/* Conventional fork / headstock with soft headlight housing */}
+      <mesh position={[-0.12, 0.56, -0.82]} rotation={[0.18, 0, -0.02]} scale={[0.052, 0.72, 0.052]}>
         <cylinderGeometry args={[1, 1, 1, 12]} />
         <meshStandardMaterial color="#9a9a9a" metalness={0.94} roughness={0.12} />
       </mesh>
-      <mesh position={[0.12, 0.56, -0.83]} rotation={[0.18, 0, 0.02]} scale={[0.052, 0.72, 0.052]}>
+      <mesh position={[0.12, 0.56, -0.82]} rotation={[0.18, 0, 0.02]} scale={[0.052, 0.72, 0.052]}>
         <cylinderGeometry args={[1, 1, 1, 12]} />
         <meshStandardMaterial color="#9a9a9a" metalness={0.94} roughness={0.12} />
       </mesh>
-      <mesh position={[0, 0.85, -0.72]} scale={[0.28, 0.045, 0.17]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#292929" metalness={0.84} roughness={0.2} />
+      <mesh position={[0, 0.74, -0.99]} scale={[0.22, 0.16, 0.10]}>
+        <sphereGeometry args={[1, 18, 12]} />
+        <meshStandardMaterial color="#262626" metalness={0.55} roughness={0.22} />
+      </mesh>
+      <mesh position={[0, 0.74, -1.08]} scale={[0.13, 0.06, 0.035]}>
+        <sphereGeometry args={[1, 16, 10]} />
+        <meshStandardMaterial color="#ffffff" emissive="#ffffee" emissiveIntensity={4} />
       </mesh>
 
       {/* Wheels */}
-      <mesh name="player-wheel" position={[0, 0.25, -1.02]} rotation={[0, Math.PI / 2, 0]}>
+      <mesh name="player-wheel" position={[0, 0.25, -1.00]} rotation={[0, Math.PI / 2, 0]}>
         <torusGeometry args={[0.245, 0.07, 12, 24]} />
         <meshStandardMaterial color="#101010" roughness={0.9} />
       </mesh>
-      <mesh name="player-wheel" position={[0, 0.25, -1.02]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh name="player-wheel" position={[0, 0.25, -1.00]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.165, 0.165, 0.06, 16]} />
         <meshStandardMaterial color="#727272" metalness={0.9} roughness={0.18} />
       </mesh>
-      <mesh position={[0.035, 0.25, -1.02]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.105, 0.105, 0.018, 16]} />
-        <meshStandardMaterial color="#b7b7b7" metalness={0.82} roughness={0.2} />
-      </mesh>
-
       <mesh name="player-wheel" position={[0, 0.25, 0.90]} rotation={[0, Math.PI / 2, 0]}>
         <torusGeometry args={[0.27, 0.105, 12, 24]} />
         <meshStandardMaterial color="#0f0f0f" roughness={0.9} />
@@ -1465,72 +1419,34 @@ function StratosBike({ bike }: { bike: Bike }) {
         <cylinderGeometry args={[0.20, 0.20, 0.12, 16]} />
         <meshStandardMaterial color="#686868" metalness={0.9} roughness={0.18} />
       </mesh>
-      <mesh position={[0.055, 0.25, 0.90]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.125, 0.125, 0.02, 16]} />
-        <meshStandardMaterial color="#b7b7b7" metalness={0.82} roughness={0.2} />
-      </mesh>
 
-      {/* Twin-sided swingarm */}
-      <mesh position={[0.13, 0.38, 0.47]} rotation={[0.02, 0.05, -0.16]} scale={[0.055, 0.07, 0.58]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#3a3a3a" metalness={0.84} roughness={0.2} />
-      </mesh>
-      <mesh position={[-0.13, 0.38, 0.47]} rotation={[0.02, -0.05, 0.16]} scale={[0.055, 0.07, 0.58]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#3a3a3a" metalness={0.84} roughness={0.2} />
-      </mesh>
-
-      {/* Wide streetfighter handlebar */}
-      <mesh position={[0, 0.90, -0.68]} rotation={[0.16, 0, 0]} scale={[0.39, 0.025, 0.025]}>
+      {/* Wide handlebar, mirrors, and compact controls */}
+      <mesh position={[0, 0.90, -0.65]} scale={[0.39, 0.025, 0.025]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color="#262626" metalness={0.92} roughness={0.14} />
       </mesh>
-      <mesh position={[-0.30, 0.94, -0.69]} scale={[0.05, 0.025, 0.075]}>
+      <mesh position={[-0.31, 0.94, -0.67]} scale={[0.05, 0.025, 0.075]}>
         <sphereGeometry args={[1, 12, 10]} />
         <meshStandardMaterial color="#8e8e8e" metalness={0.92} roughness={0.14} />
       </mesh>
-      <mesh position={[0.30, 0.94, -0.69]} scale={[0.05, 0.025, 0.075]}>
+      <mesh position={[0.31, 0.94, -0.67]} scale={[0.05, 0.025, 0.075]}>
         <sphereGeometry args={[1, 12, 10]} />
         <meshStandardMaterial color="#8e8e8e" metalness={0.92} roughness={0.14} />
-      </mesh>
-
-      {/* Compact LED headlight and tail */}
-      <mesh position={[0, 0.70, -1.10]} scale={[0.17, 0.10, 0.055]}>
-        <sphereGeometry args={[1, 16, 10]} />
-        <meshStandardMaterial color="#ffffff" emissive="#ffffee" emissiveIntensity={4} />
       </mesh>
       <mesh position={[0, 0.58, 1.08]} scale={[0.15, 0.035, 0.03]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color="#ff0000" emissive="#ff0000" emissiveIntensity={3} />
       </mesh>
 
-      {/* Full side exhaust: header and prominent muffler */}
-      <mesh position={[0.25, 0.34, 0.18]} rotation={[Math.PI / 2 - 0.16, 0, 0]} scale={[0.03, 0.03, 0.43]}>
-        <cylinderGeometry args={[1, 1, 1, 12]} />
-        <meshStandardMaterial color="#7f7f7f" metalness={0.96} roughness={0.10} />
-      </mesh>
-      <mesh position={[0.28, 0.38, 0.56]} rotation={[Math.PI / 2 - 0.04, 0, 0]} scale={[0.075, 0.075, 0.33]}>
-        <cylinderGeometry args={[1, 1, 1, 16]} />
-        <meshStandardMaterial color="#b8b8b8" metalness={0.97} roughness={0.08} />
-      </mesh>
-      <mesh position={[0.28, 0.39, 0.75]} rotation={[Math.PI / 2 - 0.04, 0, 0]} scale={[0.052, 0.052, 0.018]}>
-        <cylinderGeometry args={[1, 1, 1, 16]} />
-        <meshStandardMaterial color="#161616" metalness={0.35} roughness={0.42} />
-      </mesh>
-
       {/* Rider */}
       <group position={[0, 0.99, 0.15]}>
-        <mesh position={[0, 0.12, 0]} rotation={[0.08, 0, 0]} scale={[0.21, 0.28, 0.15]}>
+        <mesh position={[0, 0.12, 0]} scale={[0.21, 0.28, 0.15]}>
           <sphereGeometry args={[1, 12, 10]} />
           <meshStandardMaterial color="#181818" roughness={0.82} />
         </mesh>
         <mesh position={[0, 0.46, -0.10]} scale={[0.145, 0.17, 0.14]}>
           <sphereGeometry args={[1, 12, 10]} />
           <meshStandardMaterial color={bike.accentColor} metalness={0.55} roughness={0.22} />
-        </mesh>
-        <mesh position={[0, 0.44, -0.19]} scale={[0.105, 0.035, 0.025]}>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color="#111111" metalness={0.9} roughness={0.12} />
         </mesh>
         <mesh position={[-0.17, -0.02, -0.19]} rotation={[0.48, 0, 0.12]} scale={[0.055, 0.19, 0.055]}>
           <boxGeometry args={[1, 1, 1]} />
@@ -1553,73 +1469,70 @@ function StratosBike({ bike }: { bike: Bike }) {
   )
 }
 
-// ============== ZENITH BIKE (Ultimate Superbike) ==============
 function ZenithBike({ bike }: { bike: Bike }) {
   return (
     <>
-      {/* Full superbike fairing - rounded nose, tank and lower cowl */}
-      <group position={[0, 0.54, -0.08]}>
-        <mesh scale={[0.39, 0.44, 0.98]}>
-          <sphereGeometry args={[0.63, 22, 14]} />
+      {/* Rounded superbike fairing: full, smooth front body with no wing-like spikes */}
+      <group position={[0, 0.55, -0.06]}>
+        <mesh scale={[0.40, 0.42, 0.96]}>
+          <sphereGeometry args={[0.64, 24, 16]} />
           <meshStandardMaterial color={bike.color} metalness={0.84} roughness={0.15} />
         </mesh>
-        <mesh position={[0, 0.02, -0.62]} scale={[0.28, 0.28, 0.40]}>
-          <sphereGeometry args={[1, 18, 12]} />
-          <meshStandardMaterial color={bike.accentColor} metalness={0.88} roughness={0.12} />
+        <mesh position={[0, 0.02, -0.59]} scale={[0.29, 0.30, 0.42]}>
+          <sphereGeometry args={[1, 22, 14]} />
+          <meshStandardMaterial color={bike.accentColor} metalness={0.86} roughness={0.13} />
         </mesh>
-        <mesh position={[0, -0.18, 0.16]} scale={[0.32, 0.17, 0.66]}>
-          <sphereGeometry args={[0.58, 18, 12]} />
+        <mesh position={[0, -0.18, 0.18]} scale={[0.32, 0.17, 0.64]}>
+          <sphereGeometry args={[0.58, 20, 14]} />
           <meshStandardMaterial color={bike.color} metalness={0.82} roughness={0.16} />
         </mesh>
       </group>
 
-      {/* Large sculpted tank */}
-      <mesh position={[0, 0.79, -0.05]} scale={[0.35, 0.28, 0.62]}>
-        <sphereGeometry args={[1, 22, 14]} />
+      {/* Rounded tank and natural tail transition */}
+      <mesh position={[0, 0.79, -0.02]} scale={[0.35, 0.28, 0.60]}>
+        <sphereGeometry args={[1, 24, 16]} />
         <meshStandardMaterial color={bike.accentColor} metalness={0.88} roughness={0.12} />
       </mesh>
-
-      {/* High, narrow tail and seat */}
-      <mesh position={[0, 0.63, 0.70]} scale={[0.23, 0.17, 0.48]}>
-        <sphereGeometry args={[1, 20, 12]} />
+      <mesh position={[0, 0.65, 0.70]} scale={[0.24, 0.17, 0.48]}>
+        <sphereGeometry args={[1, 22, 14]} />
         <meshStandardMaterial color={bike.color} metalness={0.86} roughness={0.14} />
       </mesh>
-      <mesh position={[0, 0.72, 0.40]} scale={[0.26, 0.05, 0.34]}>
-        <sphereGeometry args={[1, 16, 10]} />
+      <mesh position={[0, 0.73, 0.40]} scale={[0.27, 0.05, 0.34]}>
+        <sphereGeometry args={[1, 18, 12]} />
         <meshStandardMaterial color="#070707" roughness={0.94} />
       </mesh>
 
-      {/* Performance engine and frame */}
+      {/* Compact performance engine and frame */}
       <mesh position={[0, 0.32, 0.10]} scale={[0.31, 0.23, 0.40]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color="#101010" metalness={0.95} roughness={0.16} />
       </mesh>
-      <mesh position={[0.18, 0.49, 0.05]} rotation={[0, 0.20, -0.34]} scale={[0.045, 0.055, 0.62]}>
+      <mesh position={[0.18, 0.49, 0.05]} rotation={[0, 0.18, -0.28]} scale={[0.045, 0.055, 0.60]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#383838" metalness={0.9} roughness={0.16} />
+        <meshStandardMaterial color="#383838" metalness={0.90} roughness={0.16} />
       </mesh>
-      <mesh position={[-0.18, 0.49, 0.05]} rotation={[0, -0.20, 0.34]} scale={[0.045, 0.055, 0.62]}>
+      <mesh position={[-0.18, 0.49, 0.05]} rotation={[0, -0.18, 0.28]} scale={[0.045, 0.055, 0.60]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#383838" metalness={0.9} roughness={0.16} />
+        <meshStandardMaterial color="#383838" metalness={0.90} roughness={0.16} />
       </mesh>
 
-      {/* Front aerodynamic winglets */}
-      <mesh position={[-0.34, 0.54, -0.55]} rotation={[0, 0.18, -0.10]} scale={[0.12, 0.025, 0.27]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color={bike.accentColor} metalness={0.82} roughness={0.14} />
+      {/* Small integrated intake details — rounded, not blade-like winglets */}
+      <mesh position={[-0.26, 0.54, -0.52]} scale={[0.10, 0.035, 0.19]}>
+        <sphereGeometry args={[1, 16, 10]} />
+        <meshStandardMaterial color={bike.accentColor} metalness={0.78} roughness={0.16} />
       </mesh>
-      <mesh position={[0.34, 0.54, -0.55]} rotation={[0, -0.18, 0.10]} scale={[0.12, 0.025, 0.27]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color={bike.accentColor} metalness={0.82} roughness={0.14} />
+      <mesh position={[0.26, 0.54, -0.52]} scale={[0.10, 0.035, 0.19]}>
+        <sphereGeometry args={[1, 16, 10]} />
+        <meshStandardMaterial color={bike.accentColor} metalness={0.78} roughness={0.16} />
       </mesh>
 
       {/* Windscreen */}
-      <mesh position={[0, 0.91, -0.61]} rotation={[0.42, 0, 0]} scale={[0.21, 0.12, 0.025]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#111111" metalness={0.4} roughness={0.24} transparent opacity={0.78} />
+      <mesh position={[0, 0.91, -0.59]} rotation={[0.40, 0, 0]} scale={[0.21, 0.12, 0.025]}>
+        <sphereGeometry args={[1, 16, 10]} />
+        <meshStandardMaterial color="#111111" metalness={0.35} roughness={0.24} transparent opacity={0.78} />
       </mesh>
 
-      {/* Twin fork legs and top clamp */}
+      {/* Twin fork legs and clamp */}
       <mesh position={[-0.12, 0.57, -0.88]} rotation={[0.20, 0, -0.02]} scale={[0.055, 0.74, 0.055]}>
         <cylinderGeometry args={[1, 1, 1, 12]} />
         <meshStandardMaterial color="#adadad" metalness={0.96} roughness={0.08} />
@@ -1630,48 +1543,39 @@ function ZenithBike({ bike }: { bike: Bike }) {
       </mesh>
       <mesh position={[0, 0.86, -0.72]} scale={[0.28, 0.045, 0.18]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#252525" metalness={0.9} roughness={0.12} />
+        <meshStandardMaterial color="#252525" metalness={0.90} roughness={0.12} />
       </mesh>
 
       {/* Wheels */}
       <mesh name="player-wheel" position={[0, 0.25, -1.05]} rotation={[0, Math.PI / 2, 0]}>
         <torusGeometry args={[0.245, 0.07, 12, 24]} />
-        <meshStandardMaterial color="#090909" roughness={0.9} />
+        <meshStandardMaterial color="#090909" roughness={0.90} />
       </mesh>
       <mesh name="player-wheel" position={[0, 0.25, -1.05]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.17, 0.17, 0.06, 16]} />
         <meshStandardMaterial color="#737373" metalness={0.93} roughness={0.13} />
       </mesh>
-      <mesh position={[0.04, 0.25, -1.05]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.108, 0.108, 0.018, 16]} />
-        <meshStandardMaterial color="#c0c0c0" metalness={0.84} roughness={0.16} />
-      </mesh>
-
       <mesh name="player-wheel" position={[0, 0.25, 0.96]} rotation={[0, Math.PI / 2, 0]}>
         <torusGeometry args={[0.27, 0.11, 12, 24]} />
-        <meshStandardMaterial color="#080808" roughness={0.9} />
+        <meshStandardMaterial color="#080808" roughness={0.90} />
       </mesh>
       <mesh name="player-wheel" position={[0, 0.25, 0.96]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.20, 0.20, 0.13, 16]} />
         <meshStandardMaterial color="#6d6d6d" metalness={0.93} roughness={0.13} />
       </mesh>
-      <mesh position={[0.06, 0.25, 0.96]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.128, 0.128, 0.02, 16]} />
-        <meshStandardMaterial color="#c0c0c0" metalness={0.84} roughness={0.16} />
-      </mesh>
 
-      {/* Single-sided swingarm + rear suspension */}
+      {/* Rear suspension */}
       <mesh position={[0.15, 0.38, 0.48]} rotation={[0.02, 0.08, -0.18]} scale={[0.06, 0.075, 0.60]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color="#343434" metalness={0.88} roughness={0.16} />
       </mesh>
       <mesh position={[0, 0.53, 0.30]} rotation={[0, 0, -0.18]} scale={[0.035, 0.035, 0.40]}>
         <cylinderGeometry args={[1, 1, 1, 12]} />
-        <meshStandardMaterial color="#707070" metalness={0.9} roughness={0.12} />
+        <meshStandardMaterial color="#707070" metalness={0.90} roughness={0.12} />
       </mesh>
 
       {/* Clip-ons + mirrors */}
-      <mesh position={[0, 0.91, -0.64]} rotation={[0.34, 0, 0]} scale={[0.36, 0.022, 0.024]}>
+      <mesh position={[0, 0.91, -0.64]} rotation={[0.30, 0, 0]} scale={[0.36, 0.022, 0.024]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color="#1f1f1f" metalness={0.95} roughness={0.10} />
       </mesh>
@@ -1684,7 +1588,7 @@ function ZenithBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color="#999999" metalness={0.94} roughness={0.10} />
       </mesh>
 
-      {/* Bright LED headlight and tail strip */}
+      {/* Headlight + tail */}
       <mesh position={[0, 0.71, -1.14]} scale={[0.18, 0.065, 0.035]}>
         <sphereGeometry args={[1, 16, 10]} />
         <meshStandardMaterial color="#ffffff" emissive="#ffffee" emissiveIntensity={5} />
@@ -1692,24 +1596,6 @@ function ZenithBike({ bike }: { bike: Bike }) {
       <mesh position={[0, 0.56, 1.15]} scale={[0.14, 0.035, 0.025]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color="#ff0000" emissive="#ff0000" emissiveIntensity={3.5} />
-      </mesh>
-
-      {/* Twin under-tail exhausts: clearly visible round cans and outlets */}
-      <mesh position={[-0.16, 0.40, 0.52]} rotation={[Math.PI / 2 - 0.13, 0, 0]} scale={[0.060, 0.060, 0.30]}>
-        <cylinderGeometry args={[1, 1, 1, 16]} />
-        <meshStandardMaterial color="#a7a7a7" metalness={0.97} roughness={0.08} />
-      </mesh>
-      <mesh position={[0.16, 0.40, 0.52]} rotation={[Math.PI / 2 - 0.13, 0, 0]} scale={[0.060, 0.060, 0.30]}>
-        <cylinderGeometry args={[1, 1, 1, 16]} />
-        <meshStandardMaterial color="#a7a7a7" metalness={0.97} roughness={0.08} />
-      </mesh>
-      <mesh position={[-0.16, 0.41, 0.69]} rotation={[Math.PI / 2 - 0.13, 0, 0]} scale={[0.038, 0.038, 0.018]}>
-        <cylinderGeometry args={[1, 1, 1, 16]} />
-        <meshStandardMaterial color="#151515" metalness={0.35} roughness={0.4} />
-      </mesh>
-      <mesh position={[0.16, 0.41, 0.69]} rotation={[Math.PI / 2 - 0.13, 0, 0]} scale={[0.038, 0.038, 0.018]}>
-        <cylinderGeometry args={[1, 1, 1, 16]} />
-        <meshStandardMaterial color="#151515" metalness={0.35} roughness={0.4} />
       </mesh>
 
       {/* Rider */}
@@ -1720,11 +1606,7 @@ function ZenithBike({ bike }: { bike: Bike }) {
         </mesh>
         <mesh position={[0, 0.42, -0.13]} scale={[0.14, 0.165, 0.135]}>
           <sphereGeometry args={[1, 12, 10]} />
-          <meshStandardMaterial color={bike.accentColor} metalness={0.6} roughness={0.18} />
-        </mesh>
-        <mesh position={[0, 0.40, -0.21]} scale={[0.10, 0.034, 0.024]}>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color="#050505" metalness={0.95} roughness={0.08} />
+          <meshStandardMaterial color={bike.accentColor} metalness={0.60} roughness={0.18} />
         </mesh>
         <mesh position={[-0.16, -0.04, -0.21]} rotation={[0.72, 0, 0.12]} scale={[0.052, 0.18, 0.052]}>
           <boxGeometry args={[1, 1, 1]} />
@@ -1743,74 +1625,6 @@ function ZenithBike({ bike }: { bike: Bike }) {
           <meshStandardMaterial color="#141414" />
         </mesh>
       </group>
-    </>
-  )
-}
-
-// ============== CARS ==============
-// Stylized, logo-free models inspired by the requested real-world proportions.
-
-function CarBase({ car, shape = 'sedan' }: { car: Car; shape?: 'hatch' | 'sedan' | 'suv' | 'gt' | 'exotic' }) {
-  const dimensions = {
-    hatch: [1.55, 1.0, 3.2],
-    sedan: [1.65, 1.0, 4.2],
-    suv: [1.9, 1.35, 4.6],
-    gt: [1.85, 1.05, 4.7],
-    exotic: [1.9, 0.9, 4.4],
-  } as const
-  const [w, h, l] = dimensions[shape]
-  const wheelZ = l * 0.34
-
-  return (
-    <>
-      <mesh position={[0, h * 0.34, 0]}>
-        <boxGeometry args={[w, h * 0.48, l]} />
-        <meshStandardMaterial color={car.color} metalness={0.65} roughness={0.28} />
-      </mesh>
-      <mesh position={[0, h * 0.66, -l * 0.04]}>
-        <boxGeometry args={[w * 0.78, h * 0.42, l * 0.48]} />
-        <meshStandardMaterial color={car.accentColor} metalness={0.35} roughness={0.3} />
-      </mesh>
-      <mesh position={[0, h * 0.68, -l * 0.06]}>
-        <boxGeometry args={[w * 0.64, h * 0.25, l * 0.42]} />
-        <meshStandardMaterial color="#17212b" metalness={0.55} roughness={0.18} transparent opacity={0.9} />
-      </mesh>
-      <mesh position={[0, h * 0.29, -l * 0.48]}>
-        <boxGeometry args={[w * 0.82, h * 0.13, 0.08]} />
-        <meshStandardMaterial color="#252525" metalness={0.5} roughness={0.25} />
-      </mesh>
-      {[-1, 1].map((side) => (
-        <group key={side}>
-          {[-wheelZ, wheelZ].map((z) => (
-            <group key={z} position={[side * w * 0.52, h * 0.24, z]}>
-              <mesh rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[0.27, 0.27, 0.22, 16]} />
-                <meshStandardMaterial color="#101010" roughness={0.82} metalness={0.05} />
-              </mesh>
-              <mesh position={[side > 0 ? 0.115 : -0.115, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[0.13, 0.13, 0.025, 16]} />
-                <meshStandardMaterial color="#9ca3af" metalness={0.75} roughness={0.2} />
-              </mesh>
-            </group>
-          ))}
-        </group>
-      ))}
-      <mesh position={[-w * 0.3, h * 0.36, -l / 2 - 0.01]}>
-        <boxGeometry args={[w * 0.2, h * 0.12, 0.05]} />
-        <meshStandardMaterial color="#ffffdc" emissive="#fff6b0" emissiveIntensity={1.2} />
-      </mesh>
-      <mesh position={[w * 0.3, h * 0.36, -l / 2 - 0.01]}>
-        <boxGeometry args={[w * 0.2, h * 0.12, 0.05]} />
-        <meshStandardMaterial color="#ffffdc" emissive="#fff6b0" emissiveIntensity={1.2} />
-      </mesh>
-      <mesh position={[-w * 0.3, h * 0.36, l / 2 + 0.01]}>
-        <boxGeometry args={[w * 0.18, h * 0.1, 0.05]} />
-        <meshStandardMaterial color="#ef3340" emissive="#ef3340" emissiveIntensity={0.7} />
-      </mesh>
-      <mesh position={[w * 0.3, h * 0.36, l / 2 + 0.01]}>
-        <boxGeometry args={[w * 0.18, h * 0.1, 0.05]} />
-        <meshStandardMaterial color="#ef3340" emissive="#ef3340" emissiveIntensity={0.7} />
-      </mesh>
     </>
   )
 }
