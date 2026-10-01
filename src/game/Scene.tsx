@@ -3,6 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { getState, actions, useGameStore, type Bike, type Car } from './store'
+import { sweptSegmentOverlapsRange } from './collision'
 
 // Constants
 const LANE_WIDTH = 3.5
@@ -1995,6 +1996,7 @@ function TrafficSystem() {
     for (let i = vehicles.length - 1; i >= 0; i--) {
       const v = vehicles[i]
       // Vehicles always approach player (minimum approach rate ensures visibility even at low speed)
+      const previousZ = v.z
       const approachRate = Math.max(15, speed - v.speed + 30)
       v.z += approachRate * clampedDelta * 0.5
 
@@ -2017,9 +2019,14 @@ function TrafficSystem() {
       // Collision detection
       const [vw, , vl] = getVehicleDimensions(v.type)
       const collisionX = lateralDist < (vw / 2 + 0.35)
-      const collisionZ = v.z > PLAYER_Z - 1.8 && v.z < PLAYER_Z + 1.2
+      const collisionZ = sweptSegmentOverlapsRange(
+        previousZ,
+        v.z,
+        PLAYER_Z - 1.8,
+        PLAYER_Z + 1.2,
+      )
 
-      if (collisionX && collisionZ && v.z > PLAYER_Z - 2) {
+      if (collisionX && collisionZ) {
         // Check if shield is active
         if (state.shieldActive) {
           // [GFX] Cosmetic-only collision feedback; gameplay remains unchanged.
