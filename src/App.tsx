@@ -4,9 +4,10 @@ import { HighScoreAnalytics } from './HighScoreAnalytics'
 import { Analytics } from '@vercel/analytics/react'
 import { GameScene } from './game/Scene'
 import { HUD, MainMenu, PauseMenu, GameOverScreen, TouchControls, UnlockNotification, LoadingScreen, UsernameInput } from './game/UI'
-import { actions, getState } from './game/store'
+import { actions, getState, useGameStore } from './game/store'
 
 function App() {
+  const username = useGameStore((state) => state.username)
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
@@ -31,7 +32,7 @@ function App() {
     <div className="w-full h-full relative overflow-hidden bg-black">
       <div className="absolute inset-0"><GameScene /></div>
       {!loaded && <LoadingScreen />}
-      {loaded && !getState().username ? (
+      {loaded && !username ? (
         <UsernameInput />
       ) : loaded ? (
         <>
