@@ -955,10 +955,13 @@ export function MainMenu() {
   )
 }
 
-function SkinSelector({ bikeId }: { bikeId: string }) {
+function SkinSelector({ bikeId, isSelected }: { bikeId: string; isSelected: boolean }) {
   const state = useGameStore()
   const availableSkins = BIKE_SKINS[bikeId] || []
-  const currentSkin = state.bikeSkins[bikeId] || 'black'
+  // Only the currently selected bike's equipped skin gets an active highlight.
+  // Other bikes may retain saved skin choices internally, but they must not
+  // visually appear selected while another bike is active.
+  const currentSkin = isSelected ? state.selectedSkin : null
 
   const skinDisplayColors: Record<string, string> = {
     black: '#1a1a1a',
@@ -971,7 +974,7 @@ function SkinSelector({ bikeId }: { bikeId: string }) {
   return (
     <div className="mt-1.5 flex items-center gap-1">
       {availableSkins.map((skin: BikeSkin) => {
-        const isActive = currentSkin === skin
+        const isActive = isSelected && currentSkin === skin
         return (
           <button
             key={skin}
@@ -1521,7 +1524,7 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
                               Top Speed: <span className="text-white font-semibold">{bike.maxSpeed} kmph</span>
                             </p>
                           </div>
-                          <SkinSelector bikeId={bike.id} />
+                          <SkinSelector bikeId={bike.id} isSelected={isSelected} />
                         </>
                       )}
 
