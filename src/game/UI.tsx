@@ -506,6 +506,22 @@ export function MainMenu() {
   const navTransitionTimerRef = useRef<number | null>(null)
   const tapCountRef = useRef(0)
   const lastTapTimeRef = useRef(0)
+  const previousGameStateRef = useRef(state.gameState)
+
+  useEffect(() => {
+    const previousGameState = previousGameStateRef.current
+
+    // Returning to Main Menu after a crash must always show the normal Home screen,
+    // not the power-up selection overlay left open from the previous ride.
+    if (state.gameState === 'menu' && previousGameState === 'gameover') {
+      setShowPowerUpSelection(false)
+      setShowBikes(false)
+      setShowStore(false)
+      setNavTransition(null)
+    }
+
+    previousGameStateRef.current = state.gameState
+  }, [state.gameState])
 
   const startMenuNavigation = (destination: 'garage' | 'store') => {
     if (navTransition) return
@@ -575,7 +591,7 @@ export function MainMenu() {
     return <Store onBack={() => setShowStore(false)} />
   }
 
-  if (showPowerUpSelection) {
+  if (showPowerUpSelection && previousGameStateRef.current !== 'gameover') {
     return (
       <PowerUpSelection
         onBack={() => setShowPowerUpSelection(false)}
