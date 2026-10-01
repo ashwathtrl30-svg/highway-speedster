@@ -1042,7 +1042,7 @@ function BlitzBike({ bike }: { bike: Bike }) {
         </mesh>
         <mesh position={[0, 0.58, -0.05]}>
           <sphereGeometry args={[0.16, 8, 8]} />
-          <meshStandardMaterial color={bike.accentColor} metalness={0.6} roughness={0.2} />
+          <meshStandardMaterial color="#20252a" metalness={0.6} roughness={0.2} />
         </mesh>
         {/* Visor */}
         <mesh position={[0, 0.58, -0.15]}>
@@ -1188,7 +1188,7 @@ function ApexBike({ bike }: { bike: Bike }) {
         </mesh>
         <mesh position={[0, 0.6, -0.05]}>
           <sphereGeometry args={[0.17, 8, 8]} />
-          <meshStandardMaterial color={bike.accentColor} metalness={0.6} roughness={0.2} />
+          <meshStandardMaterial color="#20252a" metalness={0.6} roughness={0.2} />
         </mesh>
         <mesh position={[0, 0.58, -0.15]}>
           <boxGeometry args={[0.2, 0.08, 0.05]} />
@@ -1346,7 +1346,7 @@ function ChronosBike({ bike }: { bike: Bike }) {
         </mesh>
         <mesh position={[0, 0.52, -0.15]}>
           <sphereGeometry args={[0.16, 8, 8]} />
-          <meshStandardMaterial color={bike.accentColor} metalness={0.7} roughness={0.15} />
+          <meshStandardMaterial color="#20252a" metalness={0.7} roughness={0.15} />
         </mesh>
         <mesh position={[0, 0.5, -0.25]}>
           <boxGeometry args={[0.18, 0.07, 0.05]} />
@@ -1518,7 +1518,7 @@ function StratosBike({ bike }: { bike: Bike }) {
         </mesh>
         <mesh position={[0, 0.5, -0.16]}>
           <sphereGeometry args={[0.15, 8, 8]} />
-          <meshStandardMaterial color={bike.accentColor} metalness={0.7} roughness={0.15} />
+          <meshStandardMaterial color="#20252a" metalness={0.7} roughness={0.15} />
         </mesh>
         <mesh position={[0, 0.48, -0.26]}>
           <boxGeometry args={[0.17, 0.065, 0.045]} />
@@ -1698,7 +1698,7 @@ function ZenithBike({ bike }: { bike: Bike }) {
         </mesh>
         <mesh position={[0, 0.48, -0.18]}>
           <sphereGeometry args={[0.14, 8, 8]} />
-          <meshStandardMaterial color={bike.accentColor} metalness={0.75} roughness={0.12} />
+          <meshStandardMaterial color="#20252a" metalness={0.75} roughness={0.12} />
         </mesh>
         <mesh position={[0, 0.46, -0.28]}>
           <boxGeometry args={[0.16, 0.06, 0.04]} />
