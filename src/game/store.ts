@@ -885,10 +885,6 @@ export const actions = {
     crashSequenceTimer = setTimeout(() => {
       crashSequenceTimer = null
       if (getState().crashActive && getState().gameState === 'playing') {
-        setState({
-          crashActive: false,
-          gameState: 'gameover',
-        })
         actions.setGameState('gameover')
       }
     }, 4000)
