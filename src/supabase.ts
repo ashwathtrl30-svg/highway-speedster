@@ -232,6 +232,29 @@ export async function fetchUserHighScore(playerId: string): Promise<number | nul
 
 
 
+export async function changeGameUsername(playerId: string, newUsername: string) {
+  const cleanPlayerId = playerId.trim()
+  const cleanUsername = newUsername.trim()
+  if (!cleanPlayerId || !cleanUsername) return { success: false, username: '', remainingChanges: 0, message: 'Enter a valid username.' }
+  try {
+    const { data, error } = await supabase.rpc('change_game_username', {
+      p_player_id: cleanPlayerId,
+      p_new_username: cleanUsername,
+    })
+    if (error) throw error
+    const row = Array.isArray(data) ? data[0] : data
+    return {
+      success: Boolean(row?.success),
+      username: String(row?.username || ''),
+      remainingChanges: Math.max(0, Number(row?.remaining_changes || 0)),
+      message: String(row?.message || ''),
+    }
+  } catch (error) {
+    console.error('Error changing username:', error)
+    return { success: false, username: '', remainingChanges: 0, message: 'Unable to change username right now.' }
+  }
+}
+
 export async function fetchHighScoreLeaderboard(playerId = ''): Promise<Array<{ username: string; high_score: number; is_me: boolean }>> {
   try {
     const { data, error } = await supabase.rpc('get_public_high_score_leaderboard', {
