@@ -44,7 +44,7 @@ export function LoadingScreen() {
 }
 
 // ============== USERNAME INPUT ==============
-export function UsernameInput({ onComplete }: { onComplete: () => void }) {
+export function UsernameInput() {
   const state = useGameStore()
   const [inputValue, setInputValue] = useState('')
 
@@ -53,12 +53,11 @@ export function UsernameInput({ onComplete }: { onComplete: () => void }) {
   const handleSubmit = () => {
     if (inputValue.trim()) {
       actions.setUsername(inputValue.trim())
-      onComplete()
     }
   }
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center z-[90]" style={{ background: "linear-gradient(180deg, rgba(15,23,42,.98), rgba(30,27,75,.98) 48%, rgba(0,0,0,.99))", color: "#fff" }}>
+    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-indigo-950/95 via-purple-950/95 to-black/95 backdrop-blur-sm z-[90]">
       <div className="text-center px-4 max-w-md w-full">
         <div className="text-6xl mb-4">🏍️</div>
         <h1 className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-400 to-red-500 mb-2">
