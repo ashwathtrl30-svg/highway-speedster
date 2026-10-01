@@ -1011,9 +1011,9 @@ function FuturisticRider({
         <meshStandardMaterial color={red} metalness={0.42} roughness={0.30} />
       </mesh>
       <RiderSegment start={[-0.16, 0.53, -0.07]} end={[-0.19, 0.28, -0.34]} radius={0.075} color={suit} />
-      <RiderSegment start={[-0.19, 0.28, -0.34]} end={[-0.20, -0.04, -0.70]} radius={0.065} color={suit} />
+      <RiderSegment start={[-0.19, 0.28, -0.34]} end={[-0.20, -0.04, -0.82]} radius={0.065} color={suit} />
       <RiderSegment start={[0.16, 0.53, -0.07]} end={[0.19, 0.28, -0.34]} radius={0.075} color={suit} />
-      <RiderSegment start={[0.19, 0.28, -0.34]} end={[0.20, -0.04, -0.70]} radius={0.065} color={suit} />
+      <RiderSegment start={[0.19, 0.28, -0.34]} end={[0.20, -0.04, -0.82]} radius={0.065} color={suit} />
 
       {/* White/red suit accents and gloves. */}
       <mesh position={[-0.19, 0.38, -0.22]} rotation={[0.1, 0, -0.04]}>
@@ -1024,11 +1024,11 @@ function FuturisticRider({
         <boxGeometry args={[0.18, 0.052, 0.035]} />
         <meshStandardMaterial color={white} metalness={0.22} roughness={0.45} />
       </mesh>
-      <mesh position={[-0.20, 0.00, -0.71]}>
+      <mesh position={[-0.20, -0.04, -0.83]}>
         <sphereGeometry args={[0.072, 9, 7]} />
         <meshStandardMaterial color={suitEdge} metalness={0.18} roughness={0.70} />
       </mesh>
-      <mesh position={[0.20, 0.00, -0.71]}>
+      <mesh position={[0.20, -0.04, -0.83]}>
         <sphereGeometry args={[0.072, 9, 7]} />
         <meshStandardMaterial color={suitEdge} metalness={0.18} roughness={0.70} />
       </mesh>
@@ -1156,7 +1156,7 @@ function BlitzBike({ bike }: { bike: Bike }) {
       </mesh>
 
       {/* Supplied futuristic rider reference, scaled down to fit this bike. */}
-      <FuturisticRider position={[0, 0.92, 0.05]} scale={0.70} />
+      <FuturisticRider position={[0, 1.02, 0.12]} scale={0.70} />
     </>
   )
 }
@@ -1268,7 +1268,7 @@ function ApexBike({ bike }: { bike: Bike }) {
       </mesh>
 
       {/* Supplied futuristic rider reference, scaled down to fit this bike. */}
-      <FuturisticRider position={[0, 0.95, 0.08]} scale={0.70} />
+      <FuturisticRider position={[0, 1.05, 0.15]} scale={0.70} />
     </>
   )
 }
@@ -1534,7 +1534,7 @@ function StratosBike({ bike }: { bike: Bike }) {
       </mesh>
 
       {/* Supplied futuristic rider reference, scaled down to fit this bike. */}
-      <FuturisticRider position={[0, 1.05, 0.15]} scale={0.70} />
+      <FuturisticRider position={[0, 0.95, 0.08]} scale={0.70} />
     </>
   )
 }
@@ -1682,7 +1682,7 @@ function ZenithBike({ bike }: { bike: Bike }) {
       </mesh>
 
       {/* Supplied futuristic rider reference, scaled down to fit this bike. */}
-      <FuturisticRider position={[0, 1.02, 0.12]} scale={0.70} />
+      <FuturisticRider position={[0, 0.92, 0.05]} scale={0.70} />
     </>
   )
 }
