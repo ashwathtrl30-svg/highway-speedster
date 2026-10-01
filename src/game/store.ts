@@ -98,7 +98,7 @@ export const BIKE_SKINS: Record<string, BikeSkin[]> = {
   blitz: ['drifter-blue', 'getaway-orange', 'marine', 'matte-black'],
   apex: ['aurora-green', 'charcoal-black', 'rock-matte-black', 'canyon-red'],
   chronos: ['metallic-galaxy-gray', 'pearl-vigor-blue', 'candy-daring-red', 'glass-sparkle-black'],
-  stratos: ['mirror-coated-matte-spark-black', 'mirror-coated-spark-black-carbon-edition', 'custom-midnight', 'candy-flat-blazed-green'],
+  stratos: ['deep-crimson', 'mirror-coated-spark-black-carbon-edition', 'custom-midnight', 'candy-flat-blazed-green'],
   zenith: ['ducati-red', 'tricolore-livery', 'racing-black', 'winter-test'],
 }
 
@@ -124,7 +124,7 @@ export const SKIN_COLORS: Record<BikeSkin, { color: string; accentColor: string 
   'candy-daring-red': { color: '#c5212a', accentColor: '#ff6c72' },
   'glass-sparkle-black': { color: '#0d1014', accentColor: '#49505a' },
 
-  'mirror-coated-matte-spark-black': { color: '#25282a', accentColor: '#a4abb0' },
+  'deep-crimson': { color: '#8f1725', accentColor: '#e34b5d' },
   'mirror-coated-spark-black-carbon-edition': { color: '#16191c', accentColor: '#6f767c' },
   'custom-midnight': { color: '#101a2c', accentColor: '#49627f' },
   'candy-flat-blazed-green': { color: '#17191c', accentColor: '#39c56a' },
@@ -153,7 +153,7 @@ export const SKIN_NAMES: Record<BikeSkin, string> = {
   'pearl-vigor-blue': 'Pearl Vigor Blue',
   'candy-daring-red': 'Candy Daring Red',
   'glass-sparkle-black': 'Glass Sparkle Black',
-  'mirror-coated-matte-spark-black': 'Mirror Coated Matte Spark Black',
+  'deep-crimson': 'Deep Crimson',
   'mirror-coated-spark-black-carbon-edition': 'Mirror Coated Spark Black (Carbon Edition)',
   'custom-midnight': 'Custom Midnight',
   'candy-flat-blazed-green': 'Candy Flat Blazed Green',
@@ -171,7 +171,7 @@ export const SKIN_SWATCHES: Record<BikeSkin, string> = {
   'pearl-vigor-blue': 'linear-gradient(145deg,#93c6f4,#2c6db5)',
   'candy-daring-red': 'linear-gradient(145deg,#ff5b64,#bd1922)',
   'glass-sparkle-black': 'linear-gradient(145deg,#5b636c,#090c10)',
-  'mirror-coated-matte-spark-black': 'linear-gradient(145deg,#8d959b,#171a1c)',
+  'deep-crimson': 'linear-gradient(145deg,#d95767,#64101b)',
   'mirror-coated-spark-black-carbon-edition': 'linear-gradient(145deg,#59636b,#0d1013)',
   'custom-midnight': 'linear-gradient(145deg,#314b70,#0d1627)',
   'candy-flat-blazed-green': 'linear-gradient(145deg,#1c2024 0%,#0d1114 58%,#35c968 59%,#8bea9f 100%)',
@@ -184,6 +184,7 @@ export const SKIN_SWATCHES: Record<BikeSkin, string> = {
 function migrateBikeSkin(skin: unknown): BikeSkin | null {
   if (typeof skin !== 'string') return null
   if (skin === 'rainbow-finish') return 'candy-flat-blazed-green'
+  if (skin === 'mirror-coated-matte-spark-black') return 'deep-crimson'
   return skin as BikeSkin
 }
 
