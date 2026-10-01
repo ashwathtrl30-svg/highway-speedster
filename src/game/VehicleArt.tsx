@@ -11,7 +11,8 @@ function BikeMenuRider({ compact = false }: { compact?: boolean }) {
   const scale = compact ? 0.86 : 0.78
 
   return (
-    <g transform={`translate(8 -1) scale(${scale})`}>
+    <g transform="translate(50 0) scale(-1 1) translate(-50 0)">
+      <g transform={`translate(8 -1) scale(${scale})`}>
       {/* Far leg, kept darker so the near-side ">" bent leg reads clearly. */}
       <path
         d="M49 30 C46 31 43 33 40 35 L46.5 41.8"
@@ -191,6 +192,7 @@ function BikeMenuRider({ compact = false }: { compact?: boolean }) {
       />
       {/* Small red circular boot detail matching the reference. */}
       <circle cx="42.0" cy="43.5" r="1.05" fill="#ef3f36" stroke="#101318" strokeWidth="0.5" />
+      </g>
     </g>
   )
 }
