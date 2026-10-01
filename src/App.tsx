@@ -5,6 +5,7 @@ import { Analytics } from '@vercel/analytics/react'
 import { GameScene } from './game/Scene'
 import { HUD, MainMenu, PauseMenu, GameOverScreen, TouchControls, UnlockNotification, LoadingScreen } from './game/UI'
 import { actions, getState } from './game/store'
+import { ensureSupabaseAuth } from './supabase'
 
 function App() {
   const [loaded, setLoaded] = useState(false)
@@ -13,11 +14,13 @@ function App() {
     // Load saved local progress on mount.
     actions.resetGame()
 
-    // Reconcile the local high score with the shared username record every time
-    // the game is opened.
-    if (getState().username) {
-      void actions.syncSharedHighScore()
-    }
+    // Establish an invisible Supabase session for RLS-protected analytics.
+    // No Google/Apple/email sign-in UI is shown to players.
+    void ensureSupabaseAuth().then(() => {
+      if (getState().username) {
+        void actions.syncSharedHighScore()
+      }
+    })
 
     // Simulate loading time for 3D assets.
     const timer = setTimeout(() => setLoaded(true), 1500)
