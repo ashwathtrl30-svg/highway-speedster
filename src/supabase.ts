@@ -109,10 +109,14 @@ export async function fetchAllAnalytics() {
 }
 
 
-export async function fetchMyPlaytimeRank(): Promise<{ rank: number; playtimeSeconds: number; totalPlayers: number } | null> {
+export async function fetchMyPlaytimeRank(playerId: string): Promise<{ rank: number; playtimeSeconds: number; totalPlayers: number } | null> {
+  const cleanPlayerId = playerId.trim()
+  if (!cleanPlayerId) return null
+
   try {
-    if (!(await ensureSupabaseAuth())) return null
-    const { data, error } = await supabase.rpc('get_my_playtime_rank')
+    const { data, error } = await supabase.rpc('get_my_playtime_rank_by_player_id', {
+      p_player_id: cleanPlayerId,
+    })
     if (error) throw error
     const row = Array.isArray(data) ? data[0] : data
     if (!row) return null
@@ -126,6 +130,7 @@ export async function fetchMyPlaytimeRank(): Promise<{ rank: number; playtimeSec
     return null
   }
 }
+
 
 export interface CloudGameProgress {
   highScore: number
