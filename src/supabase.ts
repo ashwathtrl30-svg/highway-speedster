@@ -5,10 +5,42 @@ const supabaseAnonKey = 'sb_publishable_Wh5xFjsVYK8kkXgVwHpWbg_Io5b85cD'
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+let authReadyPromise: Promise<boolean> | null = null
+
+/**
+ * The game has no visible sign-in screen, but analytics writes use Supabase's
+ * authenticated role. Keep the player experience anonymous while still giving
+ * each browser a Supabase Auth user/session for RLS-protected analytics.
+ */
+export async function ensureSupabaseAuth(): Promise<boolean> {
+  if (authReadyPromise) return authReadyPromise
+
+  authReadyPromise = (async () => {
+    try {
+      const { data, error } = await supabase.auth.getSession()
+      if (error) throw error
+      if (data.session?.user) return true
+
+      const { data: signInData, error: signInError } = await supabase.auth.signInAnonymously()
+      if (signInError || !signInData.user) {
+        throw signInError || new Error('Anonymous Supabase sign-in returned no user')
+      }
+      return true
+    } catch (error) {
+      console.error('Supabase anonymous auth unavailable; analytics will retry:', error)
+      authReadyPromise = null
+      return false
+    }
+  })()
+
+  return authReadyPromise
+}
+
 export async function syncAnalyticsToSupabase(
   playerId: string, username: string, playtimeSeconds: number, highScore: number, totalCoins: number
 ) {
   if (!playerId.trim() || !username.trim()) return
+  if (!(await ensureSupabaseAuth())) return
   const { data: session } = await supabase.auth.getSession()
   if (!session.session) return
   const { error } = await supabase.from('user_analytics').upsert({
@@ -24,6 +56,7 @@ export async function syncAnalyticsToSupabase(
 export async function recordPlaytimeEvent(playerId: string, username: string, seconds: number) {
   if (!playerId.trim() || !username.trim() || seconds <= 0) return
   try {
+    if (!(await ensureSupabaseAuth())) return
     const { data: authData, error: authError } = await supabase.auth.getUser()
     if (authError || !authData.user) return
     const { error } = await supabase.from('playtime_events').insert({
@@ -54,6 +87,7 @@ export async function fetchAllAnalytics() {
 
 export async function fetchMyPlaytimeRank(): Promise<{ rank: number; playtimeSeconds: number; totalPlayers: number } | null> {
   try {
+    if (!(await ensureSupabaseAuth())) return null
     const { data, error } = await supabase.rpc('get_my_playtime_rank')
     if (error) throw error
     const row = Array.isArray(data) ? data[0] : data
@@ -92,6 +126,7 @@ export interface CloudGameProgress {
 export async function fetchUserGameProgress(playerId: string, username: string): Promise<CloudGameProgress | null> {
   if (!playerId.trim() || !username.trim()) return null
   try {
+    if (!(await ensureSupabaseAuth())) return null
     const { data, error } = await supabase
       .from('user_analytics')
       .select('game_progress, total_coins')
@@ -122,6 +157,7 @@ export async function saveUserGameProgress(
 ): Promise<boolean> {
   if (!playerId.trim() || !username.trim()) return false
   try {
+    if (!(await ensureSupabaseAuth())) return false
     const { data: authData, error: authError } = await supabase.auth.getUser()
     if (authError || !authData.user) return false
     const { data: existing, error: existingError } = await supabase
@@ -157,6 +193,7 @@ export async function saveUserGameProgress(
 export async function fetchUserHighScore(playerId: string): Promise<number | null> {
   if (!playerId.trim()) return null
   try {
+    if (!(await ensureSupabaseAuth())) return null
     const { data, error } = await supabase
       .from('user_analytics')
       .select('high_score')
