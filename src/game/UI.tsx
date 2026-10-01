@@ -1734,16 +1734,18 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
                       }}
                     >
                       {isUnlocked ? (
-                        <div className="w-full h-full transition-transform duration-300 group-hover:scale-[1.06]">
-                          <GarageVehicleArt section="bikes" vehicleId={bike.id} className="h-full w-full">
-                            <GarageVehicleArt section="bikes" vehicleId={bike.id} className="h-full w-full">
-                              <BikeIcon bike={bike} />
-                            </GarageVehicleArt>
-                          </GarageVehicleArt>
+                        <div
+                          className="w-full h-full transition-transform duration-300 group-hover:scale-[1.06]"
+                          style={{ transform: 'scaleX(-1)' }}
+                        >
+                          <BikeIcon bike={bike} />
                         </div>
                       ) : (
                         <>
-                          <div className="w-full h-full opacity-25 grayscale">
+                          <div
+                            className="w-full h-full opacity-25 grayscale"
+                            style={{ transform: 'scaleX(-1)' }}
+                          >
                             <BikeIcon bike={bike} />
                           </div>
                           <div className="absolute inset-0 flex items-center justify-center bg-black/25">
@@ -1841,16 +1843,18 @@ function GarageSelection({ onBack }: { onBack: () => void }) {
                       }}
                     >
                       {isUnlocked ? (
-                        <div className="w-full h-full transition-transform duration-300 group-hover:scale-[1.06]">
-                          <GarageVehicleArt section="cars" vehicleId={car.id} className="h-full w-full">
-                            <GarageVehicleArt section="cars" vehicleId={car.id} className="h-full w-full">
-                              <CarIcon car={car} />
-                            </GarageVehicleArt>
-                          </GarageVehicleArt>
+                        <div
+                          className="w-full h-full transition-transform duration-300 group-hover:scale-[1.06]"
+                          style={{ transform: car.id === 'saber-swift' ? undefined : 'scaleX(-1)' }}
+                        >
+                          <CarIcon car={car} />
                         </div>
                       ) : (
                         <>
-                          <div className="w-full h-full opacity-25 grayscale">
+                          <div
+                            className="w-full h-full opacity-25 grayscale"
+                            style={{ transform: car.id === 'saber-swift' ? undefined : 'scaleX(-1)' }}
+                          >
                             <CarIcon car={car} />
                           </div>
                           <div className="absolute inset-0 flex items-center justify-center bg-black/25">
