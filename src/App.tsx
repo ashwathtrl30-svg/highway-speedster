@@ -3,12 +3,11 @@ import { LeaderboardViewer } from './LeaderboardViewer'
 import { HighScoreAnalytics } from './HighScoreAnalytics'
 import { Analytics } from '@vercel/analytics/react'
 import { GameScene } from './game/Scene'
-import { HUD, MainMenu, PauseMenu, GameOverScreen, TouchControls, UnlockNotification, LoadingScreen, UsernameInput } from './game/UI'
+import { HUD, MainMenu, PauseMenu, GameOverScreen, TouchControls, UnlockNotification, LoadingScreen } from './game/UI'
 import { actions, getState } from './game/store'
 
 function App() {
   const [loaded, setLoaded] = useState(false)
-  const [needsUsername, setNeedsUsername] = useState(() => !getState().username)
 
   useEffect(() => {
     // Load saved local progress on mount.
@@ -32,18 +31,12 @@ function App() {
     <div className="w-full h-full relative overflow-hidden bg-black">
       <div className="absolute inset-0"><GameScene /></div>
       {!loaded && <LoadingScreen />}
-      {loaded && needsUsername ? (
-        <UsernameInput onComplete={() => setNeedsUsername(false)} />
-      ) : loaded ? (
-        <>
-          <MainMenu />
-          <HUD />
-          <PauseMenu />
-          <GameOverScreen />
-          <TouchControls />
-          <UnlockNotification />
-        </>
-      ) : null}
+      <MainMenu />
+      <HUD />
+      <PauseMenu />
+      <GameOverScreen />
+      <TouchControls />
+      <UnlockNotification />
       <Analytics />
     </div>
   )
