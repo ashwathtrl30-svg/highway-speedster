@@ -633,7 +633,7 @@ function buildCloudProgress(): CloudGameProgress | null {
 function saveCloudProgressNow() {
   const current = getState()
   const progress = buildCloudProgress()
-  if (!progress || !current.username.trim()) return
+  if (!playerId || !progress || !current.username.trim()) return
   void saveUserGameProgress(playerId, current.username, progress)
 }
 
@@ -1217,15 +1217,47 @@ export const actions = {
   async connectAccount(id: string) {
     const trimmed = id.trim()
     if (!trimmed) return { ok: false as const, reason: 'Enter an account ID.' }
+
     const previousId = playerId
     const previous = { ...getState() }
     setPlayerId(trimmed)
+
+    // Never merge another local profile into the account being connected.
+    // Start from a clean profile, then hydrate exactly what belongs to this ID.
+    const defaultCarColors = normalizeCarColorSelections()
+    const defaultBikeSkins = normalizeBikeSkinSelections()
+    const bike = BIKES[0]
+    const skin = defaultBikeSkins[bike.id] || BIKE_SKINS[bike.id][0]
+    const colors = SKIN_COLORS[skin]
+    const car = CARS[0]
+    const carColor = getCarColorOption(car.id, defaultCarColors[car.id])
+    setState({
+      highScore: 0, bikeHighScore: 0, carHighScore: 0,
+      unlockedBikes: ['blitz'], unlockedCars: ['kanto-zip'],
+      bikeSkins: defaultBikeSkins, totalCoins: 0,
+      inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 },
+      vehicleMode: 'bike',
+      selectedBike: { ...bike, color: colors.color, accentColor: colors.accentColor },
+      selectedCar: carColor ? { ...car, color: carColor.color, accentColor: carColor.accentColor } : car,
+      selectedSkin: skin, carColors: defaultCarColors, selectedCarColor: defaultCarColors[car.id],
+      username: '', totalPlaytime: 0, userPlaytime: {}, playtimeHistory: [],
+      score: 0, distance: 0, speed: 0, nearMisses: 0, combo: 0, comboTimer: 0, runCoins: 0,
+      selectedPowerUps: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 },
+      playerLane: 0, targetLane: 0, playerX: 0, newUnlock: null, newUnlockUntil: null,
+      magnetActive: false, magnetTimer: 0, magnet2xActive: false, magnet2xTimer: 0,
+      multiplierActive: false, multiplierTimer: 0, multiplier4x: false, shieldActive: false, shieldCount: 0,
+    })
+
     const connected = await loadCloudProgress()
-    if (!connected) {
+    if (!connected || !getState().username.trim()) {
       setPlayerId(previousId)
       setState(previous)
+      if (!previousId) {
+        try { localStorage.removeItem('highway-speedster-player-id') } catch {}
+      }
       return { ok: false as const, reason: 'Account not found. Check the account ID and try again.' }
     }
+
     return { ok: true as const, username: getState().username }
   },
 
