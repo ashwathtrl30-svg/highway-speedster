@@ -1970,17 +1970,6 @@ function PowerUpSelection({ onBack, onStart }: { onBack: () => void; onStart: ()
           })}
         </div>
 
-        <div className="max-w-md mx-auto mt-4 rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-center">
-          <p className="text-[11px] sm:text-xs font-bold text-white/65">
-            {selectedCount === 0
-              ? 'No power-ups selected — start normally.'
-              : selectedCount + ' power-' + (selectedCount === 1 ? 'up' : 'ups') + ' will activate immediately when the ride starts.'}
-          </p>
-          <p className="text-[10px] text-white/35 mt-1">
-            Each selected unit is consumed from your inventory. You can use as many as you own in one run.
-          </p>
-        </div>
-
         <div className="mt-4 sm:mt-6 max-w-md mx-auto w-full pb-2">
           <button
             onClick={onStart}
