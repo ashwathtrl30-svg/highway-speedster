@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useGameStore, actions, BIKES, CARS, BIKE_SKINS, SKIN_NAMES, SKIN_SWATCHES, SKIN_COLORS, CAR_COLORS, getState, type Bike, type Car, type BikeSkin, type CarColorOption, type GameData, type PowerUpType } from './store'
 import { BikeIcon, CarIcon } from './VehicleArt'
 import { fetchLeaderboardAnalytics, fetchMyPlaytimeRank } from '../supabase'
+import { getCurrentPlayerId } from './store'
 import { HighScoreAnalytics } from '../HighScoreAnalytics'
 
 // ============== LOADING SCREEN ==============
@@ -88,6 +89,116 @@ export function UsernameInput() {
         >
           🏁 START RACING
         </button>
+      </div>
+    </div>
+  )
+}
+
+// ============== ACCOUNT ACCESS ==============
+export function AccountSetup({ onComplete }: { onComplete: () => void }) {
+  const [mode, setMode] = useState<'choice' | 'new' | 'existing'>('choice')
+  const [accountId, setAccountId] = useState('')
+  const [username, setUsername] = useState('')
+  const [newAccountId, setNewAccountId] = useState('')
+  const [error, setError] = useState('')
+  const [connecting, setConnecting] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const beginNewUser = () => {
+    const id = actions.startNewAccount()
+    setNewAccountId(id)
+    setMode('new')
+    setError('')
+  }
+
+  const copyAccountId = async () => {
+    if (!newAccountId) return
+    try {
+      await navigator.clipboard.writeText(newAccountId)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1400)
+    } catch {
+      setError('Copy failed. Please store the account ID manually.')
+    }
+  }
+
+  const finishNewUser = () => {
+    const trimmed = username.trim()
+    if (!trimmed) {
+      setError('Enter a display name to continue.')
+      return
+    }
+    actions.setUsername(trimmed)
+    onComplete()
+  }
+
+  const connectExisting = async () => {
+    const trimmed = accountId.trim()
+    if (!trimmed) {
+      setError('Paste your account ID.')
+      return
+    }
+    setConnecting(true)
+    setError('')
+    const result = await actions.connectAccount(trimmed)
+    setConnecting(false)
+    if (!result.ok) {
+      setError(result.reason)
+      return
+    }
+    onComplete()
+  }
+
+  return (
+    <div className="absolute inset-0 z-[120] flex items-center justify-center overflow-y-auto bg-[radial-gradient(circle_at_50%_20%,rgba(65,94,112,.42),transparent_35%),linear-gradient(145deg,#091016,#111b22_50%,#07090c)] px-4 py-8 text-white">
+      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-black/35 p-5 sm:p-7 shadow-2xl backdrop-blur-2xl">
+        <div className="mb-6 text-center">
+          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-amber-300/75">HIGHWAY SPEEDSTER</p>
+          <h1 className="mt-2 text-3xl sm:text-4xl font-black tracking-tight">Your Account</h1>
+          <p className="mt-2 text-sm leading-6 text-white/55">Your account ID keeps your progress separate from everyone else, even when names are identical.</p>
+        </div>
+
+        {mode === 'choice' && (
+          <div className="space-y-3">
+            <button onClick={beginNewUser} className="w-full rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-4 text-left font-black text-black shadow-lg shadow-orange-500/20 transition-all active:scale-[.98]">
+              <span className="block text-lg">NEW USER</span>
+              <span className="mt-1 block text-xs font-semibold text-black/65">Start a completely fresh account with zero progress.</span>
+            </button>
+            <button onClick={() => { setMode('existing'); setError('') }} className="w-full rounded-2xl border border-white/12 bg-white/[0.055] px-5 py-4 text-left font-black transition-all hover:bg-white/[0.09] active:scale-[.98]">
+              <span className="block text-lg">ALREADY HAVE AN ACCOUNT</span>
+              <span className="mt-1 block text-xs font-semibold text-white/50">Use your account ID to load the same account on this device.</span>
+            </button>
+          </div>
+        )}
+
+        {mode === 'new' && (
+          <div>
+            <div className="rounded-2xl border border-emerald-300/20 bg-emerald-400/[0.07] p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-200/65">YOUR ACCOUNT ID</p>
+              <button onClick={copyAccountId} className="mt-2 w-full break-all rounded-xl border border-white/10 bg-black/25 px-3 py-3 text-left font-mono text-sm leading-6 text-emerald-100 transition-colors hover:bg-black/35">
+                {newAccountId}
+              </button>
+              <p className="mt-2 text-xs leading-5 text-white/55">Store this safely. You will use it to open this exact account on another device.</p>
+              <p className="mt-1 text-xs font-semibold text-emerald-200/75">{copied ? 'Copied.' : 'Tap the ID to copy it.'}</p>
+            </div>
+            <input value={username} onChange={(e) => { setUsername(e.target.value); setError('') }} onKeyDown={(e) => e.key === 'Enter' && finishNewUser()} placeholder="Display name" maxLength={40} autoFocus className="mt-4 w-full rounded-xl border border-white/12 bg-white/7 px-4 py-3 text-center text-lg font-bold text-white placeholder-white/30 outline-none focus:border-amber-300/60" />
+            {error && <p className="mt-2 text-center text-xs font-semibold text-red-300">{error}</p>}
+            <button onClick={finishNewUser} disabled={!username.trim()} className="mt-4 w-full rounded-xl bg-gradient-to-r from-emerald-400 to-green-500 py-3.5 font-black text-black disabled:cursor-not-allowed disabled:opacity-40">CREATE ACCOUNT</button>
+            <button onClick={() => setMode('choice')} className="mt-2 w-full py-2 text-xs font-bold text-white/45 hover:text-white/70">BACK</button>
+          </div>
+        )}
+
+        {mode === 'existing' && (
+          <div>
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/45">ACCOUNT ID</label>
+            <textarea value={accountId} onChange={(e) => { setAccountId(e.target.value); setError('') }} placeholder="Paste your account ID here" rows={3} autoFocus className="mt-2 w-full resize-none rounded-xl border border-white/12 bg-white/7 px-4 py-3 font-mono text-sm text-white placeholder-white/30 outline-none focus:border-amber-300/60" />
+            {error && <p className="mt-2 text-center text-xs font-semibold text-red-300">{error}</p>}
+            <button onClick={() => void connectExisting()} disabled={connecting || !accountId.trim()} className="mt-4 w-full rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 py-3.5 font-black text-black disabled:cursor-not-allowed disabled:opacity-40">
+              {connecting ? 'CONNECTING…' : 'CONNECT ACCOUNT'}
+            </button>
+            <button onClick={() => setMode('choice')} disabled={connecting} className="mt-2 w-full py-2 text-xs font-bold text-white/45 hover:text-white/70">BACK</button>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -294,7 +405,7 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
 
     const load = async () => {
       setLoading(true)
-      const data = await fetchLeaderboardAnalytics(timeFilter)
+      const data = await fetchLeaderboardAnalytics(timeFilter, getCurrentPlayerId())
       if (!mounted) return
       setAnalytics({ users: data.users })
       setLoading(false)
@@ -448,7 +559,7 @@ function PlaytimeRankCard({ username }: { username: string }) {
     let cancelled = false
     if (!username.trim()) return
 
-    fetchMyPlaytimeRank().then((result) => {
+    fetchMyPlaytimeRank(getCurrentPlayerId()).then((result) => {
       if (!cancelled) setRank(result)
     })
 
@@ -921,6 +1032,24 @@ export function MainMenu() {
           </div>
 
           {state.username && <div className="hs-menu-enter hs-menu-enter-delay-2 mb-3"><PlaytimeRankCard username={state.username} /></div>}
+          {state.username && getCurrentPlayerId() && (
+            <div className="hs-menu-enter hs-menu-enter-delay-2 mb-4 w-full max-w-md rounded-2xl border border-white/10 bg-black/25 px-4 py-3 backdrop-blur-xl">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 text-left">
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40">Account ID</p>
+                  <p className="mt-1 break-all font-mono text-[10px] leading-4 text-white/65">{getCurrentPlayerId()}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    void navigator.clipboard?.writeText(getCurrentPlayerId())
+                  }}
+                  className="shrink-0 rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2 text-[10px] font-black text-white/70 hover:bg-white/[0.1]"
+                >COPY</button>
+              </div>
+            </div>
+          )}
 
           {state.highScore > 0 && (
             <button
