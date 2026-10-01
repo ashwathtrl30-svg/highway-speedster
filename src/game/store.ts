@@ -483,6 +483,7 @@ function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHig
         totalCoins: data.totalCoins || data.coins || 0,
         inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0, ...(data.inventory || {}) },
         username: data.username || '',
+        nameEditsUsed: Math.max(0, Math.min(2, Number(data.nameEditsUsed || 0))),
         totalPlaytime: data.totalPlaytime || 0,
         userPlaytime: data.userPlaytime || {},
         playtimeHistory: data.playtimeHistory || [],
@@ -500,7 +501,7 @@ function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHig
   } catch (e) { /* ignore */ }
   const defaultCarColors = normalizeCarColorSelections()
   const defaultBikeSkins = normalizeBikeSkinSelections()
-  return { highScore: 0, bikeHighScore: 0, carHighScore: 0, unlockedBikes: ['blitz'], unlockedCars: ['kanto-zip'], bikeSkins: defaultBikeSkins, totalCoins: 0, inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }, username: '', totalPlaytime: 0, userPlaytime: {}, playtimeHistory: [], vehicleMode: 'bike', selectedBikeId: BIKES[0].id, selectedCarId: CARS[0].id, selectedSkin: defaultBikeSkins[BIKES[0].id], carColors: defaultCarColors, selectedCarColor: defaultCarColors[CARS[0].id] }
+  return { highScore: 0, nameEditsUsed: 0, bikeHighScore: 0, carHighScore: 0, unlockedBikes: ['blitz'], unlockedCars: ['kanto-zip'], bikeSkins: defaultBikeSkins, totalCoins: 0, inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }, username: '', totalPlaytime: 0, userPlaytime: {}, playtimeHistory: [], vehicleMode: 'bike', selectedBikeId: BIKES[0].id, selectedCarId: CARS[0].id, selectedSkin: defaultBikeSkins[BIKES[0].id], carColors: defaultCarColors, selectedCarColor: defaultCarColors[CARS[0].id] }
 }
 
 function saveProgress(highScore: number, unlockedBikes: string[], bikeSkins: Record<string, BikeSkin>, totalCoins: number, inventory: PowerUpInventory, username: string, totalPlaytime: number, userPlaytime: Record<string, number>, playtimeHistory: PlaytimeEntry[]) {
@@ -513,6 +514,7 @@ function saveProgress(highScore: number, unlockedBikes: string[], bikeSkins: Rec
       totalCoins,
       inventory,
       username,
+      nameEditsUsed: state.nameEditsUsed,
       totalPlaytime,
       userPlaytime,
       playtimeHistory,
@@ -596,6 +598,7 @@ let state: GameData = {
   shieldActive: false,
   shieldCount: 0,
   username: savedProgress.username,
+  nameEditsUsed: savedProgress.nameEditsUsed,
   totalPlaytime: savedProgress.totalPlaytime,
   userPlaytime: savedProgress.userPlaytime,
   playtimeHistory: savedProgress.playtimeHistory,
@@ -625,6 +628,7 @@ function buildCloudProgress(): CloudGameProgress | null {
     selectedSkin: current.selectedSkin,
     carColors: current.carColors,
     selectedCarColor: current.selectedCarColor,
+    nameEditsUsed: current.nameEditsUsed,
     totalPlaytime: current.totalPlaytime,
     userPlaytime: current.userPlaytime,
     playtimeHistory: current.playtimeHistory,
@@ -662,6 +666,7 @@ async function loadCloudProgress(username = state.username): Promise<boolean> {
   }
 
   const resolvedUsername = cloud.username.trim() || username.trim()
+  const resolvedNameEditsUsed = Math.max(0, Math.min(2, Number(cloud.nameEditsUsed || 0)))
   const current = getState()
   if (username.trim() && current.username.trim() && current.username.trim() !== username.trim()) {
     cloudHydratingUser = ''
@@ -717,6 +722,7 @@ async function loadCloudProgress(username = state.username): Promise<boolean> {
     selectedCarColor,
     vehicleMode: cloud.vehicleMode === 'car' ? 'car' : current.vehicleMode,
     username: resolvedUsername,
+    nameEditsUsed: resolvedNameEditsUsed,
     totalPlaytime: mergedTotalPlaytime,
     userPlaytime: mergedUserPlaytime,
     playtimeHistory: mergedHistory,
@@ -1164,6 +1170,7 @@ export const actions = {
       carColors: defaultCarColors,
       selectedCarColor: defaultCarColors[car.id],
       username: '',
+      nameEditsUsed: 0,
       totalPlaytime: 0,
       userPlaytime: {},
       playtimeHistory: [],
