@@ -623,13 +623,18 @@ function saveCloudProgressNow() {
   void saveUserGameProgress(playerId, current.username, progress)
 }
 
+const CLOUD_ANALYTICS_SYNC_MS = 10_000
+
 function queueCloudSave() {
-  if (cloudHydratingUser) return
-  if (cloudSaveTimer) clearTimeout(cloudSaveTimer)
+  if (cloudHydratingUser || cloudSaveTimer) return
+
+  // Throttle cloud persistence to one write per 10 seconds while still
+  // persisting the latest in-memory state. This keeps Supabase analytics
+  // continuously current without creating a write on every game frame.
   cloudSaveTimer = setTimeout(() => {
     cloudSaveTimer = null
     if (!cloudHydratingUser) saveCloudProgressNow()
-  }, 1000)
+  }, CLOUD_ANALYTICS_SYNC_MS)
 }
 
 async function loadCloudProgress(username: string) {
@@ -1201,10 +1206,11 @@ export const actions = {
     })
     saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory, state.username, newTotalPlaytime, newUserPlaytime, newPlaytimeHistory)
     
-    // Record real historical playtime in 30-second batches.
+    // Record real historical playtime in 10-second batches so the
+    // rolling analytics windows update at the same cadence as the profile.
     if (state.username) {
       pendingAnalyticsSeconds += seconds
-      if (pendingAnalyticsSeconds >= 30) {
+      if (pendingAnalyticsSeconds >= 10) {
         const eventSeconds = pendingAnalyticsSeconds
         pendingAnalyticsSeconds = 0
         recordPlaytimeEvent(playerId, state.username, eventSeconds)
