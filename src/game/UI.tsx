@@ -204,6 +204,87 @@ export function AccountSetup({ onComplete }: { onComplete: () => void }) {
   )
 }
 
+function AccountProfile({ onBack }: { onBack: () => void }) {
+  const state = useGameStore()
+  const [editing, setEditing] = useState(false)
+  const [value, setValue] = useState(state.username)
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState('')
+  const [copied, setCopied] = useState(false)
+
+  const accountId = getCurrentPlayerId()
+  const remaining = Math.max(0, 2 - state.nameEditsUsed)
+
+  const copyId = async () => {
+    if (!accountId) return
+    try {
+      await navigator.clipboard.writeText(accountId)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1400)
+    } catch {
+      setMessage('Copy failed. Store the account ID manually.')
+    }
+  }
+
+  const saveName = async () => {
+    setBusy(true)
+    setMessage('')
+    const result = await actions.editDisplayName(value)
+    setBusy(false)
+    if (!result.ok) {
+      setMessage(result.reason)
+      return
+    }
+    setEditing(false)
+    setValue(getState().username)
+    setMessage(`Username updated. ${result.remaining} change${result.remaining === 1 ? '' : 's'} remaining.`)
+  }
+
+  return (
+    <div className="absolute inset-0 z-[110] flex items-center justify-center overflow-y-auto bg-[radial-gradient(circle_at_50%_18%,rgba(80,111,128,.34),transparent_35%),linear-gradient(145deg,#091016,#121d24_52%,#07090c)] px-4 py-8 text-white">
+      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-black/40 p-5 sm:p-7 shadow-2xl backdrop-blur-2xl">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-amber-300/70">PLAYER PROFILE</p>
+            <h2 className="mt-2 text-3xl font-black">Account</h2>
+          </div>
+          <button type="button" onClick={onBack} className="rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-xs font-black text-white/70 hover:bg-white/[0.09]">CLOSE</button>
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.045] p-4">
+          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40">USERNAME</p>
+          {!editing ? (
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <p className="min-w-0 truncate text-xl font-black text-white">{state.username}</p>
+              <button type="button" onClick={() => { setEditing(true); setMessage(''); setValue(state.username) }} disabled={remaining === 0} className="shrink-0 rounded-xl border border-amber-300/20 bg-amber-300/10 px-3 py-2 text-[10px] font-black text-amber-200 disabled:cursor-not-allowed disabled:opacity-35">EDIT</button>
+            </div>
+          ) : (
+            <div className="mt-2">
+              <input value={value} onChange={(e) => setValue(e.target.value)} maxLength={40} autoFocus className="w-full rounded-xl border border-white/12 bg-black/30 px-3 py-3 text-base font-bold text-white outline-none focus:border-amber-300/60" />
+              <div className="mt-2 flex gap-2">
+                <button type="button" onClick={() => void saveName()} disabled={busy || !value.trim()} className="flex-1 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 py-2.5 text-xs font-black text-black disabled:cursor-not-allowed disabled:opacity-40">{busy ? 'SAVING…' : 'SAVE NAME'}</button>
+                <button type="button" onClick={() => { setEditing(false); setValue(state.username); setMessage('') }} disabled={busy} className="rounded-xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-xs font-black text-white/70">CANCEL</button>
+              </div>
+            </div>
+          )}
+          <p className="mt-2 text-[10px] text-white/40">{remaining} of 2 username changes remaining.</p>
+        </div>
+
+        <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.045] p-4">
+          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40">ACCOUNT ID</p>
+          <button type="button" onClick={() => void copyId()} className="mt-2 w-full break-all rounded-xl border border-white/10 bg-black/30 px-3 py-3 text-left font-mono text-xs leading-5 text-emerald-100 hover:bg-black/40">
+            {accountId || 'No account ID'}
+          </button>
+          <p className="mt-2 text-[10px] leading-4 text-white/40">Use this ID to open the same account on another device.</p>
+          <p className="mt-1 text-[10px] font-semibold text-emerald-200/70">{copied ? 'Copied.' : 'Tap the ID to copy it.'}</p>
+        </div>
+
+        {message && <p className="mt-3 text-center text-xs font-semibold text-amber-200">{message}</p>}
+      </div>
+    </div>
+  )
+}
+
 // ============== HUD ==============
 export function HUD() {
   const state = useGameStore()
@@ -981,7 +1062,7 @@ export function MainMenu() {
         </button>
       )}
 
-      <div className="relative z-10 flex min-h-full flex-col items-center justify-center px-4 py-8 sm:py-10">
+      <div className="relative z-10 flex min-h-full flex-col items-center justify-center px-4 py-8 pt-16 sm:px-4 sm:py-10 sm:pt-20">
         <div className="hs-menu-enter relative w-full max-w-3xl text-center">
           {/* Strong title treatment */}
           <div className="mb-4 sm:mb-5">
