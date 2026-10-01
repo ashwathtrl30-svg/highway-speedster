@@ -2549,6 +2549,120 @@ function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
     )
   }
   
+  if (bike.id === 'zenith' && skin === 'tricolore-livery') {
+    return (
+      <svg viewBox="0 0 100 60" className="w-full h-full hs-vehicle-facing-right">
+        <defs>
+          <linearGradient id="hsZenithTriWhite" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="52%" stopColor="#f0f1ee" />
+            <stop offset="100%" stopColor="#cfd3d0" />
+          </linearGradient>
+          <linearGradient id="hsZenithTriRed" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ef3849" />
+            <stop offset="55%" stopColor="#c91629" />
+            <stop offset="100%" stopColor="#8e0f1c" />
+          </linearGradient>
+          <linearGradient id="hsZenithTriGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#37b86c" />
+            <stop offset="55%" stopColor="#148348" />
+            <stop offset="100%" stopColor="#0b5831" />
+          </linearGradient>
+        </defs>
+
+        <circle cx="22" cy="45" r="10" fill="#17191c" stroke="#596168" strokeWidth="1.6"/>
+        <circle cx="78" cy="45" r="10" fill="#17191c" stroke="#596168" strokeWidth="1.6"/>
+
+        {/* White Panigale-style fairing base. */}
+        <path
+          d="M22 43 L28 18 L46 12 L70 18 L78 43 C65 46 39 46 22 43Z"
+          fill="url(#hsZenithTriWhite)"
+        />
+
+        {/* Aggressive asymmetric Italian tricolore treatment. */}
+        <path d="M29 19 L45 13 L46 27 L34 34 L27 40Z" fill="url(#hsZenithTriGreen)"/>
+        <path d="M46 13 L59 15 L60 29 L50 32 L46 27Z" fill="#f5f6f3"/>
+        <path d="M59 15 L70 19 L76 32 L67 38 L60 29Z" fill="url(#hsZenithTriRed)"/>
+
+        {/* Lower black/checkered racing section. */}
+        <path d="M27 39 L38 34 L52 33 L66 38 L75 40 L77 43 C63 46 38 46 25 43Z" fill="#121519"/>
+        {[0,1,2,3,4,5].map((n) => (
+          <g key={n}>
+            <rect x={31 + n * 7} y="38" width="4" height="3" fill={n % 2 === 0 ? "#f4f4f1" : "#101317"} opacity=".9"/>
+            <rect x={34.5 + n * 7} y="41" width="4" height="3" fill={n % 2 === 0 ? "#101317" : "#f4f4f1"} opacity=".9"/>
+          </g>
+        ))}
+
+        {/* Black cockpit / carbon aero surfaces. */}
+        <path d="M34 18 L40 11 L53 10 L59 17 L55 22 L42 22Z" fill="#0a0d11"/>
+        <path d="M58 19 L70 18 L77 29 L73 33 L64 28Z" fill="#111419"/>
+        <path d="M71 31 L82 34 L86 38 L73 38Z" fill="#0b0e11"/>
+
+        {/* Racing slash, headlight and metallic details. */}
+        <path d="M31 29 L46 24 L50 27 L35 33Z" fill="#ffffff" opacity=".9"/>
+        <path d="M31 26 L37 23 L37 28 L32 30Z" fill="#fff7cf"/>
+        <path d="M67 38 L78 40 L74 42 L64 40Z" fill="#d2d6d7"/>
+        <path d="M67 35 L78 37" stroke="#e1e5e6" strokeWidth="1.4" opacity=".55"/>
+        <circle cx="73" cy="30" r="1.3" fill="#ffffff" opacity=".9"/>
+      </svg>
+    )
+  }
+
+  if (bike.id === 'zenith' && skin === 'winter-test') {
+    return (
+      <svg viewBox="0 0 100 60" className="w-full h-full hs-vehicle-facing-right">
+        <defs>
+          <linearGradient id="hsZenithWinterBlack" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#2a2e32" />
+            <stop offset="42%" stopColor="#14171a" />
+            <stop offset="100%" stopColor="#080a0d" />
+          </linearGradient>
+          <linearGradient id="hsZenithWinterTank" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#d7dadd" />
+            <stop offset="50%" stopColor="#9ba1a5" />
+            <stop offset="100%" stopColor="#e4e6e7" />
+          </linearGradient>
+        </defs>
+
+        <circle cx="22" cy="45" r="10" fill="#111316" stroke="#4b5359" strokeWidth="1.6"/>
+        <circle cx="78" cy="45" r="10" fill="#111316" stroke="#4b5359" strokeWidth="1.6"/>
+
+        {/* Matte-black Winter Test fairings. */}
+        <path
+          d="M22 43 L28 18 L46 12 L70 18 L78 43 C64 46 39 46 22 43Z"
+          fill="url(#hsZenithWinterBlack)"
+        />
+
+        {/* Exposed brushed-aluminium tank. */}
+        <path d="M34 16 L46 12 L60 15 L63 24 L53 28 L41 24Z" fill="url(#hsZenithWinterTank)"/>
+        <path d="M39 15 L48 13 L58 16" fill="none" stroke="#f2f3f4" strokeWidth="1.1" opacity=".7"/>
+
+        {/* Bright Ducati-red race accents. */}
+        <path d="M29 25 L42 20 L45 23 L32 29Z" fill="#e21b2e"/>
+        <path d="M55 25 L68 21 L72 25 L59 29Z" fill="#c91528"/>
+        <path d="M30 35 L47 31 L53 34 L34 39Z" fill="#ed1b31"/>
+        <path d="M58 34 L73 36 L76 39 L61 38Z" fill="#e21b2e"/>
+        <path d="M44 41 L64 38 L69 40 L50 44Z" fill="#b50f20"/>
+
+        {/* Carbon-style wings and dark lower fairing. */}
+        <path d="M32 20 L25 25 L30 28 L38 24Z" fill="#090b0e"/>
+        <path d="M61 20 L72 22 L79 28 L70 30Z" fill="#0a0c10"/>
+        <path d="M27 39 L38 35 L52 35 L67 39 L76 41 L77 43 C63 46 39 46 24 43Z" fill="#0a0d10"/>
+
+        {/* Brushed-metal exhaust / lower hardware. */}
+        <path d="M61 38 L74 39 L82 42 L69 43Z" fill="#b5b9bb"/>
+        <path d="M67 40 L79 41" stroke="#eceff0" strokeWidth="1" opacity=".65"/>
+        <path d="M30 28 L42 23" stroke="#f1f3f4" strokeWidth="1" opacity=".35"/>
+
+        {/* Headlight, Italian-flag wing mark and race details. */}
+        <path d="M31 23 L37 20 L37 25 L32 27Z" fill="#fff9d0"/>
+        <path d="M69 27 L74 28 L76 30 L70 30Z" fill="#159447"/>
+        <path d="M73 27 L77 29 L79 31 L74 30Z" fill="#e21b2e"/>
+        <rect x="62" y="34" width="7" height="1.4" rx=".7" fill="#f3f4f4" opacity=".7"/>
+      </svg>
+    )
+  }
+
   if (bike.id === 'zenith') {
     return (
       <svg viewBox="0 0 100 60" className="w-full h-full hs-vehicle-facing-right">
