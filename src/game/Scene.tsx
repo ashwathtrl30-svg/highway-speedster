@@ -58,6 +58,7 @@ interface TrafficVehicle {
   type: 'car' | 'truck' | 'auto' | 'bus' | 'bike' | 'scooter'
   color: string
   passed: boolean
+  crashed?: boolean
 }
 
 // Power-up types
@@ -784,202 +785,194 @@ void main() {
 `
 
 function CrashFireEffect({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
-  const groupRef = useRef<THREE.Group>(null)
+  const rootRef = useRef<THREE.Group>(null)
   const blastRef = useRef<THREE.Group>(null)
-  const flameRef = useRef<THREE.Group>(null)
+  const fireRef = useRef<THREE.Group>(null)
   const smokeRef = useRef<THREE.Group>(null)
-  const debrisRef = useRef<THREE.Group>(null)
+  const sparksRef = useRef<THREE.Group>(null)
   const glowRef = useRef<THREE.PointLight>(null)
-  const startedAtRef = useRef<number | null>(null)
+  const startedRef = useRef<number | null>(null)
   const isCar = vehicleMode === 'car'
 
-  const sparks = useMemo(() =>
-    Array.from({ length: isCar ? 28 : 20 }, (_, index) => {
-      const angle = (index / (isCar ? 28 : 20)) * Math.PI * 2
-      const speed = 0.65 + (index % 7) * 0.12
-      const lift = 0.25 + (index % 5) * 0.12
+  const sparkCount = isCar ? 34 : 26
+  const sparkData = useMemo(
+    () => Array.from({ length: sparkCount }, (_, i) => {
+      const a = (i / sparkCount) * Math.PI * 2
+      const radius = 0.55 + (i % 6) * 0.16
       return {
-        angle,
-        speed,
-        lift,
-        x: Math.cos(angle) * speed,
-        y: lift,
-        z: Math.sin(angle) * speed,
-        size: 0.018 + (index % 3) * 0.012,
+        x: Math.cos(a) * radius,
+        y: 0.22 + (i % 5) * 0.13,
+        z: Math.sin(a) * radius,
+        size: 0.018 + (i % 3) * 0.012,
       }
     }),
-  [isCar])
+    [sparkCount]
+  )
 
   useFrame(() => {
-    if (!groupRef.current) return
-
+    if (!rootRef.current) return
     const now = performance.now()
-    if (startedAtRef.current === null) startedAtRef.current = now
-    const elapsed = (now - startedAtRef.current) / 1000
+    if (startedRef.current === null) startedRef.current = now
+    const elapsed = (now - startedRef.current) / 1000
 
-    const blastT = THREE.MathUtils.clamp(elapsed / 0.72, 0, 1)
-    const blastFade = 1 - blastT
-    const flamePulse = 1 + Math.sin(now * 0.015) * 0.07 + Math.sin(now * 0.038) * 0.035
-
-    // The fire stays locked to the player's stopped crash position.
-    groupRef.current.position.set(0, 0.08, 0)
-
-    if (blastRef.current) {
-      const blastScale = 0.18 + blastFade * (isCar ? 2.95 : 2.35)
-      blastRef.current.scale.setScalar(blastScale)
-      blastRef.current.rotation.y += 0.045
-      blastRef.current.visible = blastFade > 0.005
+    if (crashImpactWorld) {
+      const state = getState()
+      rootRef.current.position.set(
+        crashImpactWorld.x - state.playerX,
+        0.12,
+        crashImpactWorld.z - PLAYER_Z
+      )
     }
 
-    if (flameRef.current) {
-      flameRef.current.scale.set(
-        flamePulse,
-        flamePulse * (1 + Math.sin(now * 0.021) * 0.09),
-        flamePulse
+    const blastT = THREE.MathUtils.clamp(elapsed / 0.62, 0, 1)
+    const blastFade = 1 - blastT
+
+    if (blastRef.current) {
+      blastRef.current.visible = blastFade > 0.01
+      blastRef.current.scale.setScalar(
+        0.25 + blastFade * (isCar ? 3.6 : 3.0)
       )
-      flameRef.current.rotation.y = Math.sin(now * 0.006) * 0.08
+      blastRef.current.rotation.y += 0.055
+    }
+
+    if (fireRef.current) {
+      const pulse = 1 + Math.sin(now * 0.017) * 0.075 + Math.sin(now * 0.043) * 0.035
+      fireRef.current.scale.set(
+        pulse,
+        pulse * (1 + Math.sin(now * 0.022) * 0.1),
+        pulse
+      )
     }
 
     if (smokeRef.current) {
-      const smokeRise = Math.min(1.25, elapsed * 0.33)
-      smokeRef.current.position.y = smokeRise
-      smokeRef.current.scale.setScalar(1 + smokeRise * 0.22)
-      smokeRef.current.rotation.y = Math.sin(now * 0.0012) * 0.12
+      const rise = Math.min(1.3, elapsed * 0.3)
+      smokeRef.current.position.y = rise
+      smokeRef.current.scale.setScalar(1 + rise * 0.24)
     }
 
-    if (debrisRef.current) {
-      sparks.forEach((spark, index) => {
-        const particle = debrisRef.current!.children[index] as THREE.Mesh | undefined
-        if (!particle) return
-
-        const travel = Math.min(1.0, elapsed * (1.7 + spark.speed))
-        particle.position.set(
+    if (sparksRef.current) {
+      sparkData.forEach((spark, index) => {
+        const mesh = sparksRef.current!.children[index] as THREE.Mesh | undefined
+        if (!mesh) return
+        const travel = Math.min(1, elapsed * (1.65 + (index % 5) * 0.1))
+        mesh.position.set(
           spark.x * travel,
-          0.16 + spark.y * travel - 0.18 * travel * travel,
+          spark.y * travel - 0.2 * travel * travel,
           spark.z * travel
         )
-        particle.scale.setScalar(Math.max(0.05, 1 - travel * 0.65))
-        ;(particle.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 1 - travel)
+        mesh.scale.setScalar(Math.max(0.02, 1 - travel * 0.75))
+        ;(mesh.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 1 - travel)
       })
     }
 
     if (glowRef.current) {
       glowRef.current.intensity =
-        (isCar ? 3.8 : 2.8) +
-        (isCar ? 8.0 : 5.8) * blastFade +
-        Math.sin(now * 0.024) * 0.5
+        (isCar ? 4.2 : 3.2) +
+        (isCar ? 8.5 : 6.4) * blastFade +
+        Math.sin(now * 0.022) * 0.55
     }
   })
 
   const flames = isCar
     ? [
-        { x: -0.72, y: 0.46, z: -0.5, sx: 0.52, sy: 1.24, sz: 0.52 },
-        { x: -0.28, y: 0.64, z: -0.82, sx: 0.62, sy: 1.45, sz: 0.62 },
-        { x: 0.18, y: 0.7, z: -0.9, sx: 0.68, sy: 1.55, sz: 0.68 },
-        { x: 0.68, y: 0.5, z: -0.52, sx: 0.54, sy: 1.25, sz: 0.54 },
-        { x: -0.48, y: 0.44, z: 0.18, sx: 0.45, sy: 1.08, sz: 0.45 },
-        { x: 0.4, y: 0.48, z: 0.16, sx: 0.48, sy: 1.12, sz: 0.48 },
+        [-0.82, 0.48, -0.44, 0.52, 1.36],
+        [-0.48, 0.64, -0.78, 0.62, 1.55],
+        [-0.12, 0.72, -0.92, 0.7, 1.72],
+        [0.24, 0.68, -0.82, 0.68, 1.62],
+        [0.64, 0.56, -0.48, 0.55, 1.38],
+        [-0.32, 0.48, 0.12, 0.46, 1.08],
+        [0.38, 0.5, 0.1, 0.48, 1.15],
       ]
     : [
-        { x: -0.34, y: 0.42, z: -0.44, sx: 0.32, sy: 0.86, sz: 0.32 },
-        { x: -0.12, y: 0.56, z: -0.7, sx: 0.4, sy: 1.12, sz: 0.4 },
-        { x: 0.14, y: 0.62, z: -0.74, sx: 0.44, sy: 1.2, sz: 0.44 },
-        { x: 0.36, y: 0.46, z: -0.44, sx: 0.34, sy: 0.92, sz: 0.34 },
-        { x: 0.0, y: 0.44, z: 0.1, sx: 0.29, sy: 0.78, sz: 0.29 },
+        [-0.34, 0.42, -0.42, 0.32, 0.92],
+        [-0.16, 0.58, -0.68, 0.4, 1.18],
+        [0.08, 0.64, -0.76, 0.44, 1.28],
+        [0.3, 0.5, -0.48, 0.34, 0.98],
+        [0.0, 0.48, 0.14, 0.3, 0.82],
       ]
 
   return (
-    <group ref={groupRef}>
+    <group ref={rootRef}>
       <pointLight
         ref={glowRef}
-        position={[0, 0.62, -0.32]}
-        color="#ff5b00"
-        intensity={4}
+        position={[0, 0.75, -0.28]}
+        color="#ff5a00"
         distance={isCar ? 8 : 6}
         decay={2}
       />
 
-      {/* Violent initial fireball: bright core + hot outer shell + expanding shock ring. */}
+      {/* Instantaneous impact blast */}
       <group ref={blastRef}>
         <mesh>
-          <sphereGeometry args={[0.3, 14, 10]} />
-          <meshBasicMaterial color="#fff9d0" transparent opacity={0.98} />
+          <sphereGeometry args={[0.28, 16, 12]} />
+          <meshBasicMaterial color="#fff9cc" transparent opacity={1} />
         </mesh>
-        <mesh scale={[1.7, 0.95, 1.7]}>
-          <sphereGeometry args={[0.48, 14, 10]} />
-          <meshBasicMaterial color="#ffb52e" transparent opacity={0.7} />
+        <mesh scale={[1.9, 1.0, 1.9]}>
+          <sphereGeometry args={[0.46, 16, 12]} />
+          <meshBasicMaterial color="#ffb52d" transparent opacity={0.72} />
         </mesh>
-        <mesh scale={[2.4, 1.15, 2.4]}>
-          <sphereGeometry args={[0.44, 14, 10]} />
-          <meshBasicMaterial color="#ff4a00" transparent opacity={0.34} />
+        <mesh scale={[2.7, 1.25, 2.7]}>
+          <sphereGeometry args={[0.42, 16, 12]} />
+          <meshBasicMaterial color="#ff4b00" transparent opacity={0.38} />
         </mesh>
-        <mesh scale={[2.8, 0.42, 2.8]} position={[0, -0.28, 0]}>
-          <torusGeometry args={[0.46, 0.045, 10, 28]} />
-          <meshBasicMaterial color="#ffd86a" transparent opacity={0.82} />
+        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.5, 0.055, 10, 28]} />
+          <meshBasicMaterial color="#ffd86b" transparent opacity={0.86} />
         </mesh>
       </group>
 
-      {/* Fire spreads across the whole wreck. */}
-      <group ref={flameRef}>
-        {flames.map((flame, index) => (
-          <group
-            key={index}
-            position={[flame.x, flame.y, flame.z]}
-            scale={[flame.sx, flame.sy, flame.sz]}
-            rotation={[0, index * 0.42, index % 2 === 0 ? -0.08 : 0.08]}
-          >
+      {/* Wide fire spread across the two-vehicle impact zone */}
+      <group ref={fireRef}>
+        {flames.map((f, i) => (
+          <group key={i} position={[f[0], f[1], f[2]]} scale={[f[3], f[4], f[3]]}>
             <mesh>
-              <coneGeometry args={[0.18, 0.9, 7]} />
+              <coneGeometry args={[0.18, 0.92, 7]} />
               <meshStandardMaterial
-                color="#ff5700"
-                emissive="#ff1e00"
-                emissiveIntensity={4.8}
-                roughness={0.3}
+                color="#ff5800"
+                emissive="#ff2000"
+                emissiveIntensity={5}
+                roughness={0.28}
                 transparent
-                opacity={0.93}
+                opacity={0.94}
               />
             </mesh>
-            <mesh scale={[0.57, 0.65, 0.57]} position={[0, -0.08, 0]}>
-              <coneGeometry args={[0.18, 0.7, 7]} />
+            <mesh scale={[0.55, 0.65, 0.55]} position={[0, -0.08, 0]}>
+              <coneGeometry args={[0.18, 0.72, 7]} />
               <meshStandardMaterial
-                color="#ffd84b"
-                emissive="#ff9a00"
-                emissiveIntensity={5.4}
+                color="#ffd94f"
+                emissive="#ff9800"
+                emissiveIntensity={5.6}
                 roughness={0.18}
                 transparent
                 opacity={0.98}
               />
             </mesh>
-            <mesh scale={[0.3, 0.3, 0.3]} position={[0, -0.22, 0]}>
-              <sphereGeometry args={[0.36, 8, 8]} />
-              <meshBasicMaterial color="#fff1b0" transparent opacity={0.9} />
-            </mesh>
           </group>
         ))}
       </group>
 
-      {/* Dense dark smoke column. */}
+      {/* Thick rising smoke */}
       <group ref={smokeRef}>
-        <mesh position={[0, 1.28, -0.12]} scale={[1.0, 1.65, 1.0]}>
-          <sphereGeometry args={[0.3, 10, 10]} />
-          <meshStandardMaterial color="#3d4145" roughness={1} transparent opacity={0.2} />
+        <mesh position={[0, 1.35, -0.16]} scale={[1.0, 1.65, 1.0]}>
+          <sphereGeometry args={[0.32, 10, 10]} />
+          <meshStandardMaterial color="#3e4246" roughness={1} transparent opacity={0.22} />
         </mesh>
-        <mesh position={[0.25, 1.75, -0.06]} scale={[0.72, 1.22, 0.72]}>
-          <sphereGeometry args={[0.26, 10, 10]} />
-          <meshStandardMaterial color="#202328" roughness={1} transparent opacity={0.16} />
+        <mesh position={[0.24, 1.82, -0.04]} scale={[0.7, 1.2, 0.7]}>
+          <sphereGeometry args={[0.27, 10, 10]} />
+          <meshStandardMaterial color="#202328" roughness={1} transparent opacity={0.17} />
         </mesh>
-        <mesh position={[-0.2, 2.18, 0.08]} scale={[0.58, 1.0, 0.58]}>
-          <sphereGeometry args={[0.23, 10, 10]} />
-          <meshStandardMaterial color="#111317" roughness={1} transparent opacity={0.12} />
+        <mesh position={[-0.16, 2.22, 0.06]} scale={[0.58, 1.0, 0.58]}>
+          <sphereGeometry args={[0.24, 10, 10]} />
+          <meshStandardMaterial color="#111317" roughness={1} transparent opacity={0.13} />
         </mesh>
       </group>
 
-      {/* Burning fragments / sparks radiate from impact. */}
-      <group ref={debrisRef}>
-        {sparks.map((spark, index) => (
-          <mesh key={index} position={[0, 0.16, 0]}>
+      {/* Expanding burning fragments */}
+      <group ref={sparksRef}>
+        {sparkData.map((spark, index) => (
+          <mesh key={index}>
             <sphereGeometry args={[spark.size, 6, 6]} />
-            <meshBasicMaterial color={index % 4 === 0 ? "#fff0a8" : "#ff8a00"} transparent opacity={1} />
+            <meshBasicMaterial color={index % 5 === 0 ? "#fff0a6" : "#ff8a00"} transparent opacity={1} />
           </mesh>
         ))}
       </group>
@@ -1059,8 +1052,7 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
     const currentBike = bikeRef.current
 
     if (crashActive) {
-      // Hard-lock the wreck at the collision location. No steering, lane movement,
-      // or forward movement can continue during the four-second aftermath.
+      // Freeze the player's vehicle exactly where the impact occurred.
       actions.setPlayerX(currentXRef.current)
 
       if (meshRef.current && visualRef.current) {
@@ -1069,13 +1061,13 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
         meshRef.current.position.z = PLAYER_Z
         meshRef.current.rotation.set(0, 0, 0)
 
-        const elapsed = ((performance.now() - (crashStartTimeRef.current ?? performance.now())) / 1000)
-        const settle = THREE.MathUtils.clamp(elapsed / 0.75, 0, 1)
-        visualRef.current.position.y = Math.sin(elapsed * 8) * 0.01 * (1 - settle)
-        visualRef.current.position.z = 0
-        visualRef.current.rotation.x = THREE.MathUtils.degToRad(-3 - 7 * settle)
-        visualRef.current.rotation.y = THREE.MathUtils.degToRad(Math.sin(elapsed * 5) * 4 * (1 - settle))
-        visualRef.current.rotation.z = THREE.MathUtils.degToRad(-7 - 10 * settle)
+        // Static wreck pose: the vehicle does not slide, roll, or keep travelling.
+        visualRef.current.position.set(0, 0, 0)
+        visualRef.current.rotation.set(
+          THREE.MathUtils.degToRad(-10),
+          THREE.MathUtils.degToRad(2),
+          THREE.MathUtils.degToRad(-7)
+        )
 
         visualRef.current.traverse((object) => {
           if (object instanceof THREE.Mesh && object.name === 'player-wheel') {
@@ -1108,7 +1100,10 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
         visualRef.current.rotation.y = -tiltRef.current * 0.05
         visualRef.current.position.y =
           Math.sin(wheelSpinRef.current * 1.4) * 0.008 * speedNorm
-        visualRef.current.position.z = 0
+        visualRef.current.position.set(0, Math.sin(wheelSpinRef.current * 1.4) * 0.008 * speedNorm, 0)
+        visualRef.current.rotation.x = 0
+        visualRef.current.rotation.y = -tiltRef.current * 0.05
+        visualRef.current.rotation.z = tiltRef.current * 0.14
         visualRef.current.scale.y = 1 - speedNorm * 0.018
 
         visualRef.current.traverse((object) => {
@@ -2183,9 +2178,13 @@ function TrafficSystem() {
 
     for (let i = vehicles.length - 1; i >= 0; i--) {
       const v = vehicles[i]
-      // Vehicles always approach player (minimum approach rate ensures visibility even at low speed)
-      const approachRate = Math.max(15, speed - v.speed + 30)
-      v.z += approachRate * clampedDelta * 0.5
+
+      // A vehicle involved in the crash becomes a stationary wreck.
+      // Other traffic continues with the exact existing motion calculation.
+      if (!v.crashed) {
+        const approachRate = Math.max(15, speed - v.speed + 30)
+        v.z += approachRate * clampedDelta * 0.5
+      }
 
       // Remove if past player
       if (v.z > 25) {
@@ -2219,8 +2218,16 @@ function TrafficSystem() {
           vehicles.splice(i, 1)
           continue
         }
-        emitCollisionImpact(new THREE.Vector3(vehicleX, 0.72, v.z), false)
-        vehicles.splice(i, 1)
+        const impactX = (playerX + vehicleX) * 0.5
+        const impactZ = v.z
+        emitCollisionImpact(new THREE.Vector3(impactX, 0.78, impactZ), false)
+
+        // Keep the vehicle that was hit visible at the exact point of impact.
+        // Only this vehicle stops; all unrelated traffic continues using its
+        // existing approach motion.
+        v.crashed = true
+        v.speed = 0
+        v.z = impactZ
         actions.startCrashSequence()
         return
       }
@@ -2312,7 +2319,23 @@ function TrafficRenderer({ vehiclesRef, getDimensions }: {
       if (Math.abs(mesh.scale.x - normalizedScale) > 0.001) {
         mesh.scale.setScalar(normalizedScale)
       }
-      mesh.position.set(v.lane * LANE_WIDTH, 0, v.z)
+      mesh.position.set(
+        v.crashed && crashImpactWorld
+          ? crashImpactWorld.x
+          : v.lane * LANE_WIDTH,
+        0,
+        v.crashed && crashImpactWorld
+          ? crashImpactWorld.z
+          : v.z
+      )
+
+      if (v.crashed) {
+        // Leave the struck vehicle at the collision point. The slight rotation
+        // is static, so it reads as a wreck rather than continuing traffic.
+        mesh.rotation.set(0, 0, v.lane < 0 ? -0.16 : 0.16)
+      } else {
+        mesh.rotation.set(0, 0, 0)
+      }
     })
 
     // Remove old meshes
