@@ -918,16 +918,21 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
   )
 }
 
-function StickmanArm({
+// ============== FUTURISTIC RIDER ==============
+function RiderSegment({
   start,
   end,
-  color = '#8ec5e8',
-  width = 0.07,
+  radius,
+  color,
+  metalness = 0.35,
+  roughness = 0.5,
 }: {
   start: [number, number, number]
   end: [number, number, number]
-  color?: string
-  width?: number
+  radius: number
+  color: string
+  metalness?: number
+  roughness?: number
 }) {
   const a = new THREE.Vector3(...start)
   const b = new THREE.Vector3(...end)
@@ -940,13 +945,128 @@ function StickmanArm({
   )
 
   return (
-    <mesh position={midpoint} quaternion={quaternion}>
-      <cylinderGeometry args={[width, width * 0.92, length, 8]} />
-      <meshStandardMaterial color={color} roughness={0.85} />
+    <mesh position={midpoint} quaternion={quaternion} castShadow receiveShadow>
+      <cylinderGeometry args={[radius * 0.92, radius, length, 10]} />
+      <meshStandardMaterial color={color} metalness={metalness} roughness={roughness} />
     </mesh>
   )
 }
 
+function FuturisticRider({
+  position,
+  scale = 0.70,
+}: {
+  position: [number, number, number]
+  scale?: number
+}) {
+  const suit = '#20252a'
+  const suitEdge = '#0f1317'
+  const red = '#e33a32'
+  const redDeep = '#a91f1b'
+  const white = '#e8edf0'
+  const visor = '#071017'
+
+  return (
+    <group position={position} scale={scale}>
+      {/* Same supplied visual language: black/red/white suit, full dark helmet,
+          compact forward tuck and pronounced bent legs. */}
+      <mesh position={[0, 0.36, -0.05]} rotation={[-0.30, 0, 0]}>
+        <boxGeometry args={[0.38, 0.50, 0.30]} />
+        <meshStandardMaterial color={suit} metalness={0.38} roughness={0.42} />
+      </mesh>
+      <mesh position={[0, 0.52, -0.15]} rotation={[-0.30, 0, 0]}>
+        <boxGeometry args={[0.24, 0.14, 0.035]} />
+        <meshStandardMaterial color={red} metalness={0.45} roughness={0.32} />
+      </mesh>
+      <mesh position={[0, 0.42, -0.20]} rotation={[-0.30, 0, 0]}>
+        <boxGeometry args={[0.27, 0.055, 0.028]} />
+        <meshStandardMaterial color={white} metalness={0.25} roughness={0.48} />
+      </mesh>
+
+      {/* Helmet shell, red perimeter and dark visor. */}
+      <mesh position={[0, 0.82, -0.25]} scale={[1.0, 1.07, 1.10]}>
+        <sphereGeometry args={[0.19, 14, 10]} />
+        <meshStandardMaterial color="#252b31" metalness={0.62} roughness={0.20} />
+      </mesh>
+      <mesh
+        position={[0, 0.82, -0.25]}
+        rotation={[Math.PI / 2, 0, 0]}
+        scale={[1.0, 0.88, 1.0]}
+      >
+        <torusGeometry args={[0.155, 0.026, 8, 16]} />
+        <meshStandardMaterial color={red} metalness={0.55} roughness={0.20} />
+      </mesh>
+      <mesh position={[0, 0.79, -0.43]} rotation={[-0.12, 0, 0]}>
+        <boxGeometry args={[0.20, 0.105, 0.04]} />
+        <meshStandardMaterial color={visor} metalness={0.82} roughness={0.10} />
+      </mesh>
+
+      {/* Arms: shoulder armor, dropped elbows and hands at the bars. */}
+      <mesh position={[-0.17, 0.55, -0.08]} scale={[1.10, 0.85, 0.95]}>
+        <sphereGeometry args={[0.105, 10, 8]} />
+        <meshStandardMaterial color={red} metalness={0.42} roughness={0.30} />
+      </mesh>
+      <mesh position={[0.17, 0.55, -0.08]} scale={[1.10, 0.85, 0.95]}>
+        <sphereGeometry args={[0.105, 10, 8]} />
+        <meshStandardMaterial color={red} metalness={0.42} roughness={0.30} />
+      </mesh>
+      <RiderSegment start={[-0.16, 0.53, -0.07]} end={[-0.19, 0.28, -0.34]} radius={0.075} color={suit} />
+      <RiderSegment start={[-0.19, 0.28, -0.34]} end={[-0.20, -0.04, -0.70]} radius={0.065} color={suit} />
+      <RiderSegment start={[0.16, 0.53, -0.07]} end={[0.19, 0.28, -0.34]} radius={0.075} color={suit} />
+      <RiderSegment start={[0.19, 0.28, -0.34]} end={[0.20, -0.04, -0.70]} radius={0.065} color={suit} />
+
+      {/* White/red suit accents and gloves. */}
+      <mesh position={[-0.19, 0.38, -0.22]} rotation={[0.1, 0, -0.04]}>
+        <boxGeometry args={[0.18, 0.052, 0.035]} />
+        <meshStandardMaterial color={white} metalness={0.22} roughness={0.45} />
+      </mesh>
+      <mesh position={[0.19, 0.38, -0.22]} rotation={[0.1, 0, 0.04]}>
+        <boxGeometry args={[0.18, 0.052, 0.035]} />
+        <meshStandardMaterial color={white} metalness={0.22} roughness={0.45} />
+      </mesh>
+      <mesh position={[-0.20, 0.00, -0.71]}>
+        <sphereGeometry args={[0.072, 9, 7]} />
+        <meshStandardMaterial color={suitEdge} metalness={0.18} roughness={0.70} />
+      </mesh>
+      <mesh position={[0.20, 0.00, -0.71]}>
+        <sphereGeometry args={[0.072, 9, 7]} />
+        <meshStandardMaterial color={suitEdge} metalness={0.18} roughness={0.70} />
+      </mesh>
+
+      {/* Legs deliberately form hip -> forward knee -> rear ankle: ">" from side view. */}
+      <RiderSegment start={[-0.14, 0.13, 0.08]} end={[-0.15, -0.10, -0.34]} radius={0.092} color={suit} metalness={0.32} roughness={0.46} />
+      <RiderSegment start={[-0.15, -0.10, -0.34]} end={[-0.15, -0.31, 0.06]} radius={0.078} color={suit} metalness={0.30} roughness={0.48} />
+      <RiderSegment start={[0.14, 0.13, 0.08]} end={[0.15, -0.10, -0.34]} radius={0.092} color={suit} metalness={0.32} roughness={0.46} />
+      <RiderSegment start={[0.15, -0.10, -0.34]} end={[0.15, -0.31, 0.06]} radius={0.078} color={suit} metalness={0.30} roughness={0.48} />
+
+      {/* Knee armor, bright shin bands and boots. */}
+      <mesh position={[-0.15, -0.10, -0.34]} scale={[1.0, 1.0, 1.12]}>
+        <sphereGeometry args={[0.095, 10, 8]} />
+        <meshStandardMaterial color={redDeep} metalness={0.45} roughness={0.30} />
+      </mesh>
+      <mesh position={[0.15, -0.10, -0.34]} scale={[1.0, 1.0, 1.12]}>
+        <sphereGeometry args={[0.095, 10, 8]} />
+        <meshStandardMaterial color={redDeep} metalness={0.45} roughness={0.30} />
+      </mesh>
+      <mesh position={[-0.15, -0.23, -0.16]} rotation={[-0.35, 0, 0]}>
+        <boxGeometry args={[0.13, 0.045, 0.035]} />
+        <meshStandardMaterial color={white} metalness={0.24} roughness={0.45} />
+      </mesh>
+      <mesh position={[0.15, -0.23, -0.16]} rotation={[-0.35, 0, 0]}>
+        <boxGeometry args={[0.13, 0.045, 0.035]} />
+        <meshStandardMaterial color={white} metalness={0.24} roughness={0.45} />
+      </mesh>
+      <mesh position={[-0.15, -0.37, 0.00]}>
+        <boxGeometry args={[0.14, 0.16, 0.28]} />
+        <meshStandardMaterial color={suitEdge} metalness={0.30} roughness={0.54} />
+      </mesh>
+      <mesh position={[0.15, -0.37, 0.00]}>
+        <boxGeometry args={[0.14, 0.16, 0.28]} />
+        <meshStandardMaterial color={suitEdge} metalness={0.30} roughness={0.54} />
+      </mesh>
+    </group>
+  )
+}
 // ============== BLITZ BIKE (Modern Neo-Retro Cruiser) ==============
 function BlitzBike({ bike }: { bike: Bike }) {
   return (
@@ -1035,42 +1155,8 @@ function BlitzBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color="#aaaaaa" metalness={0.95} roughness={0.1} />
       </mesh>
 
-      {/* Rider */}
-      <group position={[0, 1.02, 0.12]}>
-        <mesh position={[0, 0.15, 0]}>
-          <boxGeometry args={[0.38, 0.52, 0.28]} />
-          <meshStandardMaterial color="#8ec5e8" roughness={0.8} />
-        </mesh>
-        <mesh position={[0, 0.58, -0.05]}>
-          <sphereGeometry args={[0.16, 8, 8]} />
-          <meshStandardMaterial color="#20252a" metalness={0.6} roughness={0.2} />
-        </mesh>
-        {/* Visor */}
-        <mesh position={[0, 0.58, -0.15]}>
-          <boxGeometry args={[0.2, 0.08, 0.05]} />
-          <meshStandardMaterial color="#111111" metalness={0.9} roughness={0.1} />
-        </mesh>
-        {/* Stickman arms — hands meet the handlebars. */}
-        <StickmanArm start={[-0.14, 0.22, -0.05]} end={[-0.30, -0.05, -0.82]} />
-        <StickmanArm start={[0.14, 0.22, -0.05]} end={[0.30, -0.05, -0.82]} />
-        <mesh position={[-0.30, -0.05, -0.82]}>
-          <sphereGeometry args={[0.065, 8, 6]} />
-          <meshStandardMaterial color="#111111" roughness={0.9} />
-        </mesh>
-        <mesh position={[0.30, -0.05, -0.82]}>
-          <sphereGeometry args={[0.065, 8, 6]} />
-          <meshStandardMaterial color="#111111" roughness={0.9} />
-        </mesh>
-        {/* Legs */}
-        <mesh position={[-0.12, -0.35, 0.1]} rotation={[0.3, 0, 0]}>
-          <boxGeometry args={[0.12, 0.45, 0.12]} />
-          <meshStandardMaterial color="#222222" />
-        </mesh>
-        <mesh position={[0.12, -0.35, 0.1]} rotation={[0.3, 0, 0]}>
-          <boxGeometry args={[0.12, 0.45, 0.12]} />
-          <meshStandardMaterial color="#222222" />
-        </mesh>
-      </group>
+      {/* Supplied futuristic rider reference, scaled down to fit this bike. */}
+      <FuturisticRider position={[0, 0.92, 0.05]} scale={0.70} />
     </>
   )
 }
@@ -1181,40 +1267,8 @@ function ApexBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color="#cccccc" metalness={0.95} roughness={0.08} />
       </mesh>
 
-      {/* Rider */}
-      <group position={[0, 1.05, 0.15]}>
-        <mesh position={[0, 0.15, 0]}>
-          <boxGeometry args={[0.42, 0.55, 0.3]} />
-          <meshStandardMaterial color="#8ec5e8" roughness={0.8} />
-        </mesh>
-        <mesh position={[0, 0.6, -0.05]}>
-          <sphereGeometry args={[0.17, 8, 8]} />
-          <meshStandardMaterial color="#20252a" metalness={0.6} roughness={0.2} />
-        </mesh>
-        <mesh position={[0, 0.58, -0.15]}>
-          <boxGeometry args={[0.2, 0.08, 0.05]} />
-          <meshStandardMaterial color="#111111" metalness={0.9} roughness={0.1} />
-        </mesh>
-        {/* Stickman arms — hands meet the wider cruiser bar. */}
-        <StickmanArm start={[-0.15, 0.24, -0.04]} end={[-0.38, -0.05, -0.89]} />
-        <StickmanArm start={[0.15, 0.24, -0.04]} end={[0.38, -0.05, -0.89]} />
-        <mesh position={[-0.38, -0.05, -0.89]}>
-          <sphereGeometry args={[0.065, 8, 6]} />
-          <meshStandardMaterial color="#111111" roughness={0.9} />
-        </mesh>
-        <mesh position={[0.38, -0.05, -0.89]}>
-          <sphereGeometry args={[0.065, 8, 6]} />
-          <meshStandardMaterial color="#111111" roughness={0.9} />
-        </mesh>
-        <mesh position={[-0.12, -0.35, 0.1]} rotation={[0.3, 0, 0]}>
-          <boxGeometry args={[0.12, 0.45, 0.12]} />
-          <meshStandardMaterial color="#222222" />
-        </mesh>
-        <mesh position={[0.12, -0.35, 0.1]} rotation={[0.3, 0, 0]}>
-          <boxGeometry args={[0.12, 0.45, 0.12]} />
-          <meshStandardMaterial color="#222222" />
-        </mesh>
-      </group>
+      {/* Supplied futuristic rider reference, scaled down to fit this bike. */}
+      <FuturisticRider position={[0, 0.95, 0.08]} scale={0.70} />
     </>
   )
 }
@@ -1339,40 +1393,8 @@ function ChronosBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color="#bbbbbb" metalness={0.95} roughness={0.1} />
       </mesh>
 
-      {/* Rider - tucked position */}
-      <group position={[0, 0.98, 0.1]}>
-        <mesh position={[0, 0.12, -0.05]} rotation={[0.2, 0, 0]}>
-          <boxGeometry args={[0.38, 0.5, 0.28]} />
-          <meshStandardMaterial color="#8ec5e8" roughness={0.8} />
-        </mesh>
-        <mesh position={[0, 0.52, -0.15]}>
-          <sphereGeometry args={[0.16, 8, 8]} />
-          <meshStandardMaterial color="#20252a" metalness={0.7} roughness={0.15} />
-        </mesh>
-        <mesh position={[0, 0.5, -0.25]}>
-          <boxGeometry args={[0.18, 0.07, 0.05]} />
-          <meshStandardMaterial color="#111111" metalness={0.9} roughness={0.1} />
-        </mesh>
-        {/* Stickman arms — both hands locked onto the clip-ons. */}
-        <StickmanArm start={[-0.15, 0.23, -0.04]} end={[-0.30, -0.06, -0.82]} />
-        <StickmanArm start={[0.15, 0.23, -0.04]} end={[0.30, -0.06, -0.82]} />
-        <mesh position={[-0.30, -0.06, -0.82]}>
-          <sphereGeometry args={[0.06, 8, 6]} />
-          <meshStandardMaterial color="#111111" roughness={0.9} />
-        </mesh>
-        <mesh position={[0.30, -0.06, -0.82]}>
-          <sphereGeometry args={[0.06, 8, 6]} />
-          <meshStandardMaterial color="#111111" roughness={0.9} />
-        </mesh>
-        <mesh position={[-0.1, -0.32, 0.05]} rotation={[0.4, 0, 0]}>
-          <boxGeometry args={[0.11, 0.42, 0.11]} />
-          <meshStandardMaterial color="#222222" />
-        </mesh>
-        <mesh position={[0.1, -0.32, 0.05]} rotation={[0.4, 0, 0]}>
-          <boxGeometry args={[0.11, 0.42, 0.11]} />
-          <meshStandardMaterial color="#222222" />
-        </mesh>
-      </group>
+      {/* Supplied futuristic rider reference, scaled down to fit this bike. */}
+      <FuturisticRider position={[0, 0.98, 0.1]} scale={0.70} />
     </>
   )
 }
@@ -1511,40 +1533,8 @@ function StratosBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color={bike.accentColor} metalness={0.7} roughness={0.2} />
       </mesh>
 
-      {/* Rider - tucked position */}
-      <group position={[0, 0.95, 0.08]}>
-        <mesh position={[0, 0.1, -0.06]} rotation={[0.25, 0, 0]}>
-          <boxGeometry args={[0.36, 0.48, 0.26]} />
-          <meshStandardMaterial color="#8ec5e8" roughness={0.8} />
-        </mesh>
-        <mesh position={[0, 0.5, -0.16]}>
-          <sphereGeometry args={[0.15, 8, 8]} />
-          <meshStandardMaterial color="#20252a" metalness={0.7} roughness={0.15} />
-        </mesh>
-        <mesh position={[0, 0.48, -0.26]}>
-          <boxGeometry args={[0.17, 0.065, 0.045]} />
-          <meshStandardMaterial color="#111111" metalness={0.9} roughness={0.1} />
-        </mesh>
-        {/* Stickman arms — hands meet the visible Stratos clip-ons. */}
-        <StickmanArm start={[-0.14, 0.22, -0.04]} end={[-0.40, 0.01, -0.66]} />
-        <StickmanArm start={[0.14, 0.22, -0.04]} end={[0.40, 0.01, -0.66]} />
-        <mesh position={[-0.40, 0.01, -0.66]}>
-          <sphereGeometry args={[0.06, 8, 6]} />
-          <meshStandardMaterial color="#111111" roughness={0.9} />
-        </mesh>
-        <mesh position={[0.40, 0.01, -0.66]}>
-          <sphereGeometry args={[0.06, 8, 6]} />
-          <meshStandardMaterial color="#111111" roughness={0.9} />
-        </mesh>
-        <mesh position={[-0.09, -0.34, 0.04]} rotation={[0.45, 0, 0]}>
-          <boxGeometry args={[0.1, 0.4, 0.1]} />
-          <meshStandardMaterial color="#222222" />
-        </mesh>
-        <mesh position={[0.09, -0.34, 0.04]} rotation={[0.45, 0, 0]}>
-          <boxGeometry args={[0.1, 0.4, 0.1]} />
-          <meshStandardMaterial color="#222222" />
-        </mesh>
-      </group>
+      {/* Supplied futuristic rider reference, scaled down to fit this bike. */}
+      <FuturisticRider position={[0, 1.05, 0.15]} scale={0.70} />
     </>
   )
 }
@@ -1691,40 +1681,8 @@ function ZenithBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color={bike.accentColor} metalness={0.7} roughness={0.2} opacity={0.6} transparent />
       </mesh>
 
-      {/* Rider - extreme tucked position */}
-      <group position={[0, 0.92, 0.05]}>
-        <mesh position={[0, 0.08, -0.08]} rotation={[0.3, 0, 0]}>
-          <boxGeometry args={[0.35, 0.46, 0.25]} />
-          <meshStandardMaterial color="#8ec5e8" roughness={0.8} />
-        </mesh>
-        <mesh position={[0, 0.48, -0.18]}>
-          <sphereGeometry args={[0.14, 8, 8]} />
-          <meshStandardMaterial color="#20252a" metalness={0.75} roughness={0.12} />
-        </mesh>
-        <mesh position={[0, 0.46, -0.28]}>
-          <boxGeometry args={[0.16, 0.06, 0.04]} />
-          <meshStandardMaterial color="#050505" metalness={0.95} roughness={0.08} />
-        </mesh>
-        {/* Stickman arms — hands meet the Zenith hyperbike clip-ons. */}
-        <StickmanArm start={[-0.14, 0.22, -0.04]} end={[-0.40, 0.04, -0.63]} />
-        <StickmanArm start={[0.14, 0.22, -0.04]} end={[0.40, 0.04, -0.63]} />
-        <mesh position={[-0.40, 0.04, -0.63]}>
-          <sphereGeometry args={[0.06, 8, 6]} />
-          <meshStandardMaterial color="#111111" roughness={0.9} />
-        </mesh>
-        <mesh position={[0.40, 0.04, -0.63]}>
-          <sphereGeometry args={[0.06, 8, 6]} />
-          <meshStandardMaterial color="#111111" roughness={0.9} />
-        </mesh>
-        <mesh position={[-0.08, -0.36, 0.02]} rotation={[0.5, 0, 0]}>
-          <boxGeometry args={[0.095, 0.38, 0.095]} />
-          <meshStandardMaterial color="#111111" />
-        </mesh>
-        <mesh position={[0.08, -0.36, 0.02]} rotation={[0.5, 0, 0]}>
-          <boxGeometry args={[0.095, 0.38, 0.095]} />
-          <meshStandardMaterial color="#111111" />
-        </mesh>
-      </group>
+      {/* Supplied futuristic rider reference, scaled down to fit this bike. */}
+      <FuturisticRider position={[0, 1.02, 0.12]} scale={0.70} />
     </>
   )
 }
