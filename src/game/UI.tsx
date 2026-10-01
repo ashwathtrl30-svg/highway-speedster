@@ -2535,7 +2535,7 @@ export function TouchControls() {
   const lastTapRef = useRef(0)
 
   useEffect(() => {
-    if (state.gameState !== 'playing') return
+    if (state.gameState !== 'playing' || state.crashActive) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
@@ -2602,7 +2602,7 @@ export function TouchControls() {
     actions.setTargetLane(getState().targetLane + (deltaX > 0 ? 1 : -1))
   }
 
-  if (state.gameState !== 'playing') return null
+  if (state.gameState !== 'playing' || state.crashActive) return null
 
   return (
     <>
