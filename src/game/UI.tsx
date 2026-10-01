@@ -1017,6 +1017,11 @@ function GarageShowroomPreview({
   )
   const switchNonceRef = useRef(0)
   const [switchFx, setSwitchFx] = useState<GarageVehicleSnapshot | null>(null)
+  const previousSkinRef = useRef<string | null>(
+    isSectionSelected ? state.selectedSkin : null
+  )
+  const skinFxNonceRef = useRef(0)
+  const [skinFx, setSkinFx] = useState(false)
 
   useEffect(() => {
     const previous = previousVehicleRef.current
@@ -1058,6 +1063,31 @@ function GarageShowroomPreview({
 
     return () => window.clearTimeout(timer)
   }, [section, vehicleId, isSectionSelected])
+
+  useEffect(() => {
+    if (!isSectionSelected) {
+      previousSkinRef.current = null
+      setSkinFx(false)
+      return
+    }
+
+    const previousSkin = previousSkinRef.current
+    const changed = previousSkin !== null && previousSkin !== state.selectedSkin
+    previousSkinRef.current = state.selectedSkin
+
+    if (!changed) return
+
+    const nonce = ++skinFxNonceRef.current
+    setSkinFx(true)
+
+    const timer = window.setTimeout(() => {
+      if (skinFxNonceRef.current === nonce) {
+        setSkinFx(false)
+      }
+    }, 420)
+
+    return () => window.clearTimeout(timer)
+  }, [isSectionSelected, state.selectedSkin])
 
   return (
     <div className="mx-3 sm:mx-4 mt-3 sm:mt-4">
@@ -1212,6 +1242,55 @@ function GarageShowroomPreview({
           0%, 100% { transform: scaleX(.94); opacity: .34; }
           50% { transform: scaleX(1.04); opacity: .5; }
         }
+
+        @keyframes hsGaragePaintChange {
+          0% {
+            transform: scale(1);
+            filter: saturate(.72) brightness(.92);
+          }
+          28% {
+            transform: scale(1.035);
+            filter: saturate(1.45) brightness(1.16);
+          }
+          62% {
+            transform: scale(1.012);
+            filter: saturate(1.12) brightness(1.05);
+          }
+          100% {
+            transform: scale(1);
+            filter: saturate(1) brightness(1);
+          }
+        }
+
+        @keyframes hsGaragePaintSweep {
+          0% {
+            transform:translateX(-130%) skewX(-18deg);
+            opacity:0;
+          }
+          18% { opacity:.42; }
+          58% { opacity:.18; }
+          100% {
+            transform:translateX(130%) skewX(-18deg);
+            opacity:0;
+          }
+        }
+
+        @keyframes hsGaragePaintPulse {
+          0% {
+            transform:translate(-50%,-50%) scale(.72);
+            opacity:0;
+          }
+          22% { opacity:.34; }
+          55% { opacity:.16; }
+          100% {
+            transform:translate(-50%,-50%) scale(1.25);
+            opacity:0;
+          }
+        }
+
+        .hs-garage-paint-change { animation:hsGaragePaintChange 420ms cubic-bezier(.16,.8,.18,1) both; }
+        .hs-garage-paint-sweep { animation:hsGaragePaintSweep 360ms cubic-bezier(.2,.72,.18,1) both; }
+        .hs-garage-paint-pulse { animation:hsGaragePaintPulse 420ms cubic-bezier(.16,.8,.18,1) both; }
       `}</style>
 
       <div className="relative h-[210px] sm:h-[245px] overflow-hidden rounded-[24px] border border-white/10 bg-[radial-gradient(circle_at_50%_15%,rgba(255,210,120,.16),transparent_36%),linear-gradient(180deg,#1a1d22_0%,#0b0d10_56%,#07080a_100%)] shadow-2xl">
@@ -1315,6 +1394,8 @@ function GarageShowroomPreview({
             style={{
               animation: switchFx
                 ? 'hsGarageSwitchNew 470ms cubic-bezier(.16,.8,.18,1) both'
+                : skinFx
+                ? 'hsGaragePaintChange 420ms cubic-bezier(.16,.8,.18,1) both'
                 : 'hsGarageVehicleIn 240ms ease-out',
               perspective: '900px',
             }}
@@ -1347,6 +1428,21 @@ function GarageShowroomPreview({
             <p className="mt-2 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.22em] text-white/28">
               Select a {isBike ? 'bike' : 'car'} below
             </p>
+          </div>
+        )}
+
+        {skinFx && (
+          <div className="absolute inset-0 z-[25] pointer-events-none overflow-hidden">
+            <div
+              className="absolute left-1/2 top-[53%] h-20 w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
+              style={{
+                background: `radial-gradient(circle, ${vehicle.color}35 0%, ${vehicle.accentColor}16 42%, transparent 72%)`,
+                animation: 'hsGaragePaintPulse 420ms cubic-bezier(.16,.8,.18,1) both',
+              }}
+            />
+            <div
+              className="absolute left-[-20%] top-[34%] h-[46%] w-[28%] bg-gradient-to-r from-transparent via-white/32 to-transparent blur-[1px] hs-garage-paint-sweep"
+            />
           </div>
         )}
 
