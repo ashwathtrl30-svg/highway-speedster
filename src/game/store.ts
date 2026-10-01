@@ -130,9 +130,9 @@ export const SKIN_COLORS: Record<BikeSkin, { color: string; accentColor: string 
   'candy-flat-blazed-green': { color: '#17191c', accentColor: '#39c56a' },
 
   'ducati-red': { color: '#c9141d', accentColor: '#ff686d' },
-  'tricolore-livery': { color: '#c81422', accentColor: '#f4f4f4' },
+  'tricolore-livery': { color: '#f4f4f1', accentColor: '#c81422' },
   'racing-black': { color: '#111315', accentColor: '#4a4f54' },
-  'winter-test': { color: '#e9edf1', accentColor: '#b7c0c8' },
+  'winter-test': { color: '#17191c', accentColor: '#e21a2f' },
 }
 
 export const SKIN_NAMES: Record<BikeSkin, string> = {
@@ -176,9 +176,9 @@ export const SKIN_SWATCHES: Record<BikeSkin, string> = {
   'custom-midnight': 'linear-gradient(145deg,#314b70,#0d1627)',
   'candy-flat-blazed-green': 'linear-gradient(145deg,#1c2024 0%,#0d1114 58%,#35c968 59%,#8bea9f 100%)',
   'ducati-red': '#c9141d',
-  'tricolore-livery': 'linear-gradient(90deg,#c81422 0 38%,#f2f2f2 38% 66%,#2c8a52 66% 100%)',
+  'tricolore-livery': 'linear-gradient(105deg,#15834a 0 28%,#f4f4f1 28% 66%,#d52234 66% 100%)',
   'racing-black': '#111315',
-  'winter-test': 'linear-gradient(145deg,#f5f7f8 0 58%,#22262b 58% 78%,#c99a34 78% 100%)',
+  'winter-test': 'linear-gradient(145deg,#0f1215 0 58%,#24282c 58% 78%,#d4d7d9 78% 88%,#e21a2f 88% 100%)',
 }
 
 function migrateBikeSkin(skin: unknown): BikeSkin | null {
