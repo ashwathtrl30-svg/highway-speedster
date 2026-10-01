@@ -5,76 +5,195 @@ const VEHICLE_FACING_RIGHT_STYLE = {
 } as const
 
 function BikeMenuRider({ compact = false }: { compact?: boolean }) {
-  const scale = compact ? 0.92 : 1
+  // Compact SVG rendering of the supplied reference rider. Only the scale is
+  // reduced for the bike; the black/red/white suit, helmet, visor and riding
+  // silhouette are kept consistent between the menu/garage artwork and game.
+  const scale = compact ? 0.86 : 0.78
 
   return (
-    <g transform={`translate(0 0) scale(${scale})`}>
-      {/* Shared side-view rider: seated astride the motorcycle, leaning naturally toward the bars. */}
-      <circle cx="49.5" cy="15.8" r="4.1" fill="#20252a" stroke="#0d0f11" strokeWidth="1" />
-      <path d="M46.5 16.1 L52.2 16.1" stroke="#69747c" strokeWidth="1" strokeLinecap="round" />
-
-      {/* Far-side leg: darker and mostly behind the tank/frame so it reads as the opposite leg. */}
+    <g transform={\`translate(8 -1) scale(\${scale})\`}>
+      {/* Far leg, kept darker so the near-side ">" bent leg reads clearly. */}
       <path
-        d="M48.5 34.2 L42.0 37.0 L48.0 42.0"
+        d="M49 30 C46 31 43 33 40 35 L46.5 41.8"
         fill="none"
-        stroke="#17191c"
-        strokeWidth="2.05"
+        stroke="#101318"
+        strokeWidth="4.2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity="0.38"
+        opacity="0.52"
       />
-      <circle cx="48.0" cy="42.0" r="0.95" fill="#101214" opacity="0.34" />
-
-      {/* Torso: hips stay over the seat instead of floating above the rear of the bike. */}
       <path
-        d="M45.5 23.6 Q49.5 21.9 53.3 24 L55.4 33.6 Q49.7 36 44.2 33.4 Z"
-        fill="#8ec5e8"
-        stroke="#5d8eaf"
+        d="M46.4 41.6 L49.5 43.1"
+        fill="none"
+        stroke="#252b31"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+        opacity="0.5"
+      />
+
+      {/* Torso and lower back: forward-tucked racing position. */}
+      <path
+        d="M43 21.5 C47 18.5 52 19.2 55.8 22.2 L56.5 29.6 C52 32.2 46 33.4 40.3 30.2 Z"
+        fill="#20252a"
+        stroke="#101318"
+        strokeWidth="0.9"
+      />
+      {/* Red shoulder/back panel. */}
+      <path
+        d="M47 20.4 C50.6 19.1 53.5 20.1 55.8 22.3 L54 25.8 L48.5 24.7 Z"
+        fill="#dd3a33"
+      />
+      <path
+        d="M40.9 24.6 L45.6 22.2 L49.4 24.8 L45.8 28.8 L41.2 27.8 Z"
+        fill="#b92420"
+      />
+      {/* White racing stripe on upper arm/torso. */}
+      <path
+        d="M42 27.1 L47.1 25.2 L48.4 27.0 L43.1 29.0 Z"
+        fill="#e7ecef"
+      />
+      <path
+        d="M43 29.7 L49.4 27.7 L50.7 29.5 L44.6 31.2 Z"
+        fill="#a7afb5"
+        opacity="0.72"
+      />
+
+      {/* Helmet with red shell accents and dark visor. */}
+      <path
+        d="M52.3 9.9 C55.1 6.7 60.4 6.3 63.8 8.7 C67.5 11.2 68.7 16.3 67 20.2 C66.1 22.4 63.9 24.1 61.4 24.6 L57.4 21.6 L53.8 17.2 Z"
+        fill="#242a30"
+        stroke="#0b0f12"
+        strokeWidth="1"
+      />
+      <path
+        d="M53.4 11.1 C55.9 7.9 60.7 7.6 63.6 9.5 C65.4 10.7 66.8 12.7 67.1 14.8 L64.8 14.1 C62.9 11.6 59 10.2 55.4 11.9 Z"
+        fill="#e33a32"
+      />
+      <path
+        d="M56.1 10.6 C59.3 9.7 63.3 10.8 65.5 13.4 L65.1 19.5 L61.3 20.8 L57.2 17.8 Z"
+        fill="#0c1116"
+        stroke="#53606a"
+        strokeWidth="0.75"
+      />
+      <path
+        d="M58.8 10.8 C61.3 11 64 12.2 65.1 14"
+        fill="none"
+        stroke="#c6d3db"
+        strokeWidth="0.55"
+        opacity="0.7"
+      />
+
+      {/* Far arm. */}
+      <path
+        d="M54.1 23.1 L58.5 25.2 L63.4 25.6"
+        fill="none"
+        stroke="#151a1f"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M58.2 24.8 L61.8 26.3"
+        fill="none"
+        stroke="#e33a32"
+        strokeWidth="1.25"
+        strokeLinecap="round"
+      />
+
+      {/* Near arm: shoulder -> elbow -> hand, reaching the bars. */}
+      <path
+        d="M52.8 22.7 L56.5 27.0 L64.7 28.0"
+        fill="none"
+        stroke="#1c2227"
+        strokeWidth="4.1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M53.6 22.6 L55.9 25.4 L58.1 24.6"
+        fill="none"
+        stroke="#e33a32"
+        strokeWidth="1.45"
+        strokeLinecap="round"
+      />
+      <path
+        d="M56.3 26.8 L61.1 27.3"
+        fill="none"
+        stroke="#e8edf0"
+        strokeWidth="0.9"
+        strokeLinecap="round"
+      />
+      <path
+        d="M64.5 27.0 L66.8 27.8 L66.4 30.2 L63.9 29.4 Z"
+        fill="#11161b"
+        stroke="#e33a32"
+        strokeWidth="0.6"
+      />
+      <circle cx="66.3" cy="28.8" r="0.9" fill="#e8edf0" />
+
+      {/* Hips and seat overlap. */}
+      <path
+        d="M40.5 29.2 C44 28.2 48.1 28.6 51.3 31 L49.5 34.2 C46.1 34.3 42.2 33.2 39.8 31.5 Z"
+        fill="#181d21"
+      />
+      <path
+        d="M40 31.2 C44 30 48.1 30.6 51.1 32.2"
+        fill="none"
+        stroke="#0e1114"
+        strokeWidth="1.3"
+      />
+
+      {/* Near-side leg: hip -> knee forward -> boot rear, deliberately reading ">". */}
+      <path
+        d="M47.9 31.9 C45.5 32.8 42 34.8 38.8 37.0 L46.1 41.3"
+        fill="none"
+        stroke="#171b1f"
+        strokeWidth="5.0"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Red thigh/hip panel. */}
+      <path
+        d="M47.7 32.0 L41.6 34.2 L39.1 36.7 L42.1 38.0 L47.1 35.9 L49.1 33.4 Z"
+        fill="#c82e29"
+      />
+      {/* White thigh stripe. */}
+      <path
+        d="M42.1 35.9 L44.0 35.1 L41.5 37.7 L39.9 36.9 Z"
+        fill="#edf1f2"
+      />
+      {/* Knee armor. */}
+      <circle cx="38.8" cy="37" r="2.6" fill="#22282d" stroke="#0b0f12" strokeWidth="0.7" />
+      <circle cx="38.8" cy="37" r="1.15" fill="#424b53" />
+
+      {/* Shin/boot with the red mechanical panel visible. */}
+      <path
+        d="M38.7 37.2 L46.2 41.5 L49.2 45.3 L46.4 47.0 L42.9 44.5 L36.8 39.8 Z"
+        fill="#252b31"
+        stroke="#0b0f12"
+        strokeWidth="0.9"
+      />
+      <path
+        d="M39.6 39.0 L44.3 42.0 L42.6 44.4 L37.8 40.3 Z"
+        fill="#d9342f"
+      />
+      <path
+        d="M37.5 40.9 L42.8 44.8"
+        stroke="#dfe6ea"
+        strokeWidth="0.8"
+        opacity="0.9"
+      />
+      <path
+        d="M43.1 44.8 L46.4 47.0 L49.4 45.5 L47.1 43.0"
+        fill="#151a1e"
+        stroke="#4e5961"
         strokeWidth="0.7"
       />
-
-      {/* Arms: both shoulders converge naturally toward the handlebars. */}
-      <path
-        d="M46.0 24.8 L42.2 27.2 L36.8 22.0"
-        fill="none"
-        stroke="#8ec5e8"
-        strokeWidth="2.15"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M52.6 24.4 L49.5 27.0 L42.9 22.7"
-        fill="none"
-        stroke="#8ec5e8"
-        strokeWidth="2.15"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        opacity="0.94"
-      />
-      <circle cx="36.8" cy="22.0" r="1.2" fill="#111315" />
-      <circle cx="42.9" cy="22.7" r="1.2" fill="#111315" />
-
-      {/* Near-side leg: visible, bent at the knee and reaching the rear-set/foot-control area. */}
-      <path
-        d="M54.0 33.2 L43.0 37.2 L49.2 42.6"
-        fill="none"
-        stroke="#17191c"
-        strokeWidth="2.65"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx="49.2" cy="42.6" r="1.15" fill="#101214" />
-
-      {/* Seat overlap cue: the rider is sitting ON the bike, not beside it. */}
-      <path
-        d="M44.2 33.0 Q49.5 31.5 55.3 33.5 L54.3 35.2 Q49.5 34.0 45.0 35.0 Z"
-        fill="#22272b"
-        opacity="0.96"
-      />
+      {/* Small red circular boot detail matching the reference. */}
+      <circle cx="42.0" cy="43.5" r="1.05" fill="#ef3f36" stroke="#101318" strokeWidth="0.5" />
     </g>
   )
 }
-
 export function BikeIcon({ bike, skin }: { bike: Bike; skin?: BikeSkin }) {
   if (bike.id === 'blitz') {
     return (
