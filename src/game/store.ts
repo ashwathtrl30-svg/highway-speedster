@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { syncAnalyticsToSupabase, recordPlaytimeEvent, fetchUserHighScore, fetchUserGameProgress, saveUserGameProgress, type CloudGameProgress } from '../supabase'
+import { syncAnalyticsToSupabase, recordPlaytimeEvent, fetchUserHighScore, fetchUserGameProgress, saveUserGameProgress, changeGameUsername, type CloudGameProgress } from '../supabase'
 
 // Bike definitions - 3 iconic Indian bikes
 export interface Bike {
@@ -1307,6 +1307,24 @@ export const actions = {
     void loadCloudProgress(trimmed).then(() => actions.syncSharedHighScore())
   },
 
+  async editDisplayName(newUsername: string) {
+    const trimmed = newUsername.trim()
+    if (!playerId || !state.username.trim()) return { ok: false as const, reason: 'Account is not ready.' }
+    if (!trimmed || trimmed.length > 40) return { ok: false as const, reason: 'Name must be between 1 and 40 characters.' }
+    if (trimmed === state.username.trim()) return { ok: true as const, remaining: Math.max(0, 2 - state.nameEditsUsed) }
+    if (state.nameEditsUsed >= 2) return { ok: false as const, reason: 'You have used both username changes.' }
+
+    const result = await changeGameUsername(playerId, trimmed)
+    if (!result.success) return { ok: false as const, reason: result.message || 'Unable to change username.' }
+
+    setState({
+      username: result.username,
+      nameEditsUsed: Math.max(0, Math.min(2, 2 - result.remainingChanges)),
+    })
+    const current = getState()
+    saveProgress(current.highScore, current.unlockedBikes, current.bikeSkins, current.totalCoins, current.inventory, current.username, current.totalPlaytime, current.userPlaytime, current.playtimeHistory)
+    return { ok: true as const, remaining: result.remainingChanges }
+  },
   // Playtime tracking
   addPlaytime(seconds: number) {
     const newTotalPlaytime = state.totalPlaytime + seconds
