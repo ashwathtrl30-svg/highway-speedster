@@ -25,7 +25,8 @@ function getStoredUsername() {
 }
 
 function formatScore(score: number) {
-  return Math.max(0, Math.floor(score || 0)).toLocaleString()
+  // High-score analytics displays the exact stored integer score.
+  return String(Math.max(0, Math.trunc(Number.isFinite(score) ? score : 0)))
 }
 
 export function HighScoreAnalytics() {
