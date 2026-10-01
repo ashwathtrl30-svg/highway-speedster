@@ -46,24 +46,20 @@ export async function syncAnalyticsToSupabase(
   const safeCoins = Math.max(0, Math.floor(totalCoins))
 
   if (!cleanPlayerId || !cleanUsername) return
-  if (!(await ensureSupabaseAuth())) return
-  const { data: session } = await supabase.auth.getSession()
-  if (!session.session) return
 
-  // Analytics values are lossless at whole-second / whole-point precision.
-  // A valid value of exactly 1 is written exactly as 1.
-  const payload = {
-    player_id: cleanPlayerId,
-    auth_user_id: session.session.user.id,
-    username: cleanUsername,
-    playtime_seconds: safePlaytime,
-    high_score: safeHighScore,
-    total_coins: safeCoins,
-    last_updated: new Date().toISOString(),
+  try {
+    const { data, error } = await supabase.rpc('sync_account_metrics', {
+      p_player_id: cleanPlayerId,
+      p_username: cleanUsername,
+      p_playtime_seconds: safePlaytime,
+      p_high_score: safeHighScore,
+      p_total_coins: safeCoins,
+    })
+    if (error) throw error
+    if (data === false) console.error('Analytics account sync rejected')
+  } catch (error) {
+    console.error('Error syncing analytics:', error)
   }
-
-  const { error } = await supabase.from('user_analytics').upsert(payload, { onConflict: 'player_id' })
-  if (error) console.error('Error syncing analytics:', error)
 }
 
 export async function recordPlaytimeEvent(playerId: string, username: string, seconds: number) {
@@ -151,26 +147,33 @@ export interface CloudGameProgress {
   playtimeHistory: Array<{ date: string; seconds: number }>
 }
 
-export async function fetchUserGameProgress(playerId: string, username: string): Promise<CloudGameProgress | null> {
-  if (!playerId.trim() || !username.trim()) return null
+export interface CloudAccountProgress extends CloudGameProgress {
+  playerId: string
+  username: string
+}
+
+export async function fetchUserGameProgress(playerId: string): Promise<CloudAccountProgress | null> {
+  const cleanPlayerId = playerId.trim()
+  if (!cleanPlayerId) return null
+
   try {
-    if (!(await ensureSupabaseAuth())) return null
-    const { data, error } = await supabase
-      .from('user_analytics')
-      .select('game_progress, total_coins')
-      .eq('player_id', playerId.trim())
-      .maybeSingle()
-
+    const { data, error } = await supabase.rpc('get_game_account', {
+      p_player_id: cleanPlayerId,
+    })
     if (error) throw error
-    if (!data?.game_progress || typeof data.game_progress !== 'object') return null
 
-    const progress = data.game_progress as CloudGameProgress
-    // Older saves may have the correct balance in user_analytics.total_coins
-    // even when game_progress.totalCoins was not persisted correctly.
-    const storedTotalCoins = Number(data.total_coins || 0)
+    const row = Array.isArray(data) ? data[0] : data
+    if (!row || typeof row !== 'object' || !row.game_progress) return null
+
+    const progress = row.game_progress as CloudGameProgress
     return {
       ...progress,
-      totalCoins: Math.max(Number(progress.totalCoins || 0), Number.isFinite(storedTotalCoins) ? storedTotalCoins : 0),
+      playerId: String(row.player_id || cleanPlayerId),
+      username: String(row.username || '').trim(),
+      totalCoins: Math.max(
+        Number(progress.totalCoins || 0),
+        Number.isFinite(Number(row.total_coins)) ? Number(row.total_coins || 0) : 0
+      ),
     }
   } catch (error) {
     console.error('Error fetching game progress:', error)
@@ -183,39 +186,21 @@ export async function saveUserGameProgress(
   username: string,
   progress: CloudGameProgress
 ): Promise<boolean> {
-  if (!playerId.trim() || !username.trim()) return false
+  const cleanPlayerId = playerId.trim()
+  const cleanUsername = username.trim()
+  if (!cleanPlayerId || !cleanUsername) return false
+
   try {
-    if (!(await ensureSupabaseAuth())) return false
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData.user) return false
-    const { data: existing, error: existingError } = await supabase
-      .from('user_analytics')
-      .select('high_score, playtime_seconds, total_coins')
-      .eq('player_id', playerId.trim())
-      .maybeSingle()
-
-    if (existingError) throw existingError
-
-    const { error } = await supabase
-      .from('user_analytics')
-      .upsert({
-        player_id: playerId.trim(),
-        auth_user_id: authData.user.id,
-        username: username.trim(),
-        ...(Math.max(Number(existing?.playtime_seconds || 0), Math.floor(progress.totalPlaytime)) !== 1
-          ? { playtime_seconds: Math.max(Number(existing?.playtime_seconds || 0), Math.floor(progress.totalPlaytime)) }
-          : {}),
-        ...(Math.max(Number(existing?.high_score || 0), Math.floor(progress.highScore)) !== 1
-          ? { high_score: Math.max(Number(existing?.high_score || 0), Math.floor(progress.highScore)) }
-          : {}),
-        // total_coins is the player's current spendable balance. Keep it in sync with game_progress.
-        total_coins: Math.max(0, Math.floor(progress.totalCoins)),
-        game_progress: progress,
-        last_updated: new Date().toISOString()
-      }, { onConflict: 'player_id' })
-
+    const { data, error } = await supabase.rpc('save_game_account', {
+      p_player_id: cleanPlayerId,
+      p_username: cleanUsername,
+      p_playtime_seconds: Math.max(0, Math.floor(progress.totalPlaytime)),
+      p_high_score: Math.max(0, Math.floor(progress.highScore)),
+      p_total_coins: Math.max(0, Math.floor(progress.totalCoins)),
+      p_game_progress: progress,
+    })
     if (error) throw error
-    return true
+    return data !== false
   } catch (error) {
     console.error('Error saving game progress:', error)
     return false
@@ -223,17 +208,17 @@ export async function saveUserGameProgress(
 }
 
 export async function fetchUserHighScore(playerId: string): Promise<number | null> {
-  if (!playerId.trim()) return null
-  try {
-    if (!(await ensureSupabaseAuth())) return null
-    const { data, error } = await supabase
-      .from('user_analytics')
-      .select('high_score')
-      .eq('player_id', playerId)
-      .maybeSingle()
+  const cleanPlayerId = playerId.trim()
+  if (!cleanPlayerId) return null
 
+  try {
+    const { data, error } = await supabase.rpc('get_game_account', {
+      p_player_id: cleanPlayerId,
+    })
     if (error) throw error
-    return data ? Math.max(0, Number(data.high_score || 0)) : 0
+
+    const row = Array.isArray(data) ? data[0] : data
+    return row ? Math.max(0, Number(row.high_score || 0)) : 0
   } catch (error) {
     console.error('Error fetching user high score:', error)
     return null
@@ -241,9 +226,13 @@ export async function fetchUserHighScore(playerId: string): Promise<number | nul
 }
 
 
-export async function fetchHighScoreLeaderboard(): Promise<Array<{ username: string; high_score: number; is_me: boolean }>> {
+
+export async function fetchHighScoreLeaderboard(playerId = ''): Promise<Array<{ username: string; high_score: number; is_me: boolean }>> {
   try {
-    const { data, error } = await supabase.rpc('get_public_high_score_leaderboard', { p_limit: 500 })
+    const { data, error } = await supabase.rpc('get_public_high_score_leaderboard', {
+      p_limit: 500,
+      p_player_id: playerId.trim() || null,
+    })
     if (error) throw error
     return (data || []).map((user: any) => ({
       username: String(user.username || '').trim(),
@@ -257,9 +246,16 @@ export async function fetchHighScoreLeaderboard(): Promise<Array<{ username: str
 }
 
 
-export async function fetchLeaderboardAnalytics(period: 'all'|'7d'|'30d'|'90d'|'180d'|'365d' = 'all') {
+export async function fetchLeaderboardAnalytics(
+  period: 'all'|'7d'|'30d'|'90d'|'180d'|'365d' = 'all',
+  playerId = ''
+) {
   try {
-    const { data, error } = await supabase.rpc('get_public_playtime_leaderboard_v2', { p_period: period, p_limit: 500 })
+    const { data, error } = await supabase.rpc('get_public_playtime_leaderboard_v2', {
+      p_period: period,
+      p_limit: 500,
+      p_player_id: playerId.trim() || null,
+    })
     if (error) throw error
     return { users: (data || []).map((u: any) => ({
       player_id: String(u.player_id || ''),
@@ -272,4 +268,3 @@ export async function fetchLeaderboardAnalytics(period: 'all'|'7d'|'30d'|'90d'|'
     return { users: [], events: [] }
   }
 }
-
