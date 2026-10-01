@@ -3,7 +3,7 @@ import { LeaderboardViewer } from './LeaderboardViewer'
 import { HighScoreAnalytics } from './HighScoreAnalytics'
 import { Analytics } from '@vercel/analytics/react'
 import { GameScene } from './game/Scene'
-import { HUD, MainMenu, PauseMenu, GameOverScreen, TouchControls, UnlockNotification, LoadingScreen } from './game/UI'
+import { HUD, MainMenu, PauseMenu, GameOverScreen, TouchControls, UnlockNotification, LoadingScreen, UsernameInput } from './game/UI'
 import { actions, getState } from './game/store'
 
 function App() {
@@ -31,12 +31,18 @@ function App() {
     <div className="w-full h-full relative overflow-hidden bg-black">
       <div className="absolute inset-0"><GameScene /></div>
       {!loaded && <LoadingScreen />}
-      <MainMenu />
-      <HUD />
-      <PauseMenu />
-      <GameOverScreen />
-      <TouchControls />
-      <UnlockNotification />
+      {loaded && !getState().username ? (
+        <UsernameInput />
+      ) : loaded ? (
+        <>
+          <MainMenu />
+          <HUD />
+          <PauseMenu />
+          <GameOverScreen />
+          <TouchControls />
+          <UnlockNotification />
+        </>
+      ) : null}
       <Analytics />
     </div>
   )
