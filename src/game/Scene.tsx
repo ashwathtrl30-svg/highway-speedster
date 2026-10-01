@@ -1009,7 +1009,7 @@ function BlitzBike({ bike }: { bike: Bike }) {
       <group position={[0, 1.02, 0.12]}>
         <mesh position={[0, 0.15, 0]}>
           <boxGeometry args={[0.38, 0.52, 0.28]} />
-          <meshStandardMaterial color="#1a1a1a" roughness={0.8} />
+          <meshStandardMaterial color="#8ec5e8" roughness={0.8} />
         </mesh>
         <mesh position={[0, 0.58, -0.05]}>
           <sphereGeometry args={[0.16, 8, 8]} />
@@ -1023,11 +1023,11 @@ function BlitzBike({ bike }: { bike: Bike }) {
         {/* Arms */}
         <mesh position={[-0.28, 0.05, -0.2]} rotation={[0.6, 0, 0.2]}>
           <boxGeometry args={[0.1, 0.4, 0.1]} />
-          <meshStandardMaterial color="#1a1a1a" />
+          <meshStandardMaterial color="#8ec5e8" />
         </mesh>
         <mesh position={[0.28, 0.05, -0.2]} rotation={[0.6, 0, -0.2]}>
           <boxGeometry args={[0.1, 0.4, 0.1]} />
-          <meshStandardMaterial color="#1a1a1a" />
+          <meshStandardMaterial color="#8ec5e8" />
         </mesh>
         {/* Legs */}
         <mesh position={[-0.12, -0.35, 0.1]} rotation={[0.3, 0, 0]}>
@@ -1153,7 +1153,7 @@ function ApexBike({ bike }: { bike: Bike }) {
       <group position={[0, 1.05, 0.15]}>
         <mesh position={[0, 0.15, 0]}>
           <boxGeometry args={[0.42, 0.55, 0.3]} />
-          <meshStandardMaterial color="#1a1a1a" roughness={0.8} />
+          <meshStandardMaterial color="#8ec5e8" roughness={0.8} />
         </mesh>
         <mesh position={[0, 0.6, -0.05]}>
           <sphereGeometry args={[0.17, 8, 8]} />
@@ -1165,11 +1165,11 @@ function ApexBike({ bike }: { bike: Bike }) {
         </mesh>
         <mesh position={[-0.28, 0.05, -0.2]} rotation={[0.6, 0, 0.2]}>
           <boxGeometry args={[0.1, 0.4, 0.1]} />
-          <meshStandardMaterial color="#1a1a1a" />
+          <meshStandardMaterial color="#8ec5e8" />
         </mesh>
         <mesh position={[0.28, 0.05, -0.2]} rotation={[0.6, 0, -0.2]}>
           <boxGeometry args={[0.1, 0.4, 0.1]} />
-          <meshStandardMaterial color="#1a1a1a" />
+          <meshStandardMaterial color="#8ec5e8" />
         </mesh>
         <mesh position={[-0.12, -0.35, 0.1]} rotation={[0.3, 0, 0]}>
           <boxGeometry args={[0.12, 0.45, 0.12]} />
@@ -1292,7 +1292,7 @@ function ChronosBike({ bike }: { bike: Bike }) {
       <group position={[0, 0.98, 0.1]}>
         <mesh position={[0, 0.12, -0.05]} rotation={[0.2, 0, 0]}>
           <boxGeometry args={[0.38, 0.5, 0.28]} />
-          <meshStandardMaterial color="#1a1a1a" roughness={0.8} />
+          <meshStandardMaterial color="#8ec5e8" roughness={0.8} />
         </mesh>
         <mesh position={[0, 0.52, -0.15]}>
           <sphereGeometry args={[0.16, 8, 8]} />
@@ -1304,11 +1304,11 @@ function ChronosBike({ bike }: { bike: Bike }) {
         </mesh>
         <mesh position={[-0.25, 0, -0.25]} rotation={[0.7, 0, 0.15]}>
           <boxGeometry args={[0.1, 0.38, 0.1]} />
-          <meshStandardMaterial color="#1a1a1a" />
+          <meshStandardMaterial color="#8ec5e8" />
         </mesh>
         <mesh position={[0.25, 0, -0.25]} rotation={[0.7, 0, -0.15]}>
           <boxGeometry args={[0.1, 0.38, 0.1]} />
-          <meshStandardMaterial color="#1a1a1a" />
+          <meshStandardMaterial color="#8ec5e8" />
         </mesh>
         <mesh position={[-0.1, -0.32, 0.05]} rotation={[0.4, 0, 0]}>
           <boxGeometry args={[0.11, 0.42, 0.11]} />
@@ -1461,7 +1461,7 @@ function StratosBike({ bike }: { bike: Bike }) {
       <group position={[0, 0.95, 0.08]}>
         <mesh position={[0, 0.1, -0.06]} rotation={[0.25, 0, 0]}>
           <boxGeometry args={[0.36, 0.48, 0.26]} />
-          <meshStandardMaterial color="#1a1a1a" roughness={0.8} />
+          <meshStandardMaterial color="#8ec5e8" roughness={0.8} />
         </mesh>
         <mesh position={[0, 0.5, -0.16]}>
           <sphereGeometry args={[0.15, 8, 8]} />
@@ -1473,11 +1473,11 @@ function StratosBike({ bike }: { bike: Bike }) {
         </mesh>
         <mesh position={[-0.24, -0.02, -0.26]} rotation={[0.75, 0, 0.15]}>
           <boxGeometry args={[0.095, 0.36, 0.095]} />
-          <meshStandardMaterial color="#1a1a1a" />
+          <meshStandardMaterial color="#8ec5e8" />
         </mesh>
         <mesh position={[0.24, -0.02, -0.26]} rotation={[0.75, 0, -0.15]}>
           <boxGeometry args={[0.095, 0.36, 0.095]} />
-          <meshStandardMaterial color="#1a1a1a" />
+          <meshStandardMaterial color="#8ec5e8" />
         </mesh>
         <mesh position={[-0.09, -0.34, 0.04]} rotation={[0.45, 0, 0]}>
           <boxGeometry args={[0.1, 0.4, 0.1]} />
@@ -1638,7 +1638,7 @@ function ZenithBike({ bike }: { bike: Bike }) {
       <group position={[0, 0.92, 0.05]}>
         <mesh position={[0, 0.08, -0.08]} rotation={[0.3, 0, 0]}>
           <boxGeometry args={[0.35, 0.46, 0.25]} />
-          <meshStandardMaterial color="#0a0a0a" roughness={0.8} />
+          <meshStandardMaterial color="#8ec5e8" roughness={0.8} />
         </mesh>
         <mesh position={[0, 0.48, -0.18]}>
           <sphereGeometry args={[0.14, 8, 8]} />
@@ -1650,11 +1650,11 @@ function ZenithBike({ bike }: { bike: Bike }) {
         </mesh>
         <mesh position={[-0.22, -0.04, -0.28]} rotation={[0.8, 0, 0.15]}>
           <boxGeometry args={[0.09, 0.34, 0.09]} />
-          <meshStandardMaterial color="#0a0a0a" />
+          <meshStandardMaterial color="#8ec5e8" />
         </mesh>
         <mesh position={[0.22, -0.04, -0.28]} rotation={[0.8, 0, -0.15]}>
           <boxGeometry args={[0.09, 0.34, 0.09]} />
-          <meshStandardMaterial color="#0a0a0a" />
+          <meshStandardMaterial color="#8ec5e8" />
         </mesh>
         <mesh position={[-0.08, -0.36, 0.02]} rotation={[0.5, 0, 0]}>
           <boxGeometry args={[0.095, 0.38, 0.095]} />
