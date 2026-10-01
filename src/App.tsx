@@ -3,26 +3,41 @@ import { LeaderboardViewer } from './LeaderboardViewer'
 import { HighScoreAnalytics } from './HighScoreAnalytics'
 import { Analytics } from '@vercel/analytics/react'
 import { GameScene } from './game/Scene'
-import { HUD, MainMenu, PauseMenu, GameOverScreen, TouchControls, UnlockNotification, LoadingScreen } from './game/UI'
-import { actions, getState } from './game/store'
+import { HUD, MainMenu, PauseMenu, GameOverScreen, TouchControls, UnlockNotification, LoadingScreen, AccountSetup } from './game/UI'
+import { actions, getState, getPlayerId } from './game/store'
 import { ensureSupabaseAuth } from './supabase'
 
 function App() {
   const [loaded, setLoaded] = useState(false)
+  const [accountReady, setAccountReady] = useState(false)
+  const [accountBooting, setAccountBooting] = useState(true)
 
   useEffect(() => {
-    // Load saved local progress on mount.
     actions.resetGame()
+    const storedPlayerId = getPlayerId()
 
-    // Establish an invisible Supabase session for RLS-protected analytics.
-    // No Google/Apple/email sign-in UI is shown to players.
-    void ensureSupabaseAuth().then(() => {
-      if (getState().username) {
-        void actions.syncSharedHighScore()
+    const boot = async () => {
+      if (storedPlayerId) {
+        // Existing devices keep their established local account ID and refresh
+        // their cloud copy without asking for a new identity.
+        if (getState().username) {
+          await actions.restoreCloudProgress()
+          void actions.syncSharedHighScore()
+          setAccountReady(true)
+        } else {
+          setAccountReady(false)
+        }
+      } else {
+        // A device with no account ID must explicitly choose New User or
+        // Already Have an Account. This prevents silent UUID duplication.
+        setAccountReady(false)
       }
-    })
+      setAccountBooting(false)
+    }
 
-    // Simulate loading time for 3D assets.
+    void ensureSupabaseAuth()
+    void boot()
+
     const timer = setTimeout(() => setLoaded(true), 1500)
     return () => clearTimeout(timer)
   }, [])
@@ -30,16 +45,29 @@ function App() {
   if (window.location.pathname === '/leaderboard') return <LeaderboardViewer />
   if (window.location.pathname === '/highscores') return <HighScoreAnalytics />
 
+  if (accountBooting) {
+    return (
+      <div className="w-full h-full relative overflow-hidden bg-black touch-none">
+        <LoadingScreen />
+      </div>
+    )
+  }
+
   return (
     <div className="w-full h-full relative overflow-hidden bg-black touch-none">
       <div className="absolute inset-0"><GameScene /></div>
       {!loaded && <LoadingScreen />}
-      <MainMenu />
-      <HUD />
-      <PauseMenu />
-      <GameOverScreen />
-      <TouchControls />
-      <UnlockNotification />
+      {!accountReady && <AccountSetup onComplete={() => setAccountReady(true)} />}
+      {accountReady && (
+        <>
+          <MainMenu />
+          <HUD />
+          <PauseMenu />
+          <GameOverScreen />
+          <TouchControls />
+          <UnlockNotification />
+        </>
+      )}
       <Analytics />
     </div>
   )
