@@ -76,6 +76,8 @@ export interface CloudGameProgress {
   unlockedBikes: string[]
   unlockedCars: string[]
   bikeSkins: Record<string, any>
+  carColors: Record<string, string>
+  selectedCarColor: string
   totalCoins: number
   inventory: any
   vehicleMode: 'bike' | 'car'
