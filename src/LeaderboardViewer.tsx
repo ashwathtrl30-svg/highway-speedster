@@ -14,13 +14,14 @@ const FILTERS: { key: Filter; label: string }[] = [  { key: '7d', label: 'Last 7
 const GAME_LAUNCH_AT = new Date('2026-09-25T17:19:37Z')
 
 function formatTime(seconds: number) {
-  const total = Math.max(0, Math.floor(seconds || 0))
+  // Playtime analytics is displayed at exact whole-second resolution.
+  const total = Math.max(0, Math.trunc(Number.isFinite(seconds) ? seconds : 0))
   const days = Math.floor(total / 86400)
   const hours = Math.floor((total % 86400) / 3600)
   const minutes = Math.floor((total % 3600) / 60)
   const secs = total % 60
 
-  if (days > 0) return `${days}d ${hours}h ${minutes}m`
+  if (days > 0) return `${days}d ${hours}h ${minutes}m ${secs}s`
   if (hours > 0) return `${hours}h ${minutes}m ${secs}s`
   if (minutes > 0) return `${minutes}m ${secs}s`
   return `${secs}s`
