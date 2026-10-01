@@ -6,6 +6,7 @@ import { GameScene } from './game/Scene'
 import { HUD, MainMenu, PauseMenu, GameOverScreen, TouchControls, UnlockNotification, LoadingScreen } from './game/UI'
 import { actions, getState } from './game/store'
 
+// Production recovery marker: force a fresh client bundle after the recent rollback.
 function App() {
   const [loaded, setLoaded] = useState(false)
 
