@@ -502,8 +502,33 @@ export function MainMenu() {
   const [showStore, setShowStore] = useState(false)
   const [showPowerUpSelection, setShowPowerUpSelection] = useState(false)
   const [showStats, setShowStats] = useState(false)
+  const [navTransition, setNavTransition] = useState<'garage' | 'store' | null>(null)
+  const navTransitionTimerRef = useRef<number | null>(null)
   const tapCountRef = useRef(0)
   const lastTapTimeRef = useRef(0)
+
+  const startMenuNavigation = (destination: 'garage' | 'store') => {
+    if (navTransition) return
+
+    setNavTransition(destination)
+    navTransitionTimerRef.current = window.setTimeout(() => {
+      if (destination === 'garage') {
+        setShowBikes(true)
+      } else {
+        setShowStore(true)
+      }
+      setNavTransition(null)
+      navTransitionTimerRef.current = null
+    }, 420)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (navTransitionTimerRef.current !== null) {
+        window.clearTimeout(navTransitionTimerRef.current)
+      }
+    }
+  }, [])
 
   // Secret keyboard shortcut for admin analytics (preserved).
   useEffect(() => {
@@ -624,6 +649,41 @@ export function MainMenu() {
         .hs-menu-skyline-drift { animation:hsMenuSkylineDrift 9s ease-in-out infinite; }
         .hs-menu-dust-float { animation:hsMenuDustFloat 3.8s ease-out infinite; }
         .hs-menu-near-light { animation:hsMenuNearLight 2.6s ease-in infinite; }
+        @keyframes hsMenuNavButtonLaunch {
+          0% { transform:scale(1); filter:brightness(1); box-shadow:0 12px 30px rgba(0,0,0,.24); }
+          22% { transform:scale(.965) translateY(1px); filter:brightness(1.2); }
+          48% { transform:scale(1.035) translateY(-1px); filter:brightness(1.5); box-shadow:0 0 42px rgba(255,205,120,.34); }
+          100% { transform:scale(.985) translateY(-2px); filter:brightness(1.1); }
+        }
+        @keyframes hsMenuNavWipe {
+          0% { transform:translateX(-118%) skewX(-16deg); opacity:0; }
+          14% { opacity:.48; }
+          58% { opacity:.26; }
+          100% { transform:translateX(118%) skewX(-16deg); opacity:0; }
+        }
+        @keyframes hsMenuNavCore {
+          0% { transform:translateX(-36%) scaleX(.55); opacity:0; }
+          18% { opacity:.8; }
+          58% { opacity:.28; }
+          100% { transform:translateX(36%) scaleX(1.15); opacity:0; }
+        }
+        @keyframes hsMenuNavShock {
+          0% { transform:translate(-50%,-50%) scale(.18); opacity:0; }
+          18% { opacity:.8; }
+          54% { opacity:.28; }
+          100% { transform:translate(-50%,-50%) scale(1.35); opacity:0; }
+        }
+        @keyframes hsMenuNavMicroStreak {
+          0% { transform:translateX(-90vw); opacity:0; }
+          18% { opacity:.5; }
+          100% { transform:translateX(110vw); opacity:0; }
+        }
+        .hs-menu-nav-launch { animation:hsMenuNavButtonLaunch 420ms cubic-bezier(.16,.8,.18,1) both; }
+        .hs-menu-nav-wipe { animation:hsMenuNavWipe 420ms cubic-bezier(.2,.75,.16,1) both; }
+        .hs-menu-nav-core { animation:hsMenuNavCore 420ms cubic-bezier(.2,.8,.18,1) both; }
+        .hs-menu-nav-shock { animation:hsMenuNavShock 420ms cubic-bezier(.16,.8,.18,1) both; }
+        .hs-menu-nav-streak { animation:hsMenuNavMicroStreak 360ms cubic-bezier(.2,.7,.18,1) both; }
+
 
       `}</style>
 
@@ -686,6 +746,68 @@ export function MainMenu() {
 
         <div className="absolute inset-x-0 bottom-0 h-[34%] bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
       </div>
+
+      {navTransition && (
+        <div
+          className="absolute inset-0 z-[80] pointer-events-none overflow-hidden"
+          aria-hidden="true"
+        >
+          <div
+            className={[
+              'absolute inset-0',
+              navTransition === 'garage'
+                ? 'bg-[radial-gradient(circle_at_50%_52%,rgba(255,201,120,.20),transparent_34%),linear-gradient(90deg,transparent,rgba(255,159,61,.08),transparent)]'
+                : 'bg-[radial-gradient(circle_at_50%_52%,rgba(90,210,255,.18),transparent_34%),linear-gradient(90deg,transparent,rgba(63,164,205,.08),transparent)]',
+            ].join(' ')}
+          />
+          <div
+            className={[
+              'absolute top-0 h-full w-[58%] blur-[1px]',
+              navTransition === 'garage'
+                ? 'bg-gradient-to-r from-transparent via-amber-200/18 to-transparent'
+                : 'bg-gradient-to-r from-transparent via-cyan-200/16 to-transparent',
+              'hs-menu-nav-wipe',
+            ].join(' ')}
+          />
+          <div
+            className={[
+              'absolute left-1/2 top-1/2 h-10 w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[2px]',
+              navTransition === 'garage'
+                ? 'bg-gradient-to-r from-transparent via-amber-200/48 to-transparent'
+                : 'bg-gradient-to-r from-transparent via-cyan-200/42 to-transparent',
+              'hs-menu-nav-core',
+            ].join(' ')}
+          />
+          <div
+            className={[
+              'absolute left-1/2 top-1/2 h-24 w-24 rounded-full border',
+              navTransition === 'garage'
+                ? 'border-amber-200/30 shadow-[0_0_40px_rgba(255,191,88,.30)]'
+                : 'border-cyan-200/28 shadow-[0_0_40px_rgba(72,195,255,.26)]',
+              'hs-menu-nav-shock',
+            ].join(' ')}
+          />
+          <div
+            className={[
+              'absolute top-[31%] h-px w-[42%] bg-gradient-to-r from-transparent to-transparent',
+              navTransition === 'garage'
+                ? 'via-amber-200/42'
+                : 'via-cyan-200/38',
+              'hs-menu-nav-streak',
+            ].join(' ')}
+          />
+          <div
+            className={[
+              'absolute top-[64%] h-px w-[28%] bg-gradient-to-r from-transparent to-transparent',
+              navTransition === 'garage'
+                ? 'via-white/25'
+                : 'via-sky-100/22',
+              'hs-menu-nav-streak',
+            ].join(' ')}
+            style={{ animationDelay: '-120ms' }}
+          />
+        </div>
+      )}
 
       {/* Existing username flow remains in the same place/function. */}
       <div className="relative z-20">
@@ -796,8 +918,12 @@ export function MainMenu() {
 
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
               <button
-                onClick={() => setShowBikes(true)}
-                className="hs-btn hs-btn-secondary rounded-2xl py-3 sm:py-3.5 text-sm sm:text-base font-black text-white shadow-lg transition-all"
+                onClick={() => startMenuNavigation('garage')}
+                className={[
+                  'hs-btn hs-btn-secondary rounded-2xl py-3 sm:py-3.5 text-sm sm:text-base font-black text-white shadow-lg transition-all',
+                  navTransition === 'garage' ? 'hs-menu-nav-launch' : '',
+                  navTransition ? 'pointer-events-none' : '',
+                ].join(' ')}
               >
                 <svg className="mx-auto mb-0.5 h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <circle cx="6.5" cy="16.5" r="3" stroke="currentColor" strokeWidth="1.7"/>
@@ -808,8 +934,12 @@ export function MainMenu() {
               </button>
 
               <button
-                onClick={() => setShowStore(true)}
-                className="rounded-2xl border border-white/12 bg-white/[0.055] py-3 sm:py-3.5 text-sm sm:text-base font-black text-white shadow-lg transition-all hover:bg-white/[0.09] hover:border-white/20 active:scale-[0.98]"
+                onClick={() => startMenuNavigation('store')}
+                className={[
+                  'rounded-2xl border border-white/12 bg-white/[0.055] py-3 sm:py-3.5 text-sm sm:text-base font-black text-white shadow-lg transition-all hover:bg-white/[0.09] hover:border-white/20 active:scale-[0.98]',
+                  navTransition === 'store' ? 'hs-menu-nav-launch' : '',
+                  navTransition ? 'pointer-events-none' : '',
+                ].join(' ')}
               >
                 <svg className="mx-auto mb-0.5 h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M5 8h14l-1 11H6L5 8Z" stroke="currentColor" strokeWidth="1.8"/>
