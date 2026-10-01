@@ -833,8 +833,6 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
   const shieldActive = useGameStore((s) => s.shieldActive)
   const vehicleMode = useGameStore((s) => s.vehicleMode)
   const selectedSkin = useGameStore((s) => s.selectedSkin)
-  const gameState = useGameStore((s) => s.gameState)
-
   useEffect(() => { bikeRef.current = bike }, [bike])
 
   useFrame((_, delta) => {
@@ -858,7 +856,7 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
   })
 
   return (
-    <group ref={meshRef} position={[0, 0, PLAYER_Z]} visible={gameState !== 'menu'}>
+    <group ref={meshRef} position={[0, 0, PLAYER_Z]}>
       <Html
         position={[0, 0.92, 0]}
         center
@@ -4554,6 +4552,7 @@ function SpeedLines() {
 export function GameScene() {
   const selectedBike = useGameStore((s) => s.selectedBike)
   const selectedCar = useGameStore((s) => s.selectedCar)
+  const gameState = useGameStore((s) => s.gameState)
 
   return (
     <Canvas
@@ -4571,7 +4570,7 @@ export function GameScene() {
     >
       <Environment />
       <Highway />
-      <Motorcycle bike={selectedBike} car={selectedCar} />
+      {gameState !== 'menu' && <Motorcycle bike={selectedBike} car={selectedCar} />}
       <TrafficSystem />
       <CoinSystem />
       <SharedParticleVFX />
