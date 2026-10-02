@@ -249,7 +249,6 @@ export function AccountSetup({ onComplete, initialError = '' }: { onComplete: ()
                   <h1 className="mt-2 text-[30px] font-black tracking-[-0.03em] text-white sm:text-[36px]">Welcome, rider.</h1>
                 </div>
                 <div className="hidden rounded-2xl border border-white/10 bg-white/[0.045] px-3 py-2 text-right sm:block">
-                  <p className="text-[8px] font-black uppercase tracking-[0.22em] text-white/35">CROSS-DEVICE</p>
                   <p className="mt-1 text-[10px] font-bold text-emerald-200/80">READY</p>
                 </div>
               </div>
