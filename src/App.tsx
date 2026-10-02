@@ -11,6 +11,7 @@ function App() {
   const [loaded, setLoaded] = useState(false)
   const [accountReady, setAccountReady] = useState(false)
   const [accountBooting, setAccountBooting] = useState(true)
+  const [accountBootError, setAccountBootError] = useState('')
 
   useEffect(() => {
     actions.resetGame()
@@ -18,9 +19,14 @@ function App() {
 
     const boot = async () => {
       if (storedPlayerId) {
-        // Existing devices keep their established local account ID and refresh
-        // their cloud copy without asking for a new identity.
-        if (getState().username) {
+        // Existing devices must remain one of the account's maximum three
+        // registered devices. Reclaim/verify the current installation before
+        // hydrating cloud progress.
+        const device = await actions.ensureCurrentDeviceConnected()
+        if (!device.ok) {
+          setAccountBootError(device.reason)
+          setAccountReady(false)
+        } else if (getState().username) {
           await actions.restoreCloudProgress()
           void actions.syncSharedHighScore()
           setAccountReady(true)
@@ -57,10 +63,23 @@ function App() {
     <div className="w-full h-full relative overflow-hidden bg-black touch-none">
       <div className="absolute inset-0"><GameScene /></div>
       {!loaded && <LoadingScreen />}
-      {!accountReady && <AccountSetup onComplete={() => setAccountReady(true)} />}
+      {!accountReady && (
+        <AccountSetup
+          initialError={accountBootError}
+          onComplete={() => {
+            setAccountBootError('')
+            setAccountReady(true)
+          }}
+        />
+      )}
       {accountReady && (
         <>
-          <MainMenu />
+          <MainMenu
+            onLogout={() => {
+              setAccountBootError('')
+              setAccountReady(false)
+            }}
+          />
           <HUD />
           <PauseMenu />
           <GameOverScreen />
