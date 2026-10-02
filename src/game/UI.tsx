@@ -1056,20 +1056,21 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           100% { transform:translateX(110vw); opacity:0; }
         }
         @keyframes hsMenuLaunchVehicle {
-          0% { transform:translate3d(0,0,0) scale(1) rotate(0deg); }
-          12% { transform:translate3d(12px,1px,0) scale(1.015) rotate(0deg); }
-          28% { transform:translate3d(58px,-3px,0) scale(1.04) rotate(-5deg); }
-          45% { transform:translate3d(150px,-22px,0) scale(1.08) rotate(-11deg); }
-          66% { transform:translate3d(34vw,-44px,0) scale(1.12) rotate(-12deg); }
-          84% { transform:translate3d(66vw,-30px,0) scale(1.08) rotate(-9deg); }
-          100% { transform:translate3d(112vw,-8px,0) scale(1.02) rotate(-6deg); }
+          from { transform:translate3d(0,0,0); }
+          to { transform:translate3d(112vw,-8px,0); }
+        }
+        @keyframes hsMenuLaunchWheelie {
+          0% { transform:translate3d(0,0,0) rotate(0deg); }
+          18% { transform:translate3d(0,0,0) rotate(-1deg); }
+          32% { transform:translate3d(0,-5px,0) rotate(-7deg); }
+          48% { transform:translate3d(0,-10px,0) rotate(-12deg); }
+          68% { transform:translate3d(0,-12px,0) rotate(-12deg); }
+          84% { transform:translate3d(0,-8px,0) rotate(-8deg); }
+          100% { transform:translate3d(0,-3px,0) rotate(-5deg); }
         }
         @keyframes hsMenuLaunchCamera {
-          0%, 25% { transform:translate3d(0,0,0) scale(1); }
-          45% { transform:translate3d(-3vw,-1vh,0) scale(1.025); }
-          66% { transform:translate3d(-9vw,-2vh,0) scale(1.055); }
-          84% { transform:translate3d(-17vw,-1vh,0) scale(1.09); }
-          100% { transform:translate3d(-23vw,0,0) scale(1.12); }
+          from { transform:translate3d(0,0,0); }
+          to { transform:translate3d(-34vw,0,0); }
         }
         @keyframes hsMenuGlassCrack {
           0%, 24% { opacity:0; transform:scale(.98); }
@@ -1097,15 +1098,22 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           100% { opacity:0; transform:scale(2.1); }
         }
         .hs-menu-launch-vehicle {
-          animation:hsMenuLaunchVehicle 1750ms cubic-bezier(.18,.72,.16,1) both;
+          animation:hsMenuLaunchVehicle 1750ms cubic-bezier(.22,.08,.76,1) both;
           transform-origin:50% 65%;
           transform:translate3d(0,0,0);
           backface-visibility:hidden;
           -webkit-backface-visibility:hidden;
           will-change:transform;
         }
+        .hs-menu-launch-wheelie {
+          animation:hsMenuLaunchWheelie 1750ms cubic-bezier(.2,.8,.18,1) both;
+          transform-origin:46% 72%;
+          backface-visibility:hidden;
+          -webkit-backface-visibility:hidden;
+          will-change:transform;
+        }
         .hs-menu-launch-camera {
-          animation:hsMenuLaunchCamera 1750ms cubic-bezier(.16,.76,.14,1) both;
+          animation:hsMenuLaunchCamera 1750ms cubic-bezier(.18,.78,.16,1) both;
           transform-origin:50% 55%;
           transform:translate3d(0,0,0);
           backface-visibility:hidden;
@@ -1522,9 +1530,11 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
               <div
                 className="relative h-[125px] w-[225px] sm:h-[155px] sm:w-[285px]"
               >
-                {isCar
-  ? <CarIcon car={state.selectedCar} />
-  : <BikeIcon bike={state.selectedBike} skin={state.selectedSkin} />}
+                <div className={rideLaunch ? 'hs-menu-launch-wheelie h-full w-full' : 'h-full w-full'}>
+                  {isCar
+                    ? <CarIcon car={state.selectedCar} />
+                    : <BikeIcon bike={state.selectedBike} skin={state.selectedSkin} />}
+                </div>
               </div>
             </div>
 
