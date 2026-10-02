@@ -1349,6 +1349,16 @@ export const actions = {
     const colors = SKIN_COLORS[skin]
     const car = CARS[0]
     const carColor = getCarColorOption(car.id, defaultCarColors[car.id])
+    const deviceRegistration = await registerGameDevice(trimmed, getOrCreateDeviceId())
+    if (!deviceRegistration.success) {
+      setPlayerId(previousId)
+      setState(previous)
+      if (!previousId) {
+        try { localStorage.removeItem('highway-speedster-player-id') } catch {}
+      }
+      return { ok: false as const, reason: deviceRegistration.reason || 'This account is already connected on 3 devices.' }
+    }
+
     setState({
       highScore: 0, bikeHighScore: 0, carHighScore: 0,
       unlockedBikes: ['blitz'], unlockedCars: ['kanto-zip'],
