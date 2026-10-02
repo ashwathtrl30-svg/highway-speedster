@@ -2017,7 +2017,8 @@ function TrafficRenderer({ vehiclesRef, getDimensions }: {
       if (Math.abs(mesh.scale.x - normalizedScale) > 0.001) {
         mesh.scale.setScalar(normalizedScale)
       }
-      mesh.position.set(v.lane * LANE_WIDTH, 0, v.z)
+      const trafficVisualLift = (v.type === 'car' || v.type === 'truck' || v.type === 'bus') ? 0.12 : 0
+      mesh.position.set(v.lane * LANE_WIDTH, trafficVisualLift, v.z)
     })
 
     // Remove old meshes
