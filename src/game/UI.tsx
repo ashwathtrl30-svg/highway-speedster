@@ -845,7 +845,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
       rideLaunchTimerRef.current = null
       setRideLaunch(false)
       actions.setGameState('playing')
-    }, 1750)
+    }, 2450)
   }
 
   useEffect(() => {
@@ -1057,7 +1057,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
         }
         @keyframes hsMenuLaunchVehicle {
           from { transform:translate3d(0,0,0); }
-          to { transform:translate3d(112vw,-8px,0); }
+          to { transform:translate3d(55vw,-8px,0); }
         }
         @keyframes hsMenuLaunchWheelie {
           0% { transform:translate3d(0,0,0) rotate(0deg); }
@@ -1070,7 +1070,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
         }
         @keyframes hsMenuLaunchCamera {
           from { transform:translate3d(0,0,0); }
-          to { transform:translate3d(-34vw,0,0); }
+          to { transform:translate3d(-25vw,0,0); }
         }
         @keyframes hsMenuGlassCrack {
           0%, 24% { opacity:0; transform:scale(.98); }
@@ -1098,7 +1098,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           100% { opacity:0; transform:scale(2.1); }
         }
         .hs-menu-launch-vehicle {
-          animation:hsMenuLaunchVehicle 1750ms cubic-bezier(.22,.08,.76,1) both;
+          animation:hsMenuLaunchVehicle 2450ms cubic-bezier(.22,.08,.76,1) both;
           transform-origin:50% 65%;
           transform:translate3d(0,0,0);
           backface-visibility:hidden;
@@ -1106,14 +1106,14 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           will-change:transform;
         }
         .hs-menu-launch-wheelie {
-          animation:hsMenuLaunchWheelie 1750ms cubic-bezier(.2,.8,.18,1) both;
+          animation:hsMenuLaunchWheelie 2450ms cubic-bezier(.2,.8,.18,1) both;
           transform-origin:46% 72%;
           backface-visibility:hidden;
           -webkit-backface-visibility:hidden;
           will-change:transform;
         }
         .hs-menu-launch-camera {
-          animation:hsMenuLaunchCamera 1750ms cubic-bezier(.18,.78,.16,1) both;
+          animation:hsMenuLaunchCamera 2450ms cubic-bezier(.18,.78,.16,1) both;
           transform-origin:50% 55%;
           transform:translate3d(0,0,0);
           backface-visibility:hidden;
@@ -1121,7 +1121,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           will-change:transform;
         }
         .hs-menu-glass-crack {
-          animation:hsMenuGlassCrack 1750ms linear both;
+          animation:hsMenuGlassCrack 2450ms linear both;
           transform-origin:50% 50%;
           backface-visibility:hidden;
           -webkit-backface-visibility:hidden;
@@ -1146,12 +1146,12 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           animation:hsMenuLaunchFlash 1750ms ease-out both;
         }
         .hs-menu-launch-hide {
-          animation:hsMenuLaunchHide 1750ms ease-out both;
+          animation:hsMenuLaunchHide 2450ms ease-out both;
           pointer-events:none !important;
         }
         @keyframes hsMenuLaunchHide {
-          0%, 42% { opacity:1; transform:translateY(0) scale(1); }
-          70%, 100% { opacity:0; transform:translateY(10px) scale(.985); }
+          0%, 62% { opacity:1; transform:translateY(0) scale(1); }
+          86%, 100% { opacity:0; transform:translateY(10px) scale(.985); }
         }
         .hs-menu-nav-launch { animation:hsMenuNavButtonLaunch 420ms cubic-bezier(.16,.8,.18,1) both; }
         .hs-menu-nav-wipe { animation:hsMenuNavWipe 420ms cubic-bezier(.2,.75,.16,1) both; }
@@ -1460,7 +1460,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
               />
             </div>
 
-            <div className="absolute inset-0 overflow-hidden rounded-[28px]">
+            <div className={`absolute inset-0 rounded-[28px] ${rideLaunch ? 'overflow-visible' : 'overflow-hidden'}`}>
             {rideLaunch && (
               <>
                 <div className="absolute inset-0 z-[20] pointer-events-none overflow-visible">
