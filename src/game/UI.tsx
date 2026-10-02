@@ -1554,7 +1554,6 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
                   state.inventory.magnet2x > 0 ||
                   state.inventory.multiplier2x > 0 ||
                   state.inventory.multiplier4x > 0 ||
-                  state.inventory.multiplier4x > 0 ||
                   state.inventory.shield > 0
 
                 if (hasPowerUps) {
