@@ -1204,69 +1204,145 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
             </div>
           </div>
 
-          {/* Hero vehicle stage — existing selected vehicle, no new ownership state. */}
+          {/* Hero vehicle stage — clear 3D glass display box. */}
           <div className="hs-menu-enter hs-menu-enter-delay relative mx-auto mb-5 h-[170px] w-full max-w-xl [perspective:1200px] sm:mb-6 sm:h-[215px]">
             <div
-              className="pointer-events-none absolute left-3 right-3 top-2 bottom-3 rounded-[26px]"
+              className="pointer-events-none absolute left-3 right-3 top-2 bottom-3 [transform-style:preserve-3d]"
               style={{
-                transform: 'rotateX(7deg) rotateY(-6deg)',
-                transformStyle: 'preserve-3d',
-                background: 'linear-gradient(145deg, rgba(255,255,255,.105), rgba(155,200,220,.035) 42%, rgba(20,35,45,.13))',
-                boxShadow: '0 28px 55px rgba(0,0,0,.34), 0 8px 20px rgba(180,225,240,.08), inset 0 1px 0 rgba(255,255,255,.34), inset 0 -1px 0 rgba(255,255,255,.07)',
-                border: '1px solid rgba(255,255,255,.22)',
-                backdropFilter: 'blur(16px) saturate(145%)',
-                WebkitBackdropFilter: 'blur(16px) saturate(145%)',
+                transform: 'rotateX(5deg) rotateY(-6deg)',
               }}
             >
+              {/* Back pane: visible through the clear glass, not a solid card. */}
+              <div
+                className="absolute inset-[7px] rounded-[22px]"
+                style={{
+                  background: 'linear-gradient(145deg, rgba(220,245,255,.035), rgba(255,255,255,.008) 48%, rgba(150,205,225,.028))',
+                  border: '1px solid rgba(225,247,255,.16)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,.22), inset 0 -1px 0 rgba(130,185,210,.08)',
+                  backdropFilter: 'blur(2px) saturate(115%)',
+                  WebkitBackdropFilter: 'blur(2px) saturate(115%)',
+                  transform: 'translateZ(-18px)',
+                }}
+              />
+
+              {/* Main front glass pane — almost transparent, with a real glass edge. */}
               <div
                 className="absolute inset-0 rounded-[26px]"
                 style={{
-                  background: 'linear-gradient(122deg, rgba(255,255,255,.22) 0%, rgba(255,255,255,.06) 18%, transparent 40%, rgba(255,255,255,.025) 68%, rgba(255,255,255,.10) 100%)',
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 0 1px rgba(255,255,255,.06)',
+                  background: 'linear-gradient(145deg, rgba(235,249,255,.055), rgba(180,225,240,.012) 42%, rgba(255,255,255,.035) 72%, rgba(145,200,220,.045))',
+                  border: '1.5px solid rgba(226,248,255,.43)',
+                  boxShadow: '0 24px 48px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.58), inset 1px 0 0 rgba(255,255,255,.18), inset -1px 0 0 rgba(110,175,205,.13), inset 0 -1px 0 rgba(115,170,195,.10)',
+                  transform: 'translateZ(18px)',
                 }}
               />
+
+              {/* Thickened optical edges give the box the hard glass feel from the reference. */}
               <div
-                className="absolute left-3 right-3 top-1 h-8 rounded-[18px]"
+                className="absolute left-[1px] top-2 bottom-2 w-[5px] rounded-full"
                 style={{
-                  transform: 'translateZ(15px)',
-                  background: 'linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.025))',
-                  borderTop: '1px solid rgba(255,255,255,.42)',
-                  borderLeft: '1px solid rgba(255,255,255,.08)',
-                  borderRight: '1px solid rgba(255,255,255,.08)',
+                  background: 'linear-gradient(180deg, rgba(255,255,255,.78), rgba(170,220,238,.22) 45%, rgba(255,255,255,.60))',
                   filter: 'blur(.15px)',
+                  transform: 'translateZ(20px)',
+                  opacity: .82,
                 }}
               />
               <div
-                className="absolute top-5 bottom-5 right-0 w-4 rounded-r-[20px]"
+                className="absolute right-[1px] top-2 bottom-2 w-[5px] rounded-full"
                 style={{
-                  transform: 'translateX(10px) rotateY(-78deg)',
+                  background: 'linear-gradient(180deg, rgba(235,249,255,.50), rgba(120,185,210,.18) 45%, rgba(255,255,255,.62))',
+                  filter: 'blur(.15px)',
+                  transform: 'translateZ(20px)',
+                  opacity: .74,
+                }}
+              />
+              <div
+                className="absolute left-2 right-2 top-[1px] h-[5px] rounded-full"
+                style={{
+                  background: 'linear-gradient(90deg, rgba(255,255,255,.55), rgba(255,255,255,.84) 45%, rgba(190,230,242,.42))',
+                  filter: 'blur(.15px)',
+                  transform: 'translateZ(20px)',
+                  opacity: .80,
+                }}
+              />
+              <div
+                className="absolute left-2 right-2 bottom-[1px] h-[5px] rounded-full"
+                style={{
+                  background: 'linear-gradient(90deg, rgba(165,215,232,.22), rgba(255,255,255,.46) 48%, rgba(255,255,255,.22))',
+                  filter: 'blur(.15px)',
+                  transform: 'translateZ(20px)',
+                  opacity: .62,
+                }}
+              />
+
+              {/* Refracted top face. */}
+              <div
+                className="absolute left-3 right-3 top-0 h-7"
+                style={{
+                  clipPath: 'polygon(3% 100%, 7% 0, 93% 0, 97% 100%)',
+                  background: 'linear-gradient(180deg, rgba(255,255,255,.16), rgba(195,231,242,.035))',
+                  borderTop: '1px solid rgba(255,255,255,.62)',
+                  transform: 'translateZ(10px)',
+                  filter: 'blur(.1px)',
+                }}
+              />
+
+              {/* Refracted lower face. */}
+              <div
+                className="absolute left-3 right-3 bottom-0 h-8"
+                style={{
+                  clipPath: 'polygon(3% 0, 7% 100%, 93% 100%, 97% 0)',
+                  background: 'linear-gradient(180deg, rgba(145,205,224,.02), rgba(255,255,255,.12))',
+                  borderBottom: '1px solid rgba(230,248,255,.45)',
+                  transform: 'translateZ(10px)',
+                }}
+              />
+
+              {/* Side faces create actual box depth. */}
+              <div
+                className="absolute left-0 top-5 bottom-5 w-6"
+                style={{
+                  clipPath: 'polygon(100% 0, 0 10%, 0 90%, 100% 100%)',
+                  background: 'linear-gradient(90deg, rgba(120,190,215,.11), rgba(255,255,255,.035))',
+                  borderLeft: '1px solid rgba(216,245,255,.34)',
+                  transform: 'translateX(-1px) rotateY(76deg)',
+                  transformOrigin: 'right center',
+                }}
+              />
+              <div
+                className="absolute right-0 top-5 bottom-5 w-6"
+                style={{
+                  clipPath: 'polygon(0 0, 100% 10%, 100% 90%, 0 100%)',
+                  background: 'linear-gradient(270deg, rgba(100,175,205,.12), rgba(255,255,255,.035))',
+                  borderRight: '1px solid rgba(214,243,255,.42)',
+                  transform: 'translateX(1px) rotateY(-76deg)',
                   transformOrigin: 'left center',
-                  background: 'linear-gradient(180deg, rgba(255,255,255,.14), rgba(95,165,190,.045), rgba(255,255,255,.075))',
-                  borderRight: '1px solid rgba(255,255,255,.23)',
-                  boxShadow: '8px 0 20px rgba(0,0,0,.16)',
-                  backdropFilter: 'blur(8px)',
+                }}
+              />
+
+              {/* Four bright corner catches — the signature detail visible on realistic glass boxes. */}
+              <div className="absolute left-2 top-2 h-7 w-7 rounded-tl-[14px] border-l-2 border-t-2 border-white/65" style={{ transform: 'translateZ(22px)' }} />
+              <div className="absolute right-2 top-2 h-7 w-7 rounded-tr-[14px] border-r-2 border-t-2 border-white/50" style={{ transform: 'translateZ(22px)' }} />
+              <div className="absolute left-2 bottom-2 h-7 w-7 rounded-bl-[14px] border-b-2 border-l-2 border-white/34" style={{ transform: 'translateZ(22px)' }} />
+              <div className="absolute right-2 bottom-2 h-7 w-7 rounded-br-[14px] border-b-2 border-r-2 border-white/40" style={{ transform: 'translateZ(22px)' }} />
+
+              {/* Soft internal reflection sweep. */}
+              <div
+                className="absolute left-[8%] top-[8%] h-[74%] w-[22%] rounded-full"
+                style={{
+                  transform: 'rotate(18deg) translateZ(23px)',
+                  background: 'linear-gradient(180deg, rgba(255,255,255,.26), rgba(255,255,255,0))',
+                  filter: 'blur(11px)',
+                  opacity: .50,
                 }}
               />
               <div
-                className="absolute left-4 right-4 bottom-0 h-4 rounded-b-[18px]"
+                className="absolute inset-x-[9%] top-[8%] h-px"
                 style={{
-                  transform: 'translateY(10px) rotateX(-74deg)',
-                  transformOrigin: 'center top',
-                  background: 'linear-gradient(180deg, rgba(120,190,215,.045), rgba(255,255,255,.11))',
-                  borderBottom: '1px solid rgba(255,255,255,.18)',
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent)',
+                  transform: 'translateZ(23px)',
+                  opacity: .70,
                 }}
               />
-              <div
-                className="absolute left-6 top-4 h-[68%] w-[30%] rounded-full"
-                style={{
-                  transform: 'rotate(18deg)',
-                  background: 'linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,0))',
-                  filter: 'blur(10px)',
-                  opacity: .8,
-                }}
-              />
-              <div className="absolute inset-x-7 top-2 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" />
-              <div className="absolute inset-x-10 bottom-2 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
             </div>
 
             <div className="absolute inset-0 overflow-hidden rounded-[28px]">
