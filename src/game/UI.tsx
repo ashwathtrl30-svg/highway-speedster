@@ -1056,13 +1056,13 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           100% { transform:translateX(110vw); opacity:0; }
         }
         @keyframes hsMenuLaunchVehicle {
-          0% { transform:translate3d(0,0,0) scale(1) rotate(0deg); filter:brightness(1); }
-          12% { transform:translate3d(12px,1px,0) scale(1.015) rotate(0deg); filter:brightness(1.16); }
-          28% { transform:translate3d(58px,-3px,0) scale(1.04) rotate(-5deg); filter:brightness(1.24); }
-          45% { transform:translate3d(150px,-22px,0) scale(1.08) rotate(-11deg); filter:brightness(1.28); }
-          66% { transform:translate3d(34vw,-44px,0) scale(1.12) rotate(-12deg); filter:brightness(1.32); }
-          84% { transform:translate3d(66vw,-30px,0) scale(1.08) rotate(-9deg); filter:brightness(1.16); }
-          100% { transform:translate3d(112vw,-8px,0) scale(1.02) rotate(-6deg); filter:brightness(1); }
+          0% { transform:translate3d(0,0,0) scale(1) rotate(0deg); }
+          12% { transform:translate3d(12px,1px,0) scale(1.015) rotate(0deg); }
+          28% { transform:translate3d(58px,-3px,0) scale(1.04) rotate(-5deg); }
+          45% { transform:translate3d(150px,-22px,0) scale(1.08) rotate(-11deg); }
+          66% { transform:translate3d(34vw,-44px,0) scale(1.12) rotate(-12deg); }
+          84% { transform:translate3d(66vw,-30px,0) scale(1.08) rotate(-9deg); }
+          100% { transform:translate3d(112vw,-8px,0) scale(1.02) rotate(-6deg); }
         }
         @keyframes hsMenuLaunchCamera {
           0%, 25% { transform:translate3d(0,0,0) scale(1); }
@@ -1097,22 +1097,34 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           100% { opacity:0; transform:scale(2.1); }
         }
         .hs-menu-launch-vehicle {
-          animation:hsMenuLaunchVehicle 1750ms cubic-bezier(.17,.76,.17,1) both;
+          animation:hsMenuLaunchVehicle 1750ms cubic-bezier(.18,.72,.16,1) both;
           transform-origin:50% 65%;
-          will-change:transform,filter;
+          transform:translate3d(0,0,0);
+          backface-visibility:hidden;
+          -webkit-backface-visibility:hidden;
+          will-change:transform;
         }
         .hs-menu-launch-camera {
           animation:hsMenuLaunchCamera 1750ms cubic-bezier(.16,.76,.14,1) both;
           transform-origin:50% 55%;
+          transform:translate3d(0,0,0);
+          backface-visibility:hidden;
+          -webkit-backface-visibility:hidden;
           will-change:transform;
         }
         .hs-menu-glass-crack {
-          animation:hsMenuGlassCrack 1750ms ease-out both;
+          animation:hsMenuGlassCrack 1750ms linear both;
           transform-origin:50% 50%;
+          backface-visibility:hidden;
+          -webkit-backface-visibility:hidden;
+          will-change:transform,opacity;
         }
         .hs-menu-glass-shard {
           animation:hsMenuGlassShard 720ms cubic-bezier(.16,.72,.16,1) 500ms both;
           transform-origin:center;
+          backface-visibility:hidden;
+          -webkit-backface-visibility:hidden;
+          will-change:transform,opacity;
         }
         .hs-menu-glass-shard:nth-child(3n) {
           animation-name:hsMenuGlassShardAlt;
@@ -1444,7 +1456,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
             {rideLaunch && (
               <>
                 <div className="absolute inset-0 z-[20] pointer-events-none overflow-visible">
-                  <div className="hs-menu-launch-flash absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/30 blur-2xl" />
+                  <div className="hs-menu-launch-flash absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/25 shadow-[0_0_48px_rgba(255,255,255,.42)]" />
                   <div className="hs-menu-glass-crack absolute inset-[5%] rounded-[22px] border border-white/55">
                     <span className="absolute left-[50%] top-[22%] h-[34%] w-px origin-bottom rotate-[23deg] bg-gradient-to-b from-white/90 via-sky-100/75 to-transparent" />
                     <span className="absolute left-[50%] top-[44%] h-[25%] w-px origin-top -rotate-[31deg] bg-gradient-to-b from-white/85 via-sky-100/65 to-transparent" />
