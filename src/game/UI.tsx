@@ -1205,9 +1205,72 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           </div>
 
           {/* Hero vehicle stage — existing selected vehicle, no new ownership state. */}
-          <div className="hs-menu-enter hs-menu-enter-delay relative mx-auto mb-5 h-[170px] w-full max-w-xl overflow-hidden rounded-[28px] border border-white/20 bg-white/[0.075] backdrop-blur-xl shadow-[0_20px_55px_rgba(0,0,0,.28),inset_0_1px_0_rgba(255,255,255,.26),inset_0_-1px_0_rgba(255,255,255,.07)] sm:mb-6 sm:h-[215px]">
-            <div className="pointer-events-none absolute inset-[1px] rounded-[27px] border border-white/[0.08]" />
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(125deg,rgba(255,255,255,.18)_0%,rgba(255,255,255,.055)_22%,transparent_46%,rgba(255,255,255,.025)_68%,rgba(255,255,255,.09)_100%)]" />
+          <div className="hs-menu-enter hs-menu-enter-delay relative mx-auto mb-5 h-[170px] w-full max-w-xl [perspective:1200px] sm:mb-6 sm:h-[215px]">
+            <div
+              className="pointer-events-none absolute left-3 right-3 top-2 bottom-3 rounded-[26px]"
+              style={{
+                transform: 'rotateX(7deg) rotateY(-6deg)',
+                transformStyle: 'preserve-3d',
+                background: 'linear-gradient(145deg, rgba(255,255,255,.105), rgba(155,200,220,.035) 42%, rgba(20,35,45,.13))',
+                boxShadow: '0 28px 55px rgba(0,0,0,.34), 0 8px 20px rgba(180,225,240,.08), inset 0 1px 0 rgba(255,255,255,.34), inset 0 -1px 0 rgba(255,255,255,.07)',
+                border: '1px solid rgba(255,255,255,.22)',
+                backdropFilter: 'blur(16px) saturate(145%)',
+                WebkitBackdropFilter: 'blur(16px) saturate(145%)',
+              }}
+            >
+              <div
+                className="absolute inset-0 rounded-[26px]"
+                style={{
+                  background: 'linear-gradient(122deg, rgba(255,255,255,.22) 0%, rgba(255,255,255,.06) 18%, transparent 40%, rgba(255,255,255,.025) 68%, rgba(255,255,255,.10) 100%)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 0 1px rgba(255,255,255,.06)',
+                }}
+              />
+              <div
+                className="absolute left-3 right-3 top-1 h-8 rounded-[18px]"
+                style={{
+                  transform: 'translateZ(15px)',
+                  background: 'linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.025))',
+                  borderTop: '1px solid rgba(255,255,255,.42)',
+                  borderLeft: '1px solid rgba(255,255,255,.08)',
+                  borderRight: '1px solid rgba(255,255,255,.08)',
+                  filter: 'blur(.15px)',
+                }}
+              />
+              <div
+                className="absolute top-5 bottom-5 right-0 w-4 rounded-r-[20px]"
+                style={{
+                  transform: 'translateX(10px) rotateY(-78deg)',
+                  transformOrigin: 'left center',
+                  background: 'linear-gradient(180deg, rgba(255,255,255,.14), rgba(95,165,190,.045), rgba(255,255,255,.075))',
+                  borderRight: '1px solid rgba(255,255,255,.23)',
+                  boxShadow: '8px 0 20px rgba(0,0,0,.16)',
+                  backdropFilter: 'blur(8px)',
+                }}
+              />
+              <div
+                className="absolute left-4 right-4 bottom-0 h-4 rounded-b-[18px]"
+                style={{
+                  transform: 'translateY(10px) rotateX(-74deg)',
+                  transformOrigin: 'center top',
+                  background: 'linear-gradient(180deg, rgba(120,190,215,.045), rgba(255,255,255,.11))',
+                  borderBottom: '1px solid rgba(255,255,255,.18)',
+                }}
+              />
+              <div
+                className="absolute left-6 top-4 h-[68%] w-[30%] rounded-full"
+                style={{
+                  transform: 'rotate(18deg)',
+                  background: 'linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,0))',
+                  filter: 'blur(10px)',
+                  opacity: .8,
+                }}
+              />
+              <div className="absolute inset-x-7 top-2 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+              <div className="absolute inset-x-10 bottom-2 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+            </div>
+
+            <div className="absolute inset-0 overflow-hidden rounded-[28px]">
+
             <div className="pointer-events-none absolute -left-[18%] top-[-30%] h-[85%] w-[42%] rotate-[18deg] rounded-full bg-white/[0.08] blur-2xl" />
             <div className="pointer-events-none absolute inset-x-6 top-2 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent" />
             <div className="absolute inset-0 hs-menu-hero-glow" />
@@ -1250,6 +1313,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
 
             <div className="absolute right-4 top-4 rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-white/45">
               {isCar ? 'CAR' : 'BIKE'}
+            </div>
             </div>
           </div>
 
