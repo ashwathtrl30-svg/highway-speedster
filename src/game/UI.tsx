@@ -799,7 +799,9 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
   const [showStats, setShowStats] = useState(false)
   const [showAccount, setShowAccount] = useState(false)
   const [navTransition, setNavTransition] = useState<'garage' | 'store' | null>(null)
+  const [rideLaunch, setRideLaunch] = useState(false)
   const navTransitionTimerRef = useRef<number | null>(null)
+  const rideLaunchTimerRef = useRef<number | null>(null)
   const tapCountRef = useRef(0)
   const lastTapTimeRef = useRef(0)
   const previousGameStateRef = useRef(state.gameState)
@@ -834,10 +836,25 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
     }, 420)
   }
 
+  const beginRideLaunch = (prepareRun: boolean) => {
+    if (rideLaunch) return
+    if (prepareRun) actions.resetGame()
+
+    setRideLaunch(true)
+    rideLaunchTimerRef.current = window.setTimeout(() => {
+      rideLaunchTimerRef.current = null
+      setRideLaunch(false)
+      actions.setGameState('playing')
+    }, 1750)
+  }
+
   useEffect(() => {
     return () => {
       if (navTransitionTimerRef.current !== null) {
         window.clearTimeout(navTransitionTimerRef.current)
+      }
+      if (rideLaunchTimerRef.current !== null) {
+        window.clearTimeout(rideLaunchTimerRef.current)
       }
     }
   }, [])
@@ -897,7 +914,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
         onBack={() => setShowPowerUpSelection(false)}
         onStart={() => {
           actions.useSelectedPowerUps()
-          actions.setGameState('playing')
+          beginRideLaunch(false)
         }}
       />
     )
@@ -1037,6 +1054,84 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           0% { transform:translateX(-90vw); opacity:0; }
           18% { opacity:.5; }
           100% { transform:translateX(110vw); opacity:0; }
+        }
+        @keyframes hsMenuLaunchVehicle {
+          0% { transform:translate3d(0,0,0) scale(1) rotate(0deg); filter:brightness(1); }
+          12% { transform:translate3d(12px,1px,0) scale(1.015) rotate(0deg); filter:brightness(1.16); }
+          28% { transform:translate3d(58px,-3px,0) scale(1.04) rotate(-5deg); filter:brightness(1.24); }
+          45% { transform:translate3d(150px,-22px,0) scale(1.08) rotate(-11deg); filter:brightness(1.28); }
+          66% { transform:translate3d(34vw,-44px,0) scale(1.12) rotate(-12deg); filter:brightness(1.32); }
+          84% { transform:translate3d(66vw,-30px,0) scale(1.08) rotate(-9deg); filter:brightness(1.16); }
+          100% { transform:translate3d(112vw,-8px,0) scale(1.02) rotate(-6deg); filter:brightness(1); }
+        }
+        @keyframes hsMenuLaunchCamera {
+          0%, 25% { transform:translate3d(0,0,0) scale(1); }
+          45% { transform:translate3d(-3vw,-1vh,0) scale(1.025); }
+          66% { transform:translate3d(-9vw,-2vh,0) scale(1.055); }
+          84% { transform:translate3d(-17vw,-1vh,0) scale(1.09); }
+          100% { transform:translate3d(-23vw,0,0) scale(1.12); }
+        }
+        @keyframes hsMenuGlassCrack {
+          0%, 24% { opacity:0; transform:scale(.98); }
+          31% { opacity:1; transform:scale(1); }
+          43% { opacity:.95; transform:scale(1.012); }
+          60%, 100% { opacity:0; transform:scale(1.045); }
+        }
+        @keyframes hsMenuGlassShard {
+          0% { opacity:.9; transform:translate3d(0,0,0) rotate(0deg) scale(1); }
+          20% { opacity:.95; }
+          100% { opacity:0; transform:translate3d(54px,-34px,0) rotate(78deg) scale(.48); }
+        }
+        @keyframes hsMenuGlassShardAlt {
+          0% { opacity:.84; transform:translate3d(0,0,0) rotate(0deg) scale(1); }
+          100% { opacity:0; transform:translate3d(-34px,42px,0) rotate(-68deg) scale(.38); }
+        }
+        @keyframes hsMenuGlassShardUp {
+          0% { opacity:.84; transform:translate3d(0,0,0) rotate(0deg) scale(1); }
+          100% { opacity:0; transform:translate3d(10px,-58px,0) rotate(62deg) scale(.42); }
+        }
+        @keyframes hsMenuLaunchFlash {
+          0%, 25% { opacity:0; transform:scale(.72); }
+          33% { opacity:.85; transform:scale(1); }
+          50% { opacity:.16; transform:scale(1.5); }
+          100% { opacity:0; transform:scale(2.1); }
+        }
+        .hs-menu-launch-vehicle {
+          animation:hsMenuLaunchVehicle 1750ms cubic-bezier(.17,.76,.17,1) both;
+          transform-origin:50% 65%;
+          will-change:transform,filter;
+        }
+        .hs-menu-launch-camera {
+          animation:hsMenuLaunchCamera 1750ms cubic-bezier(.16,.76,.14,1) both;
+          transform-origin:50% 55%;
+          will-change:transform;
+        }
+        .hs-menu-glass-crack {
+          animation:hsMenuGlassCrack 1750ms ease-out both;
+          transform-origin:50% 50%;
+        }
+        .hs-menu-glass-shard {
+          animation:hsMenuGlassShard 720ms cubic-bezier(.16,.72,.16,1) 500ms both;
+          transform-origin:center;
+        }
+        .hs-menu-glass-shard:nth-child(3n) {
+          animation-name:hsMenuGlassShardAlt;
+          animation-delay:540ms;
+        }
+        .hs-menu-glass-shard:nth-child(4n) {
+          animation-name:hsMenuGlassShardUp;
+          animation-delay:520ms;
+        }
+        .hs-menu-launch-flash {
+          animation:hsMenuLaunchFlash 1750ms ease-out both;
+        }
+        .hs-menu-launch-hide {
+          animation:hsMenuLaunchHide 1750ms ease-out both;
+          pointer-events:none !important;
+        }
+        @keyframes hsMenuLaunchHide {
+          0%, 42% { opacity:1; transform:translateY(0) scale(1); }
+          70%, 100% { opacity:0; transform:translateY(10px) scale(.985); }
         }
         .hs-menu-nav-launch { animation:hsMenuNavButtonLaunch 420ms cubic-bezier(.16,.8,.18,1) both; }
         .hs-menu-nav-wipe { animation:hsMenuNavWipe 420ms cubic-bezier(.2,.75,.16,1) both; }
@@ -1205,7 +1300,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           </div>
 
           {/* Hero vehicle stage — clear 3D glass display box. */}
-          <div className="hs-menu-enter hs-menu-enter-delay relative mx-auto mb-5 h-[170px] w-full max-w-xl [perspective:1200px] sm:mb-6 sm:h-[215px]">
+          <div className={`hs-menu-enter hs-menu-enter-delay relative mx-auto mb-5 h-[170px] w-full max-w-xl [perspective:1200px] sm:mb-6 sm:h-[215px] ${rideLaunch ? 'hs-menu-launch-camera' : ''}`}>
             <div
               className="pointer-events-none absolute left-3 right-3 top-2 bottom-3 [transform-style:preserve-3d]"
               style={{
@@ -1227,7 +1322,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
 
               {/* Main front glass pane — almost transparent, with a real glass edge. */}
               <div
-                className="absolute inset-0 rounded-[26px]"
+                className={`absolute inset-0 rounded-[26px] ${rideLaunch ? 'hs-menu-glass-crack' : ''}`}
                 style={{
                   background: 'linear-gradient(145deg, rgba(235,249,255,.055), rgba(180,225,240,.012) 42%, rgba(255,255,255,.035) 72%, rgba(145,200,220,.045))',
                   border: '1.5px solid rgba(226,248,255,.43)',
@@ -1346,6 +1441,42 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
             </div>
 
             <div className="absolute inset-0 overflow-hidden rounded-[28px]">
+            {rideLaunch && (
+              <>
+                <div className="absolute inset-0 z-[20] pointer-events-none overflow-visible">
+                  <div className="hs-menu-launch-flash absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/30 blur-2xl" />
+                  <div className="hs-menu-glass-crack absolute inset-[5%] rounded-[22px] border border-white/55">
+                    <span className="absolute left-[50%] top-[22%] h-[34%] w-px origin-bottom rotate-[23deg] bg-gradient-to-b from-white/90 via-sky-100/75 to-transparent" />
+                    <span className="absolute left-[50%] top-[44%] h-[25%] w-px origin-top -rotate-[31deg] bg-gradient-to-b from-white/85 via-sky-100/65 to-transparent" />
+                    <span className="absolute left-[50%] top-[44%] h-[28%] w-px origin-top rotate-[72deg] bg-gradient-to-b from-white/80 via-white/45 to-transparent" />
+                    <span className="absolute left-[36%] top-[46%] h-px w-[28%] origin-left rotate-[18deg] bg-gradient-to-r from-white/80 via-sky-100/55 to-transparent" />
+                    <span className="absolute left-[33%] top-[54%] h-px w-[22%] origin-left -rotate-[23deg] bg-gradient-to-r from-white/70 via-white/40 to-transparent" />
+                    <span className="absolute left-[50%] top-[44%] h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/80 blur-[1px]" />
+                  </div>
+                  <div className="hs-menu-glass-shards absolute inset-[3%]">
+                    {[
+                      ['left-[48%] top-[42%] h-4 w-7 rotate-[18deg]', 'from-white/70 to-sky-100/10'],
+                      ['left-[39%] top-[50%] h-5 w-8 -rotate-[28deg]', 'from-sky-100/65 to-white/5'],
+                      ['left-[58%] top-[49%] h-4 w-6 rotate-[48deg]', 'from-white/72 to-transparent'],
+                      ['left-[31%] top-[37%] h-6 w-5 -rotate-[16deg]', 'from-white/58 to-sky-100/5'],
+                      ['left-[64%] top-[36%] h-5 w-7 rotate-[28deg]', 'from-sky-100/60 to-transparent'],
+                      ['left-[52%] top-[57%] h-5 w-6 -rotate-[42deg]', 'from-white/58 to-transparent'],
+                      ['left-[43%] top-[61%] h-4 w-7 rotate-[16deg]', 'from-white/52 to-transparent'],
+                      ['left-[67%] top-[55%] h-4 w-5 -rotate-[22deg]', 'from-sky-100/58 to-transparent'],
+                      ['left-[35%] top-[60%] h-3.5 w-5 rotate-[31deg]', 'from-white/48 to-transparent'],
+                      ['left-[57%] top-[31%] h-3 w-6 -rotate-[11deg]', 'from-white/52 to-transparent'],
+                    ].map(([position, gradient], index) => (
+                      <span
+                        key={index}
+                        className={`hs-menu-glass-shard absolute rounded-[2px] bg-gradient-to-br ${position} ${gradient}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+
 
             <div className="absolute inset-0 hs-menu-hero-glow" />
             <div className="absolute inset-x-0 top-[20%] h-[52%] hs-menu-hero-surface pointer-events-none" />
@@ -1373,8 +1504,8 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
             </div>
             <div
               key={heroVehicle.id}
-              className="absolute inset-0 z-[8] flex items-center justify-center"
-              style={{ animation: 'hsMenuVehicleIn 240ms ease-out' }}
+              className={`absolute inset-0 z-[8] flex items-center justify-center ${rideLaunch ? 'hs-menu-launch-vehicle' : ''}`}
+              style={rideLaunch ? undefined : { animation: 'hsMenuVehicleIn 240ms ease-out' }}
             >
               <div
                 className="relative h-[125px] w-[225px] sm:h-[155px] sm:w-[285px]"
@@ -1413,21 +1544,23 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           )}
 
           {/* One obvious primary action; existing handler is unchanged. */}
-          <div className="hs-menu-enter hs-menu-enter-delay-3 relative z-20 mx-auto flex w-full max-w-md flex-col items-center gap-3.5 sm:gap-4">
+          <div className={`hs-menu-enter hs-menu-enter-delay-3 relative z-20 mx-auto flex w-full max-w-md flex-col items-center gap-3.5 sm:gap-4 ${rideLaunch ? 'hs-menu-launch-hide' : ''}`}>
             <button
               onClick={() => {
+                if (rideLaunch) return
                 actions.resetGame()
                 const hasPowerUps =
                   state.inventory.magnet > 0 ||
                   state.inventory.magnet2x > 0 ||
                   state.inventory.multiplier2x > 0 ||
                   state.inventory.multiplier4x > 0 ||
+                  state.inventory.multiplier4x > 0 ||
                   state.inventory.shield > 0
 
                 if (hasPowerUps) {
                   setShowPowerUpSelection(true)
                 } else {
-                  actions.setGameState('playing')
+                  beginRideLaunch(false)
                 }
               }}
               className="hs-btn hs-btn-primary group relative w-full overflow-hidden rounded-2xl py-4 sm:py-5 text-base sm:text-lg font-black tracking-wide shadow-xl shadow-orange-500/20 transition-all hover:scale-[1.015] hover:shadow-orange-500/30"
