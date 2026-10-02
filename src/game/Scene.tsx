@@ -1446,12 +1446,7 @@ function StratosBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color={bike.color} metalness={0.8} roughness={0.18} />
       </mesh>
       
-      {/* Front fairing - very aggressive angle */}
-      <mesh position={[0, 0.62, -0.88]} rotation={[0.35, 0, 0]}>
-        <boxGeometry args={[0.46, 0.42, 0.52]} />
-        <meshStandardMaterial color={bike.accentColor} metalness={0.85} roughness={0.12} />
-      </mesh>
-      
+      {/* Front cockpit panel removed: hands remain unobstructed. */
       {/* No cockpit bar/windscreen hardware: rider hands remain unobstructed. */}
       
       {/* Engine block */}
@@ -1536,12 +1531,7 @@ function StratosBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color={bike.color} metalness={0.85} roughness={0.15} />
       </mesh>
       
-      {/* Front fairing - extreme angle */}
-      <mesh position={[0, 0.6, -0.92]} rotation={[0.4, 0, 0]}>
-        <boxGeometry args={[0.48, 0.45, 0.55]} />
-        <meshStandardMaterial color={bike.accentColor} metalness={0.9} roughness={0.1} />
-      </mesh>
-      
+      {/* Front cockpit panel removed: hands remain unobstructed. */
       {/* No cockpit bar/windscreen hardware: rider hands remain unobstructed. */}
       
       {/* Engine block - larger */}
