@@ -1641,7 +1641,7 @@ function CarBase({ car, shape = 'sedan' }: { car: Car; shape?: 'hatch' | 'sedan'
       {[-1, 1].map((side) => (
         <group key={side}>
           {[-wheelZ, wheelZ].map((z) => (
-            <group key={z} position={[side * w * 0.52, h * 0.24, z]}>
+            <group key={z} position={[side * (w * 0.56 + 0.04), h * 0.34, z]}>
               <mesh rotation={[0, Math.PI / 2, 0]}>
                 <torusGeometry args={[0.27, 0.07, 10, 20]} />
                 <meshStandardMaterial color="#111111" roughness={0.9} metalness={0.02} />
@@ -1849,10 +1849,9 @@ function TrafficSystem() {
       )
       
       if (!tooClose) {
-        // Cars never face another car as traffic. Cars get two-wheeled traffic plus public/commercial vehicles.
-        const types: TrafficVehicle['type'][] = state.vehicleMode === 'car'
-          ? ['bike', 'bike', 'bike', 'scooter', 'scooter', 'auto', 'bus', 'truck']
-          : ['car', 'car', 'car', 'car', 'truck', 'auto', 'bus']
+        // Keep the traffic pool identical regardless of the player's vehicle.
+        // The same car/truck/auto/bus mix is used in bike and car runs.
+        const types: TrafficVehicle['type'][] = ['car', 'car', 'car', 'car', 'truck', 'auto', 'bus']
         const type = types[Math.floor(Math.random() * types.length)]
         const color = vehicleColors[Math.floor(Math.random() * vehicleColors.length)]
         const vehicleSpeed = 25 + Math.random() * 35
@@ -2017,7 +2016,10 @@ function TrafficRenderer({ vehiclesRef, getDimensions }: {
       if (Math.abs(mesh.scale.x - normalizedScale) > 0.001) {
         mesh.scale.setScalar(normalizedScale)
       }
-      const trafficVisualLift = (v.type === 'car' || v.type === 'truck' || v.type === 'bus') ? 0.12 : 0
+      // Small visual lift keeps four-wheel traffic visibly planted on its wheels.
+      const trafficVisualLift = v.type === 'car'
+        ? 0.18
+        : (v.type === 'truck' || v.type === 'bus') ? 0.12 : 0
       mesh.position.set(v.lane * LANE_WIDTH, trafficVisualLift, v.z)
     })
 
@@ -2123,13 +2125,15 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
   const wheelRingMat = new THREE.MeshStandardMaterial({ color: '#111111', roughness: 0.9, metalness: 0.02 })
   
   const wheelZ = type === 'bus' || type === 'truck' ? l * 0.35 : type === 'bike' || type === 'scooter' ? l * 0.38 : l * 0.3
+  const wheelY = type === 'car' ? 0.30 : 0.22
+  const wheelSideOffset = type === 'car' ? 0.09 : 0.04
   const wheelPositions = (type === 'bike' || type === 'scooter')
-    ? [[0, 0.22, -wheelZ], [0, 0.22, wheelZ]]
+    ? [[0, wheelY, -wheelZ], [0, wheelY, wheelZ]]
     : [
-        [-w / 2 - 0.04, 0.22, -wheelZ],
-        [w / 2 + 0.04, 0.22, -wheelZ],
-        [-w / 2 - 0.04, 0.22, wheelZ],
-        [w / 2 + 0.04, 0.22, wheelZ],
+        [-w / 2 - wheelSideOffset, wheelY, -wheelZ],
+        [w / 2 + wheelSideOffset, wheelY, -wheelZ],
+        [-w / 2 - wheelSideOffset, wheelY, wheelZ],
+        [w / 2 + wheelSideOffset, wheelY, wheelZ],
       ]
 
   if (type === 'truck' || type === 'bus') {
