@@ -1896,7 +1896,12 @@ function TrafficSystem() {
 
       // Collision detection
       const [vw] = getVehicleDimensions(v.type)
-      const collisionHalfWidth = vw / 2 + 0.35
+
+      // Include the player's actual visual width plus a small contact buffer.
+      // This makes a light side-to-side touch register as a crash instead of
+      // allowing the player to visually clip through traffic.
+      const playerHalfWidth = state.vehicleMode === 'car' ? 0.95 : 0.30
+      const collisionHalfWidth = vw / 2 + playerHalfWidth + 0.08
       const collisionX = sweptSegmentOverlapsRange(
         previousPlayerXRef.current,
         playerX,
