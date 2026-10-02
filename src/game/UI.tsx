@@ -1065,12 +1065,14 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
         }
         @keyframes hsMenuLaunchWheelie {
           0% { transform:translate3d(0,0,0) rotate(0deg); }
-          12% { transform:translate3d(0,-6px,0) rotate(-6deg); }
-          26% { transform:translate3d(0,-17px,0) rotate(-16deg); }
-          42% { transform:translate3d(0,-27px,0) rotate(-26deg); }
-          56% { transform:translate3d(0,-30px,0) rotate(-29deg); }
-          70% { transform:translate3d(0,-24px,0) rotate(-23deg); }
-          84% { transform:translate3d(0,-15px,0) rotate(-15deg); }
+          10% { transform:translate3d(0,-5px,0) rotate(-5deg); }
+          22% { transform:translate3d(0,-10px,0) rotate(-11deg); }
+          34% { transform:translate3d(0,-15px,0) rotate(-17deg); }
+          46% { transform:translate3d(0,-20px,0) rotate(-23deg); }
+          58% { transform:translate3d(0,-22px,0) rotate(-26deg); }
+          70% { transform:translate3d(0,-20px,0) rotate(-23deg); }
+          82% { transform:translate3d(0,-16px,0) rotate(-17deg); }
+          92% { transform:translate3d(0,-12px,0) rotate(-12deg); }
           100% { transform:translate3d(0,-8px,0) rotate(-8deg); }
         }
         @keyframes hsMenuLaunchCamera {
@@ -1111,7 +1113,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           will-change:transform;
         }
         .hs-menu-launch-wheelie {
-          animation:hsMenuLaunchWheelie 900ms cubic-bezier(.18,.82,.20,1) both;
+          animation:hsMenuLaunchWheelie 900ms cubic-bezier(.22,.72,.28,1) both;
           transform-origin:46% 72%;
           backface-visibility:hidden;
           -webkit-backface-visibility:hidden;
