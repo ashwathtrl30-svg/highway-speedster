@@ -665,14 +665,14 @@ function saveCloudProgressNow() {
   void saveUserGameProgress(playerId, current.username, progress, getOrCreateDeviceId())
 }
 
-const CLOUD_ANALYTICS_SYNC_MS = 10_000
+const CLOUD_ANALYTICS_SYNC_MS = 30_000
 
 function queueCloudSave() {
   if (cloudHydratingUser || cloudSaveTimer) return
 
-  // Throttle cloud persistence to one write per 10 seconds while still
-  // persisting the latest in-memory state. This keeps Supabase analytics
-  // continuously current without creating a write on every game frame.
+  // Throttle cloud persistence to one write per 30 seconds while still
+  // persisting the latest in-memory state. This keeps cloud progress current
+  // while substantially reducing database write pressure during traffic spikes.
   cloudSaveTimer = setTimeout(() => {
     cloudSaveTimer = null
     if (!cloudHydratingUser) saveCloudProgressNow()
@@ -1422,8 +1422,31 @@ export const actions = {
   setUsername(username: string) {
     const trimmed = username.trim()
     if (!trimmed || !playerId) return
+
+    const isFirstUsername = !state.username.trim()
     setState({ username: trimmed })
-    saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory, trimmed, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
+    saveProgress(
+      state.highScore,
+      state.unlockedBikes,
+      state.bikeSkins,
+      state.totalCoins,
+      state.inventory,
+      trimmed,
+      state.totalPlaytime,
+      state.userPlaytime,
+      state.playtimeHistory
+    )
+
+    // A brand-new account must exist in the cloud immediately so its account ID
+    // can be used on another device without waiting for the first 30-second sync.
+    if (isFirstUsername) {
+      if (cloudSaveTimer) {
+        clearTimeout(cloudSaveTimer)
+        cloudSaveTimer = null
+      }
+      saveCloudProgressNow()
+    }
+
     void loadCloudProgress(trimmed).then(() => actions.syncSharedHighScore())
   },
 
@@ -1473,11 +1496,11 @@ export const actions = {
     })
     saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory, state.username, newTotalPlaytime, newUserPlaytime, newPlaytimeHistory)
     
-    // Record real historical playtime in 10-second batches so the
-    // rolling analytics windows update at the same cadence as the profile.
+    // Record real historical playtime in 30-second batches so the
+    // rolling analytics windows stay accurate while reducing event-write load.
     if (state.username) {
       pendingAnalyticsSeconds += seconds
-      if (pendingAnalyticsSeconds >= 10) {
+      if (pendingAnalyticsSeconds >= 30) {
         const eventSeconds = pendingAnalyticsSeconds
         pendingAnalyticsSeconds = 0
         recordPlaytimeEvent(playerId, state.username, eventSeconds)
