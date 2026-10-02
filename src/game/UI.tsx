@@ -845,7 +845,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
       rideLaunchTimerRef.current = null
       setRideLaunch(false)
       actions.setGameState('playing')
-    }, 900)
+    }, 700)
   }
 
   useEffect(() => {
@@ -1097,7 +1097,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           100% { opacity:0; transform:scale(2.1); }
         }
         .hs-menu-launch-vehicle {
-          animation:hsMenuLaunchVehicle 900ms linear both;
+          animation:hsMenuLaunchVehicle 700ms linear both;
           transform-origin:50% 65%;
           transform:translate3d(0,0,0);
           backface-visibility:hidden;
@@ -1105,14 +1105,14 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           will-change:transform;
         }
         .hs-menu-launch-wheelie {
-          animation:hsMenuLaunchWheelie 900ms linear both;
+          animation:hsMenuLaunchWheelie 700ms linear both;
           transform-origin:46% 72%;
           backface-visibility:hidden;
           -webkit-backface-visibility:hidden;
           will-change:transform;
         }
         .hs-menu-launch-camera {
-          animation:hsMenuLaunchCamera 900ms linear both;
+          animation:hsMenuLaunchCamera 700ms linear both;
           transform-origin:50% 55%;
           transform:translate3d(0,0,0);
           backface-visibility:hidden;
@@ -1120,14 +1120,14 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           will-change:transform;
         }
         .hs-menu-glass-crack {
-          animation:hsMenuGlassCrack 900ms cubic-bezier(.18,.82,.20,1) both;
+          animation:hsMenuGlassCrack 700ms cubic-bezier(.18,.82,.20,1) both;
           transform-origin:50% 50%;
           backface-visibility:hidden;
           -webkit-backface-visibility:hidden;
           will-change:transform,opacity;
         }
         .hs-menu-glass-shard {
-          animation:hsMenuGlassShard 520ms cubic-bezier(.18,.82,.20,1) 170ms both;
+          animation:hsMenuGlassShard 340ms cubic-bezier(.18,.82,.20,1) 120ms both;
           transform-origin:center;
           backface-visibility:hidden;
           -webkit-backface-visibility:hidden;
@@ -1135,21 +1135,21 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
         }
         .hs-menu-glass-shard:nth-child(3n) {
           animation-name:hsMenuGlassShardAlt;
-          animation-delay:190ms;
+          animation-delay:130ms;
         }
         .hs-menu-glass-shard:nth-child(4n) {
           animation-name:hsMenuGlassShardUp;
-          animation-delay:180ms;
+          animation-delay:125ms;
         }
         .hs-menu-launch-flash {
-          animation:hsMenuLaunchFlash 520ms ease-out both;
+          animation:hsMenuLaunchFlash 420ms ease-out both;
         }
         .hs-menu-launch-hide {
-          animation:hsMenuLaunchHide 900ms linear both;
+          animation:hsMenuLaunchHide 700ms linear both;
           pointer-events:none !important;
         }
         @keyframes hsMenuLaunchHide {
-          0%, 60% { opacity:1; transform:translateY(0) scale(1); }
+          0%, 58% { opacity:1; transform:translateY(0) scale(1); }
           82%, 100% { opacity:0; transform:translateY(6px) scale(.99); }
         }
         .hs-menu-nav-launch { animation:hsMenuNavButtonLaunch 420ms cubic-bezier(.16,.8,.18,1) both; }
