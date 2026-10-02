@@ -870,14 +870,13 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
       meshRef.current.position.x = currentXRef.current
       meshRef.current.rotation.z = tiltRef.current
       meshRef.current.rotation.y = -tiltRef.current * 0.3
-      meshRef.current.position.y = Math.sin(wheelSpinRef.current * 2) * 0.02 * (state.speed / 100)
+      meshRef.current.position.y = 0
 
       if (visualRef.current) {
         const speedNorm = THREE.MathUtils.clamp(state.speed / 100, 0, 1)
         visualRef.current.rotation.z = tiltRef.current * 0.14
         visualRef.current.rotation.y = -tiltRef.current * 0.05
-        visualRef.current.position.y =
-          Math.sin(wheelSpinRef.current * 1.4) * 0.008 * speedNorm
+        visualRef.current.position.y = 0
         visualRef.current.scale.y = 1 - speedNorm * 0.018
 
         visualRef.current.traverse((object) => {
@@ -1643,13 +1642,13 @@ function CarBase({ car, shape = 'sedan' }: { car: Car; shape?: 'hatch' | 'sedan'
         <group key={side}>
           {[-wheelZ, wheelZ].map((z) => (
             <group key={z} position={[side * w * 0.52, h * 0.24, z]}>
-              <mesh rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[0.27, 0.27, 0.22, 16]} />
-                <meshStandardMaterial color="#101010" roughness={0.82} metalness={0.05} />
+              <mesh rotation={[0, Math.PI / 2, 0]}>
+                <torusGeometry args={[0.27, 0.07, 10, 20]} />
+                <meshStandardMaterial color="#111111" roughness={0.9} metalness={0.02} />
               </mesh>
-              <mesh position={[side > 0 ? 0.115 : -0.115, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[0.13, 0.13, 0.025, 16]} />
-                <meshStandardMaterial color="#9ca3af" metalness={0.75} roughness={0.2} />
+              <mesh rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[0.18, 0.18, 0.07, 12]} />
+                <meshStandardMaterial color="#555555" metalness={0.8} roughness={0.2} />
               </mesh>
             </group>
           ))}
@@ -2115,8 +2114,12 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
   }
 
   // Wheels
-  const wheelGeo = new THREE.CylinderGeometry(0.22, 0.22, 0.12, 8)
-  const wheelMat = new THREE.MeshStandardMaterial({ color: '#111111', roughness: 0.9 })
+  const wheelGeo = new THREE.CylinderGeometry(0.22, 0.22, 0.12, 12)
+  const wheelMat = new THREE.MeshStandardMaterial({ color: '#111111', roughness: 0.9, metalness: 0.02 })
+  const wheelRimGeo = new THREE.CylinderGeometry(0.14, 0.14, 0.07, 12)
+  const wheelRimMat = new THREE.MeshStandardMaterial({ color: '#555555', roughness: 0.2, metalness: 0.8 })
+  const wheelRingGeo = new THREE.TorusGeometry(0.25, 0.065, 8, 16)
+  const wheelRingMat = new THREE.MeshStandardMaterial({ color: '#111111', roughness: 0.9, metalness: 0.02 })
   
   const wheelZ = type === 'bus' || type === 'truck' ? l * 0.35 : type === 'bike' || type === 'scooter' ? l * 0.38 : l * 0.3
   const wheelPositions = (type === 'bike' || type === 'scooter')
@@ -2139,6 +2142,16 @@ function createVehicleMesh(type: string, color: string, getDimensions: (type: st
     wheel.position.set(x, y, z)
     wheel.rotation.z = Math.PI / 2
     group.add(wheel)
+
+    const rim = new THREE.Mesh(wheelRimGeo, wheelRimMat)
+    rim.position.set(x + (x >= 0 ? -0.002 : 0.002), y, z)
+    rim.rotation.z = Math.PI / 2
+    group.add(rim)
+
+    const ring = new THREE.Mesh(wheelRingGeo, wheelRingMat)
+    ring.position.set(x, y, z)
+    ring.rotation.y = Math.PI / 2
+    group.add(ring)
   })
 
   // Tail lights
