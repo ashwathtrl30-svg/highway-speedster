@@ -1298,7 +1298,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           )}
 
           {/* One obvious primary action; existing handler is unchanged. */}
-          <div className="hs-menu-enter hs-menu-enter-delay-3 relative z-20 mx-auto flex w-full max-w-sm flex-col items-center gap-2.5 sm:gap-3">
+          <div className="hs-menu-enter hs-menu-enter-delay-3 relative z-20 mx-auto flex w-full max-w-md flex-col items-center gap-3.5 sm:gap-4">
             <button
               onClick={() => {
                 actions.resetGame()
@@ -1315,7 +1315,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
                   actions.setGameState('playing')
                 }
               }}
-              className="hs-btn hs-btn-primary group relative overflow-hidden rounded-2xl py-3.5 sm:py-4 text-base sm:text-lg font-black tracking-wide shadow-xl shadow-orange-500/20 transition-all hover:scale-[1.015] hover:shadow-orange-500/30"
+              className="hs-btn hs-btn-primary group relative w-full overflow-hidden rounded-2xl py-4 sm:py-5 text-base sm:text-lg font-black tracking-wide shadow-xl shadow-orange-500/20 transition-all hover:scale-[1.015] hover:shadow-orange-500/30"
             >
               <span className="absolute inset-0 bg-white/20 opacity-0 transition-opacity group-hover:opacity-100" />
               <span className="relative flex items-center justify-center gap-2">
@@ -1327,11 +1327,11 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
               </span>
             </button>
 
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+            <div className="grid w-full grid-cols-2 gap-3.5 sm:gap-4">
               <button
                 onClick={() => startMenuNavigation('garage')}
                 className={[
-                  'hs-btn hs-btn-secondary rounded-2xl py-3 sm:py-3.5 text-sm sm:text-base font-black text-white shadow-lg transition-all',
+                  'hs-btn hs-btn-secondary w-full rounded-2xl py-3.5 sm:py-4 text-sm sm:text-base font-black text-white shadow-lg transition-all',
                   navTransition === 'garage' ? 'hs-menu-nav-launch' : '',
                   navTransition ? 'pointer-events-none' : '',
                 ].join(' ')}
@@ -1347,7 +1347,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
               <button
                 onClick={() => startMenuNavigation('store')}
                 className={[
-                  'rounded-2xl border border-white/12 bg-white/[0.055] py-3 sm:py-3.5 text-sm sm:text-base font-black text-white shadow-lg transition-all hover:bg-white/[0.09] hover:border-white/20 active:scale-[0.98]',
+                  'w-full rounded-2xl border border-white/12 bg-white/[0.055] py-3.5 sm:py-4 text-sm sm:text-base font-black text-white shadow-lg transition-all hover:bg-white/[0.09] hover:border-white/20 active:scale-[0.98]',
                   navTransition === 'store' ? 'hs-menu-nav-launch' : '',
                   navTransition ? 'pointer-events-none' : '',
                 ].join(' ')}
