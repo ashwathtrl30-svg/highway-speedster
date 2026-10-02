@@ -6,9 +6,16 @@ import { GameScene } from './game/Scene'
 import { HUD, MainMenu, PauseMenu, GameOverScreen, TouchControls, UnlockNotification, LoadingScreen, AccountSetup } from './game/UI'
 import { actions, getState, getPlayerId } from './game/store'
 import { ensureSupabaseAuth } from './supabase'
+import { trackEvent } from './game/analytics'
 
 function App() {
   const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    const path = window.location.pathname
+    if (path === '/leaderboard') trackEvent('leaderboard_opened')
+    if (path === '/highscores') trackEvent('highscores_opened')
+  }, [])
   const [accountReady, setAccountReady] = useState(false)
   const [accountBooting, setAccountBooting] = useState(true)
   const [accountBootError, setAccountBootError] = useState('')

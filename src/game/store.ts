@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { syncAnalyticsToSupabase, recordPlaytimeEvent, fetchUserHighScore, fetchUserGameProgress, saveUserGameProgress, registerGameDevice, logoutGameAccount, changeGameUsername, type CloudGameProgress } from '../supabase'
+import { trackEvent, setAnalyticsUserProperty } from './analytics'
 
 // Bike definitions - 3 iconic Indian bikes
 export interface Bike {
@@ -789,6 +790,15 @@ export function subscribe(listener: Listener): () => void {
 
 // Analytics batches playtime into 30-second events so weekly/monthly history is accurate.
 let pendingAnalyticsSeconds = 0
+let currentRunSeconds = 0
+let currentRunStartingHighScore = 0
+let currentRunPowerUps: Record<PowerUpType, number> = {
+  magnet: 0,
+  magnet2x: 0,
+  multiplier2x: 0,
+  multiplier4x: 0,
+  shield: 0,
+}
 
 // Actions
 export function setPlayerId(id: string) {
@@ -891,9 +901,62 @@ export const actions = {
     return { ok: true as const, deviceCount: result.deviceCount }
   },
   setGameState(gameState: GameState) {
+    const previousGameState = state.gameState
+
+    if (gameState === 'playing') {
+      if (previousGameState === 'paused') {
+        trackEvent('game_resume', {
+          vehicle_mode: state.vehicleMode,
+          vehicle_id: state.vehicleMode === 'car' ? state.selectedCar.id : state.selectedBike.id,
+          run_seconds: currentRunSeconds,
+        })
+      } else {
+        currentRunSeconds = 0
+        currentRunStartingHighScore = state.highScore
+        trackEvent('game_start', {
+          start_reason: previousGameState === 'gameover'
+            ? 'restart_after_crash'
+            : previousGameState === 'menu'
+            ? 'new_ride'
+            : 'other',
+          vehicle_mode: state.vehicleMode,
+          vehicle_id: state.vehicleMode === 'car' ? state.selectedCar.id : state.selectedBike.id,
+          magnet_units: currentRunPowerUps.magnet,
+          magnet_2x_units: currentRunPowerUps.magnet2x,
+          multiplier_2x_units: currentRunPowerUps.multiplier2x,
+          multiplier_4x_units: currentRunPowerUps.multiplier4x,
+          shield_units: currentRunPowerUps.shield,
+          powerup_units_total: Object.values(currentRunPowerUps).reduce((sum, value) => sum + value, 0),
+        })
+      }
+    } else if (gameState === 'paused' && previousGameState === 'playing') {
+      trackEvent('game_pause', {
+        vehicle_mode: state.vehicleMode,
+        vehicle_id: state.vehicleMode === 'car' ? state.selectedCar.id : state.selectedBike.id,
+        run_seconds: currentRunSeconds,
+      })
+    } else if (gameState === 'menu' && previousGameState !== 'menu') {
+      trackEvent('game_menu_return', {
+        from_state: previousGameState,
+        run_seconds: currentRunSeconds,
+      })
+    }
+
     setState({ gameState })
     // Save progress when game ends
     if (gameState === 'gameover') {
+      trackEvent('game_over', {
+        vehicle_mode: state.vehicleMode,
+        vehicle_id: state.vehicleMode === 'car' ? state.selectedCar.id : state.selectedBike.id,
+        run_seconds: currentRunSeconds,
+        score: state.score,
+        distance_km: Number(state.distance.toFixed(2)),
+        run_coins: state.runCoins,
+        near_misses: state.nearMisses,
+        best_combo: state.combo,
+        new_high_score: state.score > currentRunStartingHighScore,
+        end_reason: 'traffic_collision',
+      })
       // Add run coins to total coins but keep runCoins visible
       const newTotalCoins = state.totalCoins + state.runCoins
       setState({ totalCoins: newTotalCoins })
@@ -961,6 +1024,21 @@ export const actions = {
         : state.newUnlockUntil,
     })
 
+    newlyUnlockedBikes.forEach((bike) => {
+      trackEvent('vehicle_unlocked', {
+        vehicle_mode: 'bike',
+        vehicle_id: bike.id,
+        unlock_score: bike.unlockScore,
+      })
+    })
+    newlyUnlockedCars.forEach((car) => {
+      trackEvent('vehicle_unlocked', {
+        vehicle_mode: 'car',
+        vehicle_id: car.id,
+        unlock_score: car.unlockScore,
+      })
+    })
+
     if (
       newHighScore !== state.highScore ||
       bikeHighScore !== state.bikeHighScore ||
@@ -1006,6 +1084,12 @@ export const actions = {
 
   selectBike(bike: Bike) {
     const skin = getBikeSkinOption(bike.id, state.bikeSkins[bike.id])
+    trackEvent('vehicle_selected', {
+      vehicle_mode: 'bike',
+      vehicle_id: bike.id,
+      source: 'garage',
+    })
+    setAnalyticsUserProperty('preferred_vehicle_mode', 'bike')
     const colors = SKIN_COLORS[skin]
     setState({ 
       selectedBike: { ...bike, color: colors.color, accentColor: colors.accentColor },
@@ -1033,6 +1117,12 @@ export const actions = {
       vehicleMode: 'car',
       unlockedCars,
     })
+    trackEvent('vehicle_selected', {
+      vehicle_mode: 'car',
+      vehicle_id: car.id,
+      source: 'garage',
+    })
+    setAnalyticsUserProperty('preferred_vehicle_mode', 'car')
     saveVehicleSelection('car', car.id)
   },
 
@@ -1051,6 +1141,10 @@ export const actions = {
     }
 
     setState(updates)
+    trackEvent('car_color_selected', {
+      vehicle_id: carId,
+      color_id: color.id,
+    })
     saveProgress(
       state.highScore,
       state.unlockedBikes,
@@ -1077,6 +1171,11 @@ export const actions = {
     }
     
     setState(updates)
+    trackEvent('skin_selected', {
+      vehicle_mode: 'bike',
+      vehicle_id: bikeId,
+      skin_id: skin,
+    })
     saveProgress(state.highScore, state.unlockedBikes, newBikeSkins, state.totalCoins, state.inventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
   },
 
@@ -1089,6 +1188,7 @@ export const actions = {
     if (state.totalCoins >= 300) {
       const newTotalCoins = state.totalCoins - 300
       const newInventory = { ...state.inventory, magnet: state.inventory.magnet + 1 }
+      trackEvent('shop_purchase', { item_id: 'magnet', quantity: 1, price_coins: 300 })
       setState({ totalCoins: newTotalCoins, inventory: newInventory })
       saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
     }
@@ -1098,6 +1198,7 @@ export const actions = {
     if (state.totalCoins >= 300) {
       const newTotalCoins = state.totalCoins - 300
       const newInventory = { ...state.inventory, magnet2x: state.inventory.magnet2x + 1 }
+      trackEvent('shop_purchase', { item_id: 'magnet2x', quantity: 1, price_coins: 300 })
       setState({ totalCoins: newTotalCoins, inventory: newInventory })
       saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
     }
@@ -1107,6 +1208,7 @@ export const actions = {
     if (state.totalCoins >= 300) {
       const newTotalCoins = state.totalCoins - 300
       const newInventory = { ...state.inventory, multiplier2x: state.inventory.multiplier2x + 1 }
+      trackEvent('shop_purchase', { item_id: 'multiplier2x', quantity: 1, price_coins: 300 })
       setState({ totalCoins: newTotalCoins, inventory: newInventory })
       saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
     }
@@ -1116,6 +1218,7 @@ export const actions = {
     if (state.totalCoins >= 350) {
       const newTotalCoins = state.totalCoins - 350
       const newInventory = { ...state.inventory, multiplier4x: state.inventory.multiplier4x + 1 }
+      trackEvent('shop_purchase', { item_id: 'multiplier4x', quantity: 1, price_coins: 350 })
       setState({ totalCoins: newTotalCoins, inventory: newInventory })
       saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
     }
@@ -1125,6 +1228,7 @@ export const actions = {
     if (state.totalCoins >= 450) {
       const newTotalCoins = state.totalCoins - 450
       const newInventory = { ...state.inventory, shield: state.inventory.shield + 2 }
+      trackEvent('shop_purchase', { item_id: 'shield', quantity: 2, price_coins: 450 })
       setState({ totalCoins: newTotalCoins, inventory: newInventory })
       saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, newTotalCoins, newInventory, state.username, state.totalPlaytime, state.userPlaytime, state.playtimeHistory)
     }
@@ -1180,6 +1284,13 @@ export const actions = {
       if (quantity <= 0) return
 
       newInventory[powerUp] -= quantity
+      currentRunPowerUps[powerUp] = quantity
+      trackEvent('powerup_equipped', {
+        powerup_type: powerUp,
+        quantity,
+        vehicle_mode: state.vehicleMode,
+        vehicle_id: state.vehicleMode === 'car' ? state.selectedCar.id : state.selectedBike.id,
+      })
 
       if (powerUp === 'magnet') {
         updates.magnetActive = true
@@ -1221,6 +1332,10 @@ export const actions = {
   },
 
   resetGame() {
+    currentRunSeconds = 0
+    currentRunStartingHighScore = state.highScore
+    currentRunPowerUps = { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 }
+
     setState({
       score: 0,
       distance: 0,
@@ -1470,6 +1585,21 @@ export const actions = {
   },
   // Playtime tracking
   addPlaytime(seconds: number) {
+    const previousRunSeconds = currentRunSeconds
+    currentRunSeconds += Math.max(0, seconds)
+    const checkpoint = Math.floor(currentRunSeconds / 30)
+    const previousCheckpoint = Math.floor(previousRunSeconds / 30)
+    if (checkpoint > previousCheckpoint && currentRunSeconds > 0) {
+      trackEvent('gameplay_checkpoint', {
+        run_seconds: checkpoint * 30,
+        score: state.score,
+        distance_km: Number(state.distance.toFixed(2)),
+        near_misses: state.nearMisses,
+        vehicle_mode: state.vehicleMode,
+        vehicle_id: state.vehicleMode === 'car' ? state.selectedCar.id : state.selectedBike.id,
+      })
+    }
+
     const newTotalPlaytime = state.totalPlaytime + seconds
     const newUserPlaytime = { ...state.userPlaytime }
     const newPlaytimeHistory = [...state.playtimeHistory]
@@ -1509,23 +1639,48 @@ export const actions = {
   },
 
   activateMagnet() {
+    trackEvent('powerup_collected', {
+      powerup_type: 'magnet',
+      vehicle_mode: state.vehicleMode,
+      vehicle_id: state.vehicleMode === 'car' ? state.selectedCar.id : state.selectedBike.id,
+    })
     setState({ magnetActive: true, magnetTimer: 10 })
   },
 
   activateMagnet2x() {
+    trackEvent('powerup_collected', {
+      powerup_type: 'magnet2x',
+      vehicle_mode: state.vehicleMode,
+      vehicle_id: state.vehicleMode === 'car' ? state.selectedCar.id : state.selectedBike.id,
+    })
     setState({ magnet2xActive: true, magnet2xTimer: 10 })
   },
 
   activateMultiplier() {
+    trackEvent('powerup_collected', {
+      powerup_type: 'multiplier2x',
+      vehicle_mode: state.vehicleMode,
+      vehicle_id: state.vehicleMode === 'car' ? state.selectedCar.id : state.selectedBike.id,
+    })
     setState({ multiplierActive: true, multiplierTimer: 10 })
   },
 
   activateShield() {
+    trackEvent('powerup_collected', {
+      powerup_type: 'shield',
+      vehicle_mode: state.vehicleMode,
+      vehicle_id: state.vehicleMode === 'car' ? state.selectedCar.id : state.selectedBike.id,
+    })
     const newShieldCount = state.shieldCount + 1
     setState({ shieldActive: true, shieldCount: newShieldCount })
   },
 
   useShield() {
+    trackEvent('shield_blocked_crash', {
+      vehicle_mode: state.vehicleMode,
+      vehicle_id: state.vehicleMode === 'car' ? state.selectedCar.id : state.selectedBike.id,
+      shields_remaining_after_hit: Math.max(0, state.shieldCount - 1),
+    })
     const newShieldCount = Math.max(0, state.shieldCount - 1)
     if (newShieldCount === 0) {
       setState({ shieldActive: false, shieldCount: 0 })
