@@ -800,8 +800,10 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
   const [showAccount, setShowAccount] = useState(false)
   const [navTransition, setNavTransition] = useState<'garage' | 'store' | null>(null)
   const [rideLaunch, setRideLaunch] = useState(false)
+  const [rideLaunchWorldReveal, setRideLaunchWorldReveal] = useState(false)
   const navTransitionTimerRef = useRef<number | null>(null)
   const rideLaunchTimerRef = useRef<number | null>(null)
+  const rideLaunchWorldRevealTimerRef = useRef<number | null>(null)
   const tapCountRef = useRef(0)
   const lastTapTimeRef = useRef(0)
   const previousGameStateRef = useRef(state.gameState)
@@ -841,9 +843,15 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
     if (prepareRun) actions.resetGame()
 
     setRideLaunch(true)
+    setRideLaunchWorldReveal(false)
+    rideLaunchWorldRevealTimerRef.current = window.setTimeout(() => {
+      rideLaunchWorldRevealTimerRef.current = null
+      setRideLaunchWorldReveal(true)
+    }, 610)
     rideLaunchTimerRef.current = window.setTimeout(() => {
       rideLaunchTimerRef.current = null
       setRideLaunch(false)
+      setRideLaunchWorldReveal(false)
       actions.setGameState('playing')
     }, 700)
   }
@@ -855,6 +863,9 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
       }
       if (rideLaunchTimerRef.current !== null) {
         window.clearTimeout(rideLaunchTimerRef.current)
+      }
+      if (rideLaunchWorldRevealTimerRef.current !== null) {
+        window.clearTimeout(rideLaunchWorldRevealTimerRef.current)
       }
     }
   }, [])
@@ -925,13 +936,22 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
 
   return (
     <div
-      className="hs-screen-enter absolute inset-0 overflow-hidden bg-[#080a0d] text-white"
+      className="hs-screen-enter absolute inset-0 overflow-hidden bg-[#080a0d] text-white transition-[background-color] duration-[90ms] ease-linear"
+      style={{ backgroundColor: rideLaunchWorldReveal ? 'transparent' : '#080a0d' }}
       onClick={handleSecretTap}
     >
       <style>{`
         @keyframes hsMenuEntrance {
           0% { opacity: 0; transform: translateY(18px) scale(.985); }
           100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .hs-menu-world-backdrop {
+          opacity: 1;
+          transition: opacity 90ms linear;
+          will-change: opacity;
+        }
+        .hs-menu-world-backdrop-reveal {
+          opacity: 0;
         }
         @keyframes hsMenuRoad {
           0% { transform: translateY(0); opacity: .14; }
@@ -1162,7 +1182,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
       `}</style>
 
       {/* Static highway backdrop: restrained metallic tones with no continuous background motion. */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <div className={`absolute inset-0 pointer-events-none overflow-hidden hs-menu-world-backdrop ${rideLaunchWorldReveal ? 'hs-menu-world-backdrop-reveal' : ''}`}>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_18%,rgba(216,154,62,.18),transparent_24%),radial-gradient(circle_at_18%_72%,rgba(54,86,103,.18),transparent_30%),linear-gradient(145deg,#10161b_0%,#182129_42%,#0c1014_72%,#07090b_100%)]" />
         <div className="absolute left-1/2 top-[18%] h-[54%] w-[118%] -translate-x-1/2 [perspective:620px]">
           <div className="hs-menu-road-depth absolute inset-0 [transform:rotateX(67deg)] [transform-origin:center_top]" />
