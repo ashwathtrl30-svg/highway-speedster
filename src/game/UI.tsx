@@ -845,7 +845,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
       rideLaunchTimerRef.current = null
       setRideLaunch(false)
       actions.setGameState('playing')
-    }, 2450)
+    }, 1400)
   }
 
   useEffect(() => {
@@ -1057,20 +1057,21 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
         }
         @keyframes hsMenuLaunchVehicle {
           from { transform:translate3d(0,0,0); }
-          to { transform:translate3d(55vw,-8px,0); }
+          to { transform:translate3d(36vw,-5px,0); }
         }
         @keyframes hsMenuLaunchWheelie {
           0% { transform:translate3d(0,0,0) rotate(0deg); }
-          18% { transform:translate3d(0,0,0) rotate(-1deg); }
-          32% { transform:translate3d(0,-5px,0) rotate(-7deg); }
-          48% { transform:translate3d(0,-10px,0) rotate(-12deg); }
-          68% { transform:translate3d(0,-12px,0) rotate(-12deg); }
-          84% { transform:translate3d(0,-8px,0) rotate(-8deg); }
-          100% { transform:translate3d(0,-3px,0) rotate(-5deg); }
+          12% { transform:translate3d(0,-4px,0) rotate(-4deg); }
+          24% { transform:translate3d(0,-12px,0) rotate(-12deg); }
+          36% { transform:translate3d(0,-20px,0) rotate(-19deg); }
+          52% { transform:translate3d(0,-24px,0) rotate(-21deg); }
+          70% { transform:translate3d(0,-20px,0) rotate(-18deg); }
+          86% { transform:translate3d(0,-12px,0) rotate(-11deg); }
+          100% { transform:translate3d(0,-6px,0) rotate(-6deg); }
         }
         @keyframes hsMenuLaunchCamera {
           from { transform:translate3d(0,0,0); }
-          to { transform:translate3d(-25vw,0,0); }
+          to { transform:translate3d(-30vw,0,0); }
         }
         @keyframes hsMenuGlassCrack {
           0%, 24% { opacity:0; transform:scale(.98); }
@@ -1098,7 +1099,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           100% { opacity:0; transform:scale(2.1); }
         }
         .hs-menu-launch-vehicle {
-          animation:hsMenuLaunchVehicle 2450ms cubic-bezier(.22,.08,.76,1) both;
+          animation:hsMenuLaunchVehicle 1400ms cubic-bezier(.16,.72,.18,1) both;
           transform-origin:50% 65%;
           transform:translate3d(0,0,0);
           backface-visibility:hidden;
@@ -1106,14 +1107,14 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           will-change:transform;
         }
         .hs-menu-launch-wheelie {
-          animation:hsMenuLaunchWheelie 2450ms cubic-bezier(.2,.8,.18,1) both;
+          animation:hsMenuLaunchWheelie 1400ms cubic-bezier(.16,.82,.18,1) both;
           transform-origin:46% 72%;
           backface-visibility:hidden;
           -webkit-backface-visibility:hidden;
           will-change:transform;
         }
         .hs-menu-launch-camera {
-          animation:hsMenuLaunchCamera 2450ms cubic-bezier(.18,.78,.16,1) both;
+          animation:hsMenuLaunchCamera 1400ms cubic-bezier(.16,.78,.16,1) both;
           transform-origin:50% 55%;
           transform:translate3d(0,0,0);
           backface-visibility:hidden;
@@ -1121,7 +1122,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           will-change:transform;
         }
         .hs-menu-glass-crack {
-          animation:hsMenuGlassCrack 2450ms linear both;
+          animation:hsMenuGlassCrack 1400ms linear both;
           transform-origin:50% 50%;
           backface-visibility:hidden;
           -webkit-backface-visibility:hidden;
@@ -1143,15 +1144,15 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           animation-delay:520ms;
         }
         .hs-menu-launch-flash {
-          animation:hsMenuLaunchFlash 1750ms ease-out both;
+          animation:hsMenuLaunchFlash 900ms ease-out both;
         }
         .hs-menu-launch-hide {
-          animation:hsMenuLaunchHide 2450ms ease-out both;
+          animation:hsMenuLaunchHide 1400ms linear both;
           pointer-events:none !important;
         }
         @keyframes hsMenuLaunchHide {
-          0%, 62% { opacity:1; transform:translateY(0) scale(1); }
-          86%, 100% { opacity:0; transform:translateY(10px) scale(.985); }
+          0%, 74% { opacity:1; transform:translateY(0) scale(1); }
+          92%, 100% { opacity:0; transform:translateY(6px) scale(.99); }
         }
         .hs-menu-nav-launch { animation:hsMenuNavButtonLaunch 420ms cubic-bezier(.16,.8,.18,1) both; }
         .hs-menu-nav-wipe { animation:hsMenuNavWipe 420ms cubic-bezier(.2,.75,.16,1) both; }
