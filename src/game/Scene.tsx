@@ -1502,25 +1502,7 @@ function StratosBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color="#666666" metalness={0.85} />
       </mesh>
 
-      {/* Racing cockpit - visible split clip-ons, steering stem and controls */}
-      <mesh position={[-0.22, 0.94, -0.56]} rotation={[0.18, 0, 0]}>
-        <cylinderGeometry args={[0.025, 0.025, 0.28, 10]} />
-        <meshStandardMaterial color="#3e4144" metalness={0.92} roughness={0.16} />
-      </mesh>
-      <mesh position={[0.22, 0.94, -0.56]} rotation={[0.18, 0, 0]}>
-        <cylinderGeometry args={[0.025, 0.025, 0.28, 10]} />
-        <meshStandardMaterial color="#3e4144" metalness={0.92} roughness={0.16} />
-      </mesh>
-      {/* Brake/clutch control levers */}
-      <mesh position={[-0.31, 0.93, -0.55]} rotation={[0.18, 0, -0.18]}>
-        <boxGeometry args={[0.035, 0.018, 0.17]} />
-        <meshStandardMaterial color="#aeb3b7" metalness={0.95} roughness={0.12} />
-      </mesh>
-      <mesh position={[0.31, 0.93, -0.55]} rotation={[0.18, 0, 0.18]}>
-        <boxGeometry args={[0.035, 0.018, 0.17]} />
-        <meshStandardMaterial color="#aeb3b7" metalness={0.95} roughness={0.12} />
-      </mesh>
-      {/* Headlight - aggressive single LED */}
+
       <mesh position={[0, 0.65, -1.1]}>
         <boxGeometry args={[0.15, 0.06, 0.04]} />
         <meshStandardMaterial color="#ffffff" emissive="#ffffee" emissiveIntensity={4} />
@@ -1553,11 +1535,6 @@ function StratosBike({ bike }: { bike: Bike }) {
         handX={0.39}
         handY={-0.03}
         handZ={-0.55}
-        leftElbowX={-0.20}
-        leftElbowY={0.13}
-        leftHandX={-0.39}
-        leftHandY={-0.03}
-        leftHandZ={-0.55}
         shoulderY={0.42}
         hipY={0.10}
         kneeY={-0.02}
@@ -1570,7 +1547,7 @@ function StratosBike({ bike }: { bike: Bike }) {
 }
 
 // ============== ZENITH BIKE (Ultimate Hyperbike) ==============
-function ZenithBike({ bike }: { bike: Bike }) {
+      {/* Headlight - aggressive single LED */}function ZenithBike({ bike }: { bike: Bike }) {
   return (
     <>
       {/* Full fairing - extreme, futuristic */}
@@ -1635,25 +1612,7 @@ function ZenithBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color="#777777" metalness={0.9} />
       </mesh>
 
-      {/* Hyperbike cockpit - forged top clamp with split clip-ons and racing controls */}
-      <mesh position={[-0.24, 0.94, -0.6]} rotation={[0.2, 0, 0]}>
-        <cylinderGeometry args={[0.026, 0.026, 0.3, 10]} />
-        <meshStandardMaterial color="#2a2d30" metalness={0.96} roughness={0.1} />
-      </mesh>
-      <mesh position={[0.24, 0.94, -0.6]} rotation={[0.2, 0, 0]}>
-        <cylinderGeometry args={[0.026, 0.026, 0.3, 10]} />
-        <meshStandardMaterial color="#2a2d30" metalness={0.96} roughness={0.1} />
-      </mesh>
-      {/* Brembo-style lever silhouettes without logos */}
-      <mesh position={[-0.33, 0.94, -0.59]} rotation={[0.2, 0, -0.2]}>
-        <boxGeometry args={[0.036, 0.02, 0.19]} />
-        <meshStandardMaterial color="#c4c8cb" metalness={0.98} roughness={0.09} />
-      </mesh>
-      <mesh position={[0.33, 0.94, -0.59]} rotation={[0.2, 0, 0.2]}>
-        <boxGeometry args={[0.036, 0.02, 0.19]} />
-        <meshStandardMaterial color="#c4c8cb" metalness={0.98} roughness={0.09} />
-      </mesh>
-      {/* Headlight - LED strip */}
+
       <mesh position={[0, 0.62, -1.15]}>
         <boxGeometry args={[0.2, 0.04, 0.03]} />
         <meshStandardMaterial color="#ffffff" emissive="#ffffee" emissiveIntensity={5} />
@@ -1694,11 +1653,6 @@ function ZenithBike({ bike }: { bike: Bike }) {
         handX={0.39}
         handY={-0.03}
         handZ={-0.59}
-        leftElbowX={-0.20}
-        leftElbowY={0.13}
-        leftHandX={-0.39}
-        leftHandY={-0.03}
-        leftHandZ={-0.59}
         shoulderY={0.42}
         hipY={0.10}
         kneeY={-0.02}
@@ -1710,7 +1664,7 @@ function ZenithBike({ bike }: { bike: Bike }) {
   )
 }
 
-// ============== CARS ==============
+      {/* Headlight - LED strip */}// ============== CARS ==============
 // Stylized, logo-free models inspired by the requested real-world proportions.
 
 function CarBase({ car, shape = 'sedan' }: { car: Car; shape?: 'hatch' | 'sedan' | 'suv' | 'gt' | 'exotic' }) {
