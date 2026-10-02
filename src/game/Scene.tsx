@@ -450,9 +450,11 @@ function getGlowTexture(kind: 'head' | 'tail') {
 function VehicleLightingAccents({
   vehicleMode,
   hideHighlightRails = false,
+  hideHeadlights = false,
 }: {
   vehicleMode: 'bike' | 'car'
   hideHighlightRails?: boolean
+  hideHeadlights?: boolean
 }) {
   const isCar = vehicleMode === 'car'
   const frontZ = isCar ? -1.65 : -1.05
@@ -494,8 +496,12 @@ function VehicleLightingAccents({
 
   return (
     <group>
-      <sprite position={[-spread, y, frontZ]} scale={[0.42, 0.42, 1]} material={headMaterial} />
-      <sprite position={[spread, y, frontZ]} scale={[0.42, 0.42, 1]} material={headMaterial} />
+      {!hideHeadlights && (
+        <>
+          <sprite position={[-spread, y, frontZ]} scale={[0.42, 0.42, 1]} material={headMaterial} />
+          <sprite position={[spread, y, frontZ]} scale={[0.42, 0.42, 1]} material={headMaterial} />
+        </>
+      )}
       <sprite position={[-spread, y * 0.9, rearZ]} scale={[0.32, 0.32, 1]} material={tailMaterial} />
       <sprite position={[spread, y * 0.9, rearZ]} scale={[0.32, 0.32, 1]} material={tailMaterial} />
 
@@ -920,14 +926,11 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
     <group ref={meshRef} position={[0, 0, PLAYER_Z]}>
       <group ref={visualRef}>
         {vehicleMode === 'car' ? renderCarModel() : renderBikeModel()}
-        {vehicleMode === 'bike' && bike.id !== 'stratos' && bike.id !== 'zenith' ? (
-          <VehicleLightingAccents vehicleMode={vehicleMode} />
-        ) : (
-          <VehicleLightingAccents
-            vehicleMode={vehicleMode}
-            hideHighlightRails={vehicleMode === 'bike' && (bike.id === 'stratos' || bike.id === 'zenith')}
-          />
-        )}
+        <VehicleLightingAccents
+          vehicleMode={vehicleMode}
+          hideHighlightRails={vehicleMode === 'bike' && (bike.id === 'stratos' || bike.id === 'zenith')}
+          hideHeadlights={vehicleMode === 'bike' && (bike.id === 'stratos' || bike.id === 'zenith')}
+        />
         {shieldActive && <ShieldBubble vehicleMode={vehicleMode} />}
       </group>
     </group>
@@ -1485,11 +1488,7 @@ function StratosBike({ bike }: { bike: Bike }) {
       </mesh>
 
 
-      <mesh position={[0, 0.65, -1.1]}>
-        <boxGeometry args={[0.15, 0.06, 0.04]} />
-        <meshStandardMaterial color="#ffffff" emissive="#ffffee" emissiveIntensity={4} />
-      </mesh>
-
+      {/* Stratos headlight removed. */}
       {/* Tail light - LED strip */}
       <mesh position={[0, 0.55, 1.1]}>
         <boxGeometry args={[0.18, 0.035, 0.025]} />
@@ -1571,11 +1570,7 @@ function StratosBike({ bike }: { bike: Bike }) {
       </mesh>
 
 
-      <mesh position={[0, 0.62, -1.15]}>
-        <boxGeometry args={[0.2, 0.04, 0.03]} />
-        <meshStandardMaterial color="#ffffff" emissive="#ffffee" emissiveIntensity={5} />
-      </mesh>
-
+      {/* Zenith headlight removed. */}
       {/* Tail light - LED strip */}
       <mesh position={[0, 0.52, 1.15]}>
         <boxGeometry args={[0.16, 0.03, 0.02]} />
