@@ -447,7 +447,13 @@ function getGlowTexture(kind: 'head' | 'tail') {
   return texture
 }
 
-function VehicleLightingAccents({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
+function VehicleLightingAccents({
+  vehicleMode,
+  hideHighlightRails = false,
+}: {
+  vehicleMode: 'bike' | 'car'
+  hideHighlightRails?: boolean
+}) {
   const isCar = vehicleMode === 'car'
   const frontZ = isCar ? -1.65 : -1.05
   const rearZ = isCar ? 1.75 : 1.08
@@ -493,27 +499,30 @@ function VehicleLightingAccents({ vehicleMode }: { vehicleMode: 'bike' | 'car' }
       <sprite position={[-spread, y * 0.9, rearZ]} scale={[0.32, 0.32, 1]} material={tailMaterial} />
       <sprite position={[spread, y * 0.9, rearZ]} scale={[0.32, 0.32, 1]} material={tailMaterial} />
 
-      {/* [GFX] Thin highlight rails read as specular accents without adding lights. */}
-      <mesh position={[-highlightX, isCar ? 0.55 : 0.52, 0]}>
-        <boxGeometry args={[0.035, 0.06, highlightLength]} />
-        <meshStandardMaterial
-          color="#eef1f1"
-          metalness={0.9}
-          roughness={0.16}
-          transparent
-          opacity={0.42}
-        />
-      </mesh>
-      <mesh position={[highlightX, isCar ? 0.55 : 0.52, 0]}>
-        <boxGeometry args={[0.035, 0.06, highlightLength]} />
-        <meshStandardMaterial
-          color="#eef1f1"
-          metalness={0.9}
-          roughness={0.16}
-          transparent
-          opacity={0.42}
-        />
-      </mesh>
+      {!hideHighlightRails && (
+        <>
+          <mesh position={[-highlightX, isCar ? 0.55 : 0.52, 0]}>
+            <boxGeometry args={[0.035, 0.06, highlightLength]} />
+            <meshStandardMaterial
+              color="#eef1f1"
+              metalness={0.9}
+              roughness={0.16}
+              transparent
+              opacity={0.42}
+            />
+          </mesh>
+          <mesh position={[highlightX, isCar ? 0.55 : 0.52, 0]}>
+            <boxGeometry args={[0.035, 0.06, highlightLength]} />
+            <meshStandardMaterial
+              color="#eef1f1"
+              metalness={0.9}
+              roughness={0.16}
+              transparent
+              opacity={0.42}
+            />
+          </mesh>
+        </>
+      )}
     </group>
   )
 }
@@ -911,7 +920,14 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
     <group ref={meshRef} position={[0, 0, PLAYER_Z]}>
       <group ref={visualRef}>
         {vehicleMode === 'car' ? renderCarModel() : renderBikeModel()}
-        <VehicleLightingAccents vehicleMode={vehicleMode} />
+        {vehicleMode === 'bike' && bike.id !== 'stratos' && bike.id !== 'zenith' ? (
+          <VehicleLightingAccents vehicleMode={vehicleMode} />
+        ) : (
+          <VehicleLightingAccents
+            vehicleMode={vehicleMode}
+            hideHighlightRails={vehicleMode === 'bike' && (bike.id === 'stratos' || bike.id === 'zenith')}
+          />
+        )}
         {shieldActive && <ShieldBubble vehicleMode={vehicleMode} />}
       </group>
     </group>
