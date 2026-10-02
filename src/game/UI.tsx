@@ -1065,7 +1065,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
         }
         @keyframes hsMenuLaunchWheelie {
           from { transform:translate3d(0,0,0) rotate(0deg); }
-          to { transform:translate3d(0,-24px,0) rotate(-24deg); }
+          to { transform:translate3d(0,-31px,0) rotate(-32deg); }
         }
         @keyframes hsMenuLaunchCamera {
           from { transform:translate3d(0,0,0); }
