@@ -965,6 +965,7 @@ function FuturisticRider({
   leftHandX,
   leftHandY,
   leftHandZ,
+  leftArmResting = false,
   shoulderY = 0.55,
   hipY = 0.13,
   kneeY = -0.10,
@@ -984,6 +985,7 @@ function FuturisticRider({
   leftHandX?: number
   leftHandY?: number
   leftHandZ?: number
+  leftArmResting?: boolean
   shoulderY?: number
   hipY?: number
   kneeY?: number
@@ -997,11 +999,11 @@ function FuturisticRider({
   const redDeep = '#a91f1b'
   const white = '#e8edf0'
   const visor = '#071017'
-  const resolvedLeftElbowX = leftElbowX ?? -elbowX
-  const resolvedLeftElbowY = leftElbowY ?? elbowY
-  const resolvedLeftHandX = leftHandX ?? -handX
-  const resolvedLeftHandY = leftHandY ?? handY
-  const resolvedLeftHandZ = leftHandZ ?? handZ
+  const resolvedLeftElbowX = leftArmResting ? -0.24 : (leftElbowX ?? -elbowX)
+  const resolvedLeftElbowY = leftArmResting ? 0.08 : (leftElbowY ?? elbowY)
+  const resolvedLeftHandX = leftArmResting ? -0.26 : (leftHandX ?? -handX)
+  const resolvedLeftHandY = leftArmResting ? -0.22 : (leftHandY ?? handY)
+  const resolvedLeftHandZ = leftArmResting ? 0.20 : (leftHandZ ?? handZ)
 
   return (
     <group position={position} scale={scale}>
@@ -1516,6 +1518,7 @@ function StratosBike({ bike }: { bike: Bike }) {
       <FuturisticRider
         position={[0, 0.98, 0.10]}
         scale={0.70}
+        leftArmResting
       />
     </>
   )
@@ -1609,6 +1612,7 @@ function StratosBike({ bike }: { bike: Bike }) {
       <FuturisticRider
         position={[0, 0.99, 0.06]}
         scale={0.70}
+        leftArmResting
       />
     </>
   )
