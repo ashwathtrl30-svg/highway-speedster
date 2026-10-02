@@ -1446,7 +1446,7 @@ function StratosBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color={bike.color} metalness={0.8} roughness={0.18} />
       </mesh>
       
-      {/* Front cockpit panel removed: hands remain unobstructed. */
+      {/* Front cockpit panel removed: hands remain unobstructed. */}
       {/* No cockpit bar/windscreen hardware: rider hands remain unobstructed. */}
       
       {/* Engine block */}
@@ -1531,7 +1531,7 @@ function StratosBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color={bike.color} metalness={0.85} roughness={0.15} />
       </mesh>
       
-      {/* Front cockpit panel removed: hands remain unobstructed. */
+      {/* Front cockpit panel removed: hands remain unobstructed. */}
       {/* No cockpit bar/windscreen hardware: rider hands remain unobstructed. */}
       
       {/* Engine block - larger */}
