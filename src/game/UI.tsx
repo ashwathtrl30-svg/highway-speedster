@@ -248,9 +248,7 @@ export function AccountSetup({ onComplete, initialError = '' }: { onComplete: ()
                   <p className="text-[9px] font-black uppercase tracking-[0.28em] text-amber-200/70">HIGHWAY SPEEDSTER</p>
                   <h1 className="mt-2 text-[30px] font-black tracking-[-0.03em] text-white sm:text-[36px]">Welcome, rider.</h1>
                 </div>
-                <div className="hidden rounded-2xl border border-white/10 bg-white/[0.045] px-3 py-2 text-right sm:block">
-                  <p className="mt-1 text-[10px] font-bold text-emerald-200/80">READY</p>
-                </div>
+                
               </div>
               <p className="mt-3 max-w-[390px] text-[13px] leading-5 text-white/55">
                 Create a fresh account or reconnect an existing one. Your account ID keeps your progress separate from every other rider.
