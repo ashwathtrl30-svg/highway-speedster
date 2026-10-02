@@ -625,8 +625,7 @@ export function HUD() {
 
 function StatsScreen({ onBack }: { onBack: () => void }) {
   const state = useGameStore()
-  type Filter = '7d' | '30d' | '90d' | '180d' | '365d' | 'all'
-  const [timeFilter, setTimeFilter] = useState<Filter>('all')
+  const timeFilter = 'all' as const
   const [analytics, setAnalytics] = useState<{
     users: Array<{ player_id: string; username: string; playtime_seconds: number; is_me: boolean }>
   }>({ users: [] })
@@ -650,7 +649,7 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
       mounted = false
       window.clearInterval(interval)
     }
-  }, [timeFilter])
+  }, [])
 
   const formatTime = (seconds: number) => {
     const total = Math.max(0, Math.floor(seconds || 0))
@@ -664,14 +663,7 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
     return `${secs}s`
   }
 
-  const filterLabel: Record<Filter, string> = {
-    '7d': 'Last 7 Days',
-    '30d': 'Last 30 Days',
-    '90d': 'Last 3 Months',
-    '180d': 'Last 6 Months',
-    '365d': 'Last 1 Year',
-    all: 'Overall'
-  }
+  const filterLabel = 'Overall'
 
   const leaderboard = analytics.users
     .filter((user) => user.username.trim())
@@ -700,23 +692,6 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
         </div>
       </div>
 
-      <div className="p-3 sm:p-4 border-b border-white/5">
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {(Object.keys(filterLabel) as Filter[]).map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setTimeFilter(filter)}
-              className={`px-3 py-2 rounded-lg font-semibold text-xs sm:text-sm whitespace-nowrap transition-all ${
-                timeFilter === filter
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
-                  : 'bg-white/10 text-gray-400 hover:bg-white/20'
-              }`}
-            >
-              {filterLabel[filter]}
-            </button>
-          ))}
-        </div>
-      </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 sm:p-4">
         <div className="rounded-xl p-3 bg-white/[0.04] border border-white/10">
@@ -733,7 +708,7 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
         </div>
         <div className="rounded-xl p-3 bg-green-500/10 border border-green-500/20">
           <p className="text-gray-500 text-[10px] uppercase">Filter</p>
-          <p className="text-green-400 text-sm font-bold">{filterLabel[timeFilter]}</p>
+          <p className="text-green-400 text-sm font-bold">{filterLabel}</p>
         </div>
       </div>
 
