@@ -844,16 +844,18 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
 
     setRideLaunch(true)
     setRideLaunchWorldReveal(false)
+    const launchDuration = isCar ? 500 : 700
+    const worldRevealAt = Math.max(0, launchDuration - 90)
     rideLaunchWorldRevealTimerRef.current = window.setTimeout(() => {
       rideLaunchWorldRevealTimerRef.current = null
       setRideLaunchWorldReveal(true)
-    }, 610)
+    }, worldRevealAt)
     rideLaunchTimerRef.current = window.setTimeout(() => {
       rideLaunchTimerRef.current = null
       setRideLaunch(false)
       setRideLaunchWorldReveal(false)
       actions.setGameState('playing')
-    }, 700)
+    }, launchDuration)
   }
 
   useEffect(() => {
@@ -936,7 +938,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
 
   return (
     <div
-      className="hs-screen-enter absolute inset-0 overflow-hidden bg-[#080a0d] text-white transition-[background-color] duration-[90ms] ease-linear"
+      className={`hs-screen-enter absolute inset-0 overflow-hidden bg-[#080a0d] text-white transition-[background-color] duration-[90ms] ease-linear ${rideLaunch && isCar ? 'hs-menu-car-launch' : ''}`}
       style={{ backgroundColor: rideLaunchWorldReveal ? 'transparent' : '#080a0d' }}
       onClick={handleSecretTap}
     >
@@ -952,6 +954,31 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
         }
         .hs-menu-world-backdrop-reveal {
           opacity: 0;
+        }
+        .hs-menu-car-launch .hs-menu-launch-vehicle {
+          animation-duration: 500ms;
+        }
+        .hs-menu-car-launch .hs-menu-launch-camera {
+          animation-duration: 500ms;
+        }
+        .hs-menu-car-launch .hs-menu-glass-crack {
+          animation-duration: 500ms;
+        }
+        .hs-menu-car-launch .hs-menu-launch-hide {
+          animation-duration: 500ms;
+        }
+        .hs-menu-car-launch .hs-menu-glass-shard {
+          animation-duration: 300ms;
+          animation-delay: 100ms;
+        }
+        .hs-menu-car-launch .hs-menu-glass-shard:nth-child(3n) {
+          animation-delay: 110ms;
+        }
+        .hs-menu-car-launch .hs-menu-glass-shard:nth-child(4n) {
+          animation-delay: 105ms;
+        }
+        .hs-menu-car-launch .hs-menu-launch-flash {
+          animation-duration: 360ms;
         }
         @keyframes hsMenuRoad {
           0% { transform: translateY(0); opacity: .14; }
