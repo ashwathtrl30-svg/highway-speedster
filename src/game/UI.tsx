@@ -845,7 +845,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
       rideLaunchTimerRef.current = null
       setRideLaunch(false)
       actions.setGameState('playing')
-    }, 1400)
+    }, 900)
   }
 
   useEffect(() => {
@@ -1056,28 +1056,32 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           100% { transform:translateX(110vw); opacity:0; }
         }
         @keyframes hsMenuLaunchVehicle {
-          from { transform:translate3d(0,0,0); }
-          to { transform:translate3d(36vw,-5px,0); }
+          0% { transform:translate3d(0,0,0); }
+          12% { transform:translate3d(14vw,-1px,0); }
+          30% { transform:translate3d(40vw,-3px,0); }
+          52% { transform:translate3d(62vw,-5px,0); }
+          76% { transform:translate3d(74vw,-7px,0); }
+          100% { transform:translate3d(80vw,-9px,0); }
         }
         @keyframes hsMenuLaunchWheelie {
           0% { transform:translate3d(0,0,0) rotate(0deg); }
-          12% { transform:translate3d(0,-4px,0) rotate(-4deg); }
-          24% { transform:translate3d(0,-12px,0) rotate(-12deg); }
-          36% { transform:translate3d(0,-20px,0) rotate(-19deg); }
-          52% { transform:translate3d(0,-24px,0) rotate(-21deg); }
-          70% { transform:translate3d(0,-20px,0) rotate(-18deg); }
-          86% { transform:translate3d(0,-12px,0) rotate(-11deg); }
-          100% { transform:translate3d(0,-6px,0) rotate(-6deg); }
+          10% { transform:translate3d(0,-7px,0) rotate(-7deg); }
+          22% { transform:translate3d(0,-18px,0) rotate(-18deg); }
+          36% { transform:translate3d(0,-29px,0) rotate(-28deg); }
+          50% { transform:translate3d(0,-31px,0) rotate(-30deg); }
+          68% { transform:translate3d(0,-23px,0) rotate(-22deg); }
+          84% { transform:translate3d(0,-12px,0) rotate(-12deg); }
+          100% { transform:translate3d(0,-7px,0) rotate(-7deg); }
         }
         @keyframes hsMenuLaunchCamera {
           from { transform:translate3d(0,0,0); }
-          to { transform:translate3d(-30vw,0,0); }
+          to { transform:translate3d(-28vw,0,0); }
         }
         @keyframes hsMenuGlassCrack {
-          0%, 24% { opacity:0; transform:scale(.98); }
-          31% { opacity:1; transform:scale(1); }
-          43% { opacity:.95; transform:scale(1.012); }
-          60%, 100% { opacity:0; transform:scale(1.045); }
+          0%, 14% { opacity:0; transform:scale(.98); }
+          20% { opacity:1; transform:scale(1); }
+          34% { opacity:.95; transform:scale(1.014); }
+          56%, 100% { opacity:0; transform:scale(1.06); }
         }
         @keyframes hsMenuGlassShard {
           0% { opacity:.9; transform:translate3d(0,0,0) rotate(0deg) scale(1); }
@@ -1099,7 +1103,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           100% { opacity:0; transform:scale(2.1); }
         }
         .hs-menu-launch-vehicle {
-          animation:hsMenuLaunchVehicle 1400ms cubic-bezier(.16,.72,.18,1) both;
+          animation:hsMenuLaunchVehicle 900ms cubic-bezier(.08,.92,.12,1) both;
           transform-origin:50% 65%;
           transform:translate3d(0,0,0);
           backface-visibility:hidden;
@@ -1107,14 +1111,14 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           will-change:transform;
         }
         .hs-menu-launch-wheelie {
-          animation:hsMenuLaunchWheelie 1400ms cubic-bezier(.16,.82,.18,1) both;
+          animation:hsMenuLaunchWheelie 900ms cubic-bezier(.08,.9,.12,1) both;
           transform-origin:46% 72%;
           backface-visibility:hidden;
           -webkit-backface-visibility:hidden;
           will-change:transform;
         }
         .hs-menu-launch-camera {
-          animation:hsMenuLaunchCamera 1400ms cubic-bezier(.16,.78,.16,1) both;
+          animation:hsMenuLaunchCamera 900ms cubic-bezier(.08,.9,.12,1) both;
           transform-origin:50% 55%;
           transform:translate3d(0,0,0);
           backface-visibility:hidden;
@@ -1122,14 +1126,14 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           will-change:transform;
         }
         .hs-menu-glass-crack {
-          animation:hsMenuGlassCrack 1400ms linear both;
+          animation:hsMenuGlassCrack 900ms linear both;
           transform-origin:50% 50%;
           backface-visibility:hidden;
           -webkit-backface-visibility:hidden;
           will-change:transform,opacity;
         }
         .hs-menu-glass-shard {
-          animation:hsMenuGlassShard 720ms cubic-bezier(.16,.72,.16,1) 500ms both;
+          animation:hsMenuGlassShard 440ms cubic-bezier(.08,.9,.12,1) 170ms both;
           transform-origin:center;
           backface-visibility:hidden;
           -webkit-backface-visibility:hidden;
@@ -1137,22 +1141,22 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
         }
         .hs-menu-glass-shard:nth-child(3n) {
           animation-name:hsMenuGlassShardAlt;
-          animation-delay:540ms;
+          animation-delay:190ms;
         }
         .hs-menu-glass-shard:nth-child(4n) {
           animation-name:hsMenuGlassShardUp;
-          animation-delay:520ms;
+          animation-delay:180ms;
         }
         .hs-menu-launch-flash {
-          animation:hsMenuLaunchFlash 900ms ease-out both;
+          animation:hsMenuLaunchFlash 520ms ease-out both;
         }
         .hs-menu-launch-hide {
-          animation:hsMenuLaunchHide 1400ms linear both;
+          animation:hsMenuLaunchHide 900ms linear both;
           pointer-events:none !important;
         }
         @keyframes hsMenuLaunchHide {
-          0%, 74% { opacity:1; transform:translateY(0) scale(1); }
-          92%, 100% { opacity:0; transform:translateY(6px) scale(.99); }
+          0%, 60% { opacity:1; transform:translateY(0) scale(1); }
+          82%, 100% { opacity:0; transform:translateY(6px) scale(.99); }
         }
         .hs-menu-nav-launch { animation:hsMenuNavButtonLaunch 420ms cubic-bezier(.16,.8,.18,1) both; }
         .hs-menu-nav-wipe { animation:hsMenuNavWipe 420ms cubic-bezier(.2,.75,.16,1) both; }
