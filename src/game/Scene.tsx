@@ -1472,12 +1472,7 @@ function StratosBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color="#0a0a0a" roughness={0.95} />
       </mesh>
 
-      {/* Front fork - inverted, thick */}
-      <mesh position={[0, 0.52, -0.9]} rotation={[0.22, 0, 0]}>
-        <boxGeometry args={[0.09, 0.72, 0.09]} />
-        <meshStandardMaterial color="#999999" metalness={0.9} roughness={0.12} />
-      </mesh>
-
+      {/* No vertical cockpit post. */}
       {/* Front wheel */}
       <mesh name="player-wheel" position={[0, 0.25, -1.0]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.24, 0.075, 8, 16]} />
@@ -1578,12 +1573,7 @@ function StratosBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color="#050505" roughness={0.95} />
       </mesh>
 
-      {/* Front fork - inverted, very thick */}
-      <mesh position={[0, 0.5, -0.95]} rotation={[0.25, 0, 0]}>
-        <boxGeometry args={[0.1, 0.7, 0.1]} />
-        <meshStandardMaterial color="#aaaaaa" metalness={0.95} roughness={0.1} />
-      </mesh>
-
+      {/* No vertical cockpit post. */}
       {/* Front wheel */}
       <mesh name="player-wheel" position={[0, 0.25, -1.05]} rotation={[0, 0, Math.PI / 2]}>
         <torusGeometry args={[0.24, 0.07, 8, 16]} />
