@@ -1215,14 +1215,14 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
         </button>
       )}
 
-      <div className="relative z-10 flex min-h-full flex-col items-center justify-center px-4 py-8 pt-16 sm:px-4 sm:py-10 sm:pt-20">
-        <div className="hs-menu-enter relative w-full max-w-3xl text-center">
+      <div className="absolute inset-0 z-10 flex items-center justify-center overflow-y-auto px-4 py-20 sm:px-6 sm:py-24">
+        <div className="hs-menu-enter relative flex w-full max-w-3xl flex-col items-center text-center">
           {/* Strong title treatment */}
-          <div className="mb-4 sm:mb-5">
-            <h1 className="hs-title text-5xl sm:text-7xl md:text-8xl font-black leading-[0.82] tracking-[-0.06em] text-white">
+          <div className="mb-4 flex w-full flex-col items-center sm:mb-5">
+            <h1 className="hs-title text-5xl sm:text-7xl md:text-8xl font-black leading-[0.82] tracking-[-0.06em] text-white text-center">
               HIGHWAY
             </h1>
-            <div className="mt-1 flex items-center justify-center gap-2 sm:gap-3">
+            <div className="mt-1 flex w-fit items-center justify-center gap-2 sm:gap-3">
               <span className="h-px w-8 sm:w-12 bg-gradient-to-r from-transparent to-amber-300/80" />
               <h2 className="text-4xl sm:text-6xl md:text-7xl font-black leading-none tracking-[-0.05em] text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-orange-400 to-red-500">
                 SPEEDSTER
@@ -1232,7 +1232,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           </div>
 
           {/* Hero vehicle stage — existing selected vehicle, no new ownership state. */}
-          <div className="hs-menu-enter hs-menu-enter-delay relative mx-auto mb-5 sm:mb-6 h-[170px] sm:h-[215px] w-full max-w-xl overflow-hidden rounded-[28px] border border-slate-200/10 bg-slate-950/80 backdrop-blur-[2px]">
+          <div className="hs-menu-enter hs-menu-enter-delay relative mx-auto mb-5 h-[170px] w-full max-w-xl overflow-hidden rounded-[28px] border border-slate-200/10 bg-slate-950/80 backdrop-blur-[2px] sm:mb-6 sm:h-[215px]">
             <div className="absolute inset-0 hs-menu-hero-glow" />
             <div className="absolute inset-x-0 top-[20%] h-[52%] hs-menu-hero-surface pointer-events-none" />
             <div className="absolute left-1/2 top-[44%] h-px w-[62%] -translate-x-1/2 rounded-full bg-amber-200/30 hs-menu-hero-horizon pointer-events-none" />
@@ -1298,7 +1298,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           )}
 
           {/* One obvious primary action; existing handler is unchanged. */}
-          <div className="hs-menu-enter hs-menu-enter-delay-3 relative z-20 flex w-full max-w-sm flex-col gap-2.5 sm:gap-3 mx-auto">
+          <div className="hs-menu-enter hs-menu-enter-delay-3 relative z-20 mx-auto flex w-full max-w-sm flex-col items-center gap-2.5 sm:gap-3">
             <button
               onClick={() => {
                 actions.resetGame()
