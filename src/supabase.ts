@@ -159,6 +159,56 @@ export interface CloudAccountProgress extends CloudGameProgress {
   username: string
 }
 
+export async function registerGameDevice(playerId: string, deviceId: string): Promise<{ success: boolean; reason: string; deviceCount: number }> {
+  const cleanPlayerId = playerId.trim()
+  const cleanDeviceId = deviceId.trim()
+  if (!cleanPlayerId || !cleanDeviceId) {
+    return { success: false, reason: 'Invalid account or device ID.', deviceCount: 0 }
+  }
+
+  try {
+    const { data, error } = await supabase.rpc('register_game_device', {
+      p_player_id: cleanPlayerId,
+      p_device_id: cleanDeviceId,
+    })
+    if (error) throw error
+    const row = Array.isArray(data) ? data[0] : data
+    return {
+      success: Boolean(row?.success),
+      reason: String(row?.reason || ''),
+      deviceCount: Math.max(0, Number(row?.device_count || 0)),
+    }
+  } catch (error) {
+    console.error('Error registering game device:', error)
+    return { success: false, reason: 'Unable to verify this device right now.', deviceCount: 0 }
+  }
+}
+
+export async function logoutGameAccount(playerId: string, deviceId: string): Promise<{ success: boolean; reason: string; deviceCount: number }> {
+  const cleanPlayerId = playerId.trim()
+  const cleanDeviceId = deviceId.trim()
+  if (!cleanPlayerId || !cleanDeviceId) {
+    return { success: false, reason: 'Invalid account or device ID.', deviceCount: 0 }
+  }
+
+  try {
+    const { data, error } = await supabase.rpc('logout_game_account', {
+      p_player_id: cleanPlayerId,
+      p_device_id: cleanDeviceId,
+    })
+    if (error) throw error
+    const row = Array.isArray(data) ? data[0] : data
+    return {
+      success: Boolean(row?.success),
+      reason: String(row?.reason || ''),
+      deviceCount: Math.max(0, Number(row?.device_count || 0)),
+    }
+  } catch (error) {
+    console.error('Error logging out of game account:', error)
+    return { success: false, reason: 'Unable to log out right now. Check your connection and try again.', deviceCount: 0 }
+  }
+}
+
 export async function fetchUserGameProgress(playerId: string): Promise<CloudAccountProgress | null> {
   const cleanPlayerId = playerId.trim()
   if (!cleanPlayerId) return null
@@ -191,20 +241,22 @@ export async function fetchUserGameProgress(playerId: string): Promise<CloudAcco
 export async function saveUserGameProgress(
   playerId: string,
   username: string,
-  progress: CloudGameProgress
+  progress: CloudGameProgress,
+  deviceId: string
 ): Promise<boolean> {
   const cleanPlayerId = playerId.trim()
   const cleanUsername = username.trim()
   if (!cleanPlayerId || !cleanUsername) return false
 
   try {
-    const { data, error } = await supabase.rpc('save_game_account', {
+    const { data, error } = await supabase.rpc('save_game_account_with_device', {
       p_player_id: cleanPlayerId,
       p_username: cleanUsername,
       p_playtime_seconds: Math.max(0, Math.floor(progress.totalPlaytime)),
       p_high_score: Math.max(0, Math.floor(progress.highScore)),
       p_total_coins: Math.max(0, Math.floor(progress.totalCoins)),
       p_game_progress: progress,
+      p_device_id: deviceId.trim(),
     })
     if (error) throw error
     return data !== false
