@@ -1549,7 +1549,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
               <div
                 className="relative h-[125px] w-[225px] sm:h-[155px] sm:w-[285px]"
               >
-                <div className={rideLaunch ? 'hs-menu-launch-wheelie h-full w-full' : 'h-full w-full'}>
+                <div className={rideLaunch && !isCar ? 'hs-menu-launch-wheelie h-full w-full' : 'h-full w-full'}>
                   {isCar
                     ? <CarIcon car={state.selectedCar} />
                     : <BikeIcon bike={state.selectedBike} skin={state.selectedSkin} />}
