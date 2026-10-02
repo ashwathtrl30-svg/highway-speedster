@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { syncAnalyticsToSupabase, recordPlaytimeEvent, fetchUserHighScore, fetchUserGameProgress, saveUserGameProgress, changeGameUsername, type CloudGameProgress } from '../supabase'
+import { syncAnalyticsToSupabase, recordPlaytimeEvent, fetchUserHighScore, fetchUserGameProgress, saveUserGameProgress, registerGameDevice, logoutGameAccount, changeGameUsername, type CloudGameProgress } from '../supabase'
 
 // Bike definitions - 3 iconic Indian bikes
 export interface Bike {
@@ -416,6 +416,28 @@ export function generatePlayerId(): string {
   return id
 }
 
+export function getDeviceId(): string {
+  try {
+    return localStorage.getItem('highway-speedster-device-id')?.trim() || ''
+  } catch {
+    return ''
+  }
+}
+
+export function generateDeviceId(): string {
+  const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  try {
+    localStorage.setItem('highway-speedster-device-id', id)
+  } catch {}
+  return id
+}
+
+function getOrCreateDeviceId(): string {
+  return getDeviceId() || generateDeviceId()
+}
+
 function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHighScore: number; unlockedBikes: string[]; unlockedCars: string[]; bikeSkins: Record<string, BikeSkin>; totalCoins: number; inventory: PowerUpInventory; username: string; totalPlaytime: number; userPlaytime: Record<string, number>; playtimeHistory: PlaytimeEntry[]; vehicleMode: 'bike' | 'car'; selectedBikeId: string; selectedCarId: string; selectedSkin: BikeSkin; carColors: Record<string, string>; selectedCarColor: string } {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
@@ -640,7 +662,7 @@ function saveCloudProgressNow() {
   const current = getState()
   const progress = buildCloudProgress()
   if (!playerId || !progress || !current.username.trim()) return
-  void saveUserGameProgress(playerId, current.username, progress)
+  void saveUserGameProgress(playerId, current.username, progress, getOrCreateDeviceId())
 }
 
 const CLOUD_ANALYTICS_SYNC_MS = 10_000
@@ -781,6 +803,93 @@ export function getCurrentPlayerId(): string {
 }
 
 export const actions = {
+  async ensureCurrentDeviceConnected() {
+    if (!playerId) return { ok: false as const, reason: 'Account is not ready.' }
+    const result = await registerGameDevice(playerId, getOrCreateDeviceId())
+    if (!result.success) {
+      return { ok: false as const, reason: result.reason || 'This account cannot be connected on this device.' }
+    }
+    return { ok: true as const, deviceCount: result.deviceCount }
+  },
+
+  async logoutAccount() {
+    if (!playerId) return { ok: true as const }
+    const accountId = playerId
+    const deviceId = getOrCreateDeviceId()
+
+    if (cloudSaveTimer) {
+      clearTimeout(cloudSaveTimer)
+      cloudSaveTimer = null
+    }
+    cloudHydratingUser = ''
+    pendingAnalyticsSeconds = 0
+
+    const result = await logoutGameAccount(accountId, deviceId)
+    if (!result.success) {
+      return { ok: false as const, reason: result.reason || 'Unable to log out right now.' }
+    }
+
+    playerId = ''
+    try {
+      localStorage.removeItem('highway-speedster-player-id')
+      localStorage.removeItem(STORAGE_KEY)
+    } catch {}
+
+    const defaultCarColors = normalizeCarColorSelections()
+    const defaultBikeSkins = normalizeBikeSkinSelections()
+    const bike = BIKES[0]
+    const skin = defaultBikeSkins[bike.id] || BIKE_SKINS[bike.id][0]
+    const colors = SKIN_COLORS[skin]
+    const car = CARS[0]
+    const carColor = getCarColorOption(car.id, defaultCarColors[car.id])
+
+    setState({
+      highScore: 0,
+      bikeHighScore: 0,
+      carHighScore: 0,
+      unlockedBikes: ['blitz'],
+      unlockedCars: ['kanto-zip'],
+      bikeSkins: defaultBikeSkins,
+      totalCoins: 0,
+      inventory: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 },
+      vehicleMode: 'bike',
+      selectedBike: { ...bike, color: colors.color, accentColor: colors.accentColor },
+      selectedCar: carColor ? { ...car, color: carColor.color, accentColor: carColor.accentColor } : car,
+      selectedSkin: skin,
+      carColors: defaultCarColors,
+      selectedCarColor: defaultCarColors[car.id],
+      username: '',
+      nameEditsUsed: 0,
+      totalPlaytime: 0,
+      userPlaytime: {},
+      playtimeHistory: [],
+      score: 0,
+      distance: 0,
+      speed: 0,
+      nearMisses: 0,
+      combo: 0,
+      comboTimer: 0,
+      runCoins: 0,
+      selectedPowerUps: { magnet: 0, magnet2x: 0, multiplier2x: 0, multiplier4x: 0, shield: 0 },
+      playerLane: 0,
+      targetLane: 0,
+      playerX: 0,
+      newUnlock: null,
+      newUnlockUntil: null,
+      magnetActive: false,
+      magnetTimer: 0,
+      magnet2xActive: false,
+      magnet2xTimer: 0,
+      multiplierActive: false,
+      multiplierTimer: 0,
+      multiplier4x: false,
+      shieldActive: false,
+      shieldCount: 0,
+      gameState: 'menu',
+    })
+
+    return { ok: true as const, deviceCount: result.deviceCount }
+  },
   setGameState(gameState: GameState) {
     setState({ gameState })
     // Save progress when game ends
