@@ -95,12 +95,12 @@ export function UsernameInput() {
 }
 
 // ============== ACCOUNT ACCESS ==============
-export function AccountSetup({ onComplete }: { onComplete: () => void }) {
+export function AccountSetup({ onComplete, initialError = '' }: { onComplete: () => void; initialError?: string }) {
   const [mode, setMode] = useState<'choice' | 'new' | 'existing'>('choice')
   const [accountId, setAccountId] = useState('')
   const [username, setUsername] = useState('')
   const [newAccountId, setNewAccountId] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError] = useState(initialError)
   const [connecting, setConnecting] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -336,7 +336,7 @@ export function AccountSetup({ onComplete }: { onComplete: () => void }) {
     </div>
   )
 }
-function AccountProfile({ onBack }: { onBack: () => void }) {
+function AccountProfile({ onBack, onLogout }: { onBack: () => void; onLogout: () => void }) {
   const state = useGameStore()
   const [editing, setEditing] = useState(false)
   const [value, setValue] = useState(state.username)
@@ -409,6 +409,28 @@ function AccountProfile({ onBack }: { onBack: () => void }) {
           </button>
           <p className="mt-2 text-[10px] leading-4 text-white/40">Use this ID to open the same account on another device.</p>
           <p className="mt-1 text-[10px] font-semibold text-emerald-200/70">{copied ? 'Copied.' : 'Tap the ID to copy it.'}</p>
+        </div>
+
+        <div className="mt-3 rounded-2xl border border-red-300/15 bg-red-400/[0.045] p-3.5">
+          <button
+            type="button"
+            onClick={async () => {
+              setBusy(true)
+              setMessage('')
+              const result = await actions.logoutAccount()
+              setBusy(false)
+              if (!result.ok) {
+                setMessage(result.reason)
+                return
+              }
+              onLogout()
+            }}
+            disabled={busy}
+            className="w-full rounded-xl border border-red-300/20 bg-red-400/[0.08] py-3 text-xs font-black tracking-wide text-red-200 transition-all hover:bg-red-400/[0.14] active:scale-[.99] disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            {busy ? 'LOGGING OUT…' : 'LOG OUT'}
+          </button>
+          <p className="mt-2 text-center text-[10px] leading-4 text-white/35">Your cloud progress and analytics stay saved. This only disconnects this device.</p>
         </div>
 
         {message && <p className="mt-3 text-center text-xs font-semibold text-amber-200">{message}</p>}
@@ -797,7 +819,7 @@ function PlaytimeRankCard({ username }: { username: string }) {
   )
 }
 
-export function MainMenu() {
+export function MainMenu({ onLogout }: { onLogout: () => void }) {
   const state = useGameStore()
   const [showBikes, setShowBikes] = useState(false)
   const [showStore, setShowStore] = useState(false)
@@ -886,7 +908,7 @@ export function MainMenu() {
   }
 
   if (showAccount) {
-    return <AccountProfile onBack={() => setShowAccount(false)} />
+    return <AccountProfile onBack={() => setShowAccount(false)} onLogout={onLogout} />
   }
 
   if (showBikes) {
