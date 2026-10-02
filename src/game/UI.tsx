@@ -1205,7 +1205,11 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           </div>
 
           {/* Hero vehicle stage — existing selected vehicle, no new ownership state. */}
-          <div className="hs-menu-enter hs-menu-enter-delay relative mx-auto mb-5 h-[170px] w-full max-w-xl overflow-hidden rounded-[28px] border border-slate-200/10 bg-slate-950/80 backdrop-blur-[2px] sm:mb-6 sm:h-[215px]">
+          <div className="hs-menu-enter hs-menu-enter-delay relative mx-auto mb-5 h-[170px] w-full max-w-xl overflow-hidden rounded-[28px] border border-white/20 bg-white/[0.075] backdrop-blur-xl shadow-[0_20px_55px_rgba(0,0,0,.28),inset_0_1px_0_rgba(255,255,255,.26),inset_0_-1px_0_rgba(255,255,255,.07)] sm:mb-6 sm:h-[215px]">
+            <div className="pointer-events-none absolute inset-[1px] rounded-[27px] border border-white/[0.08]" />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(125deg,rgba(255,255,255,.18)_0%,rgba(255,255,255,.055)_22%,transparent_46%,rgba(255,255,255,.025)_68%,rgba(255,255,255,.09)_100%)]" />
+            <div className="pointer-events-none absolute -left-[18%] top-[-30%] h-[85%] w-[42%] rotate-[18deg] rounded-full bg-white/[0.08] blur-2xl" />
+            <div className="pointer-events-none absolute inset-x-6 top-2 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent" />
             <div className="absolute inset-0 hs-menu-hero-glow" />
             <div className="absolute inset-x-0 top-[20%] h-[52%] hs-menu-hero-surface pointer-events-none" />
             <div className="absolute left-1/2 top-[44%] h-px w-[62%] -translate-x-1/2 rounded-full bg-amber-200/30 hs-menu-hero-horizon pointer-events-none" />
