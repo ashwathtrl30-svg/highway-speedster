@@ -960,6 +960,11 @@ function FuturisticRider({
   handX = 0.20,
   handY = -0.04,
   handZ = -0.82,
+  leftElbowX,
+  leftElbowY,
+  leftHandX,
+  leftHandY,
+  leftHandZ,
   shoulderY = 0.55,
   hipY = 0.13,
   kneeY = -0.10,
@@ -974,6 +979,11 @@ function FuturisticRider({
   handX?: number
   handY?: number
   handZ?: number
+  leftElbowX?: number
+  leftElbowY?: number
+  leftHandX?: number
+  leftHandY?: number
+  leftHandZ?: number
   shoulderY?: number
   hipY?: number
   kneeY?: number
@@ -987,6 +997,11 @@ function FuturisticRider({
   const redDeep = '#a91f1b'
   const white = '#e8edf0'
   const visor = '#071017'
+  const resolvedLeftElbowX = leftElbowX ?? -elbowX
+  const resolvedLeftElbowY = leftElbowY ?? elbowY
+  const resolvedLeftHandX = leftHandX ?? -handX
+  const resolvedLeftHandY = leftHandY ?? handY
+  const resolvedLeftHandZ = leftHandZ ?? handZ
 
   return (
     <group position={position} scale={scale}>
@@ -1032,13 +1047,13 @@ function FuturisticRider({
         <sphereGeometry args={[0.105, 10, 8]} />
         <meshStandardMaterial color={red} metalness={0.42} roughness={0.30} />
       </mesh>
-      <RiderSegment start={[-0.16, shoulderY - 0.02, -0.07]} end={[-elbowX, elbowY, -0.34]} radius={0.075} color={suit} />
-      <RiderSegment start={[-elbowX, elbowY, -0.34]} end={[-handX, handY, handZ]} radius={0.065} color={suit} />
+      <RiderSegment start={[-0.16, shoulderY - 0.02, -0.07]} end={[resolvedLeftElbowX, resolvedLeftElbowY, -0.34]} radius={0.075} color={suit} />
+      <RiderSegment start={[resolvedLeftElbowX, resolvedLeftElbowY, -0.34]} end={[resolvedLeftHandX, resolvedLeftHandY, resolvedLeftHandZ]} radius={0.065} color={suit} />
       <RiderSegment start={[0.16, shoulderY - 0.02, -0.07]} end={[elbowX, elbowY, -0.34]} radius={0.075} color={suit} />
       <RiderSegment start={[elbowX, elbowY, -0.34]} end={[handX, handY, handZ]} radius={0.065} color={suit} />
 
       {/* White/red suit accents and gloves. */}
-      <mesh position={[-elbowX, 0.38, -0.22]} rotation={[0.1, 0, -0.04]}>
+      <mesh position={[resolvedLeftElbowX, 0.38, -0.22]} rotation={[0.1, 0, -0.04]}>
         <boxGeometry args={[0.18, 0.052, 0.035]} />
         <meshStandardMaterial color={white} metalness={0.22} roughness={0.45} />
       </mesh>
@@ -1046,7 +1061,7 @@ function FuturisticRider({
         <boxGeometry args={[0.18, 0.052, 0.035]} />
         <meshStandardMaterial color={white} metalness={0.22} roughness={0.45} />
       </mesh>
-      <mesh position={[-handX, handY, handZ - 0.01]}>
+      <mesh position={[resolvedLeftHandX, resolvedLeftHandY, resolvedLeftHandZ - 0.01]}>
         <sphereGeometry args={[0.072, 9, 7]} />
         <meshStandardMaterial color={suitEdge} metalness={0.18} roughness={0.70} />
       </mesh>
@@ -1488,14 +1503,6 @@ function StratosBike({ bike }: { bike: Bike }) {
       </mesh>
 
       {/* Racing cockpit - visible split clip-ons, steering stem and controls */}
-      <mesh position={[0, 0.91, -0.58]} rotation={[0.18, 0, 0]}>
-        <boxGeometry args={[0.2, 0.055, 0.12]} />
-        <meshStandardMaterial color="#55585b" metalness={0.95} roughness={0.12} />
-      </mesh>
-      <mesh position={[0, 0.96, -0.53]}>
-        <cylinderGeometry args={[0.035, 0.045, 0.16, 10]} />
-        <meshStandardMaterial color="#777b80" metalness={0.96} roughness={0.1} />
-      </mesh>
       <mesh position={[-0.22, 0.94, -0.56]} rotation={[0.18, 0, 0]}>
         <cylinderGeometry args={[0.025, 0.025, 0.28, 10]} />
         <meshStandardMaterial color="#3e4144" metalness={0.92} roughness={0.16} />
@@ -1503,14 +1510,6 @@ function StratosBike({ bike }: { bike: Bike }) {
       <mesh position={[0.22, 0.94, -0.56]} rotation={[0.18, 0, 0]}>
         <cylinderGeometry args={[0.025, 0.025, 0.28, 10]} />
         <meshStandardMaterial color="#3e4144" metalness={0.92} roughness={0.16} />
-      </mesh>
-      <mesh position={[-0.38, 0.95, -0.54]} rotation={[0.18, 0, 0]}>
-        <cylinderGeometry args={[0.043, 0.043, 0.16, 10]} />
-        <meshStandardMaterial color="#101113" roughness={0.92} />
-      </mesh>
-      <mesh position={[0.38, 0.95, -0.54]} rotation={[0.18, 0, 0]}>
-        <cylinderGeometry args={[0.043, 0.043, 0.16, 10]} />
-        <meshStandardMaterial color="#101113" roughness={0.92} />
       </mesh>
       {/* Brake/clutch control levers */}
       <mesh position={[-0.31, 0.93, -0.55]} rotation={[0.18, 0, -0.18]}>
@@ -1521,16 +1520,6 @@ function StratosBike({ bike }: { bike: Bike }) {
         <boxGeometry args={[0.035, 0.018, 0.17]} />
         <meshStandardMaterial color="#aeb3b7" metalness={0.95} roughness={0.12} />
       </mesh>
-      {/* Cockpit mirrors */}
-      <mesh position={[-0.32, 1.02, -0.57]}>
-        <sphereGeometry args={[0.055, 8, 6]} />
-        <meshStandardMaterial color="#202326" metalness={0.85} roughness={0.2} />
-      </mesh>
-      <mesh position={[0.32, 1.02, -0.57]}>
-        <sphereGeometry args={[0.055, 8, 6]} />
-        <meshStandardMaterial color="#202326" metalness={0.85} roughness={0.2} />
-      </mesh>
-
       {/* Headlight - aggressive single LED */}
       <mesh position={[0, 0.65, -1.1]}>
         <boxGeometry args={[0.15, 0.06, 0.04]} />
@@ -1564,6 +1553,11 @@ function StratosBike({ bike }: { bike: Bike }) {
         handX={0.39}
         handY={-0.03}
         handZ={-0.55}
+        leftElbowX={-0.20}
+        leftElbowY={0.13}
+        leftHandX={-0.39}
+        leftHandY={-0.03}
+        leftHandZ={-0.55}
         shoulderY={0.42}
         hipY={0.10}
         kneeY={-0.02}
@@ -1642,14 +1636,6 @@ function ZenithBike({ bike }: { bike: Bike }) {
       </mesh>
 
       {/* Hyperbike cockpit - forged top clamp with split clip-ons and racing controls */}
-      <mesh position={[0, 0.9, -0.62]} rotation={[0.2, 0, 0]}>
-        <boxGeometry args={[0.22, 0.06, 0.13]} />
-        <meshStandardMaterial color="#777b80" metalness={0.98} roughness={0.08} />
-      </mesh>
-      <mesh position={[0, 0.98, -0.57]}>
-        <cylinderGeometry args={[0.04, 0.05, 0.18, 10]} />
-        <meshStandardMaterial color="#9a9fa3" metalness={0.98} roughness={0.08} />
-      </mesh>
       <mesh position={[-0.24, 0.94, -0.6]} rotation={[0.2, 0, 0]}>
         <cylinderGeometry args={[0.026, 0.026, 0.3, 10]} />
         <meshStandardMaterial color="#2a2d30" metalness={0.96} roughness={0.1} />
@@ -1657,14 +1643,6 @@ function ZenithBike({ bike }: { bike: Bike }) {
       <mesh position={[0.24, 0.94, -0.6]} rotation={[0.2, 0, 0]}>
         <cylinderGeometry args={[0.026, 0.026, 0.3, 10]} />
         <meshStandardMaterial color="#2a2d30" metalness={0.96} roughness={0.1} />
-      </mesh>
-      <mesh position={[-0.4, 0.96, -0.58]} rotation={[0.2, 0, 0]}>
-        <cylinderGeometry args={[0.045, 0.045, 0.17, 10]} />
-        <meshStandardMaterial color="#090a0b" roughness={0.94} />
-      </mesh>
-      <mesh position={[0.4, 0.96, -0.58]} rotation={[0.2, 0, 0]}>
-        <cylinderGeometry args={[0.045, 0.045, 0.17, 10]} />
-        <meshStandardMaterial color="#090a0b" roughness={0.94} />
       </mesh>
       {/* Brembo-style lever silhouettes without logos */}
       <mesh position={[-0.33, 0.94, -0.59]} rotation={[0.2, 0, -0.2]}>
@@ -1675,16 +1653,6 @@ function ZenithBike({ bike }: { bike: Bike }) {
         <boxGeometry args={[0.036, 0.02, 0.19]} />
         <meshStandardMaterial color="#c4c8cb" metalness={0.98} roughness={0.09} />
       </mesh>
-      {/* Low-profile aerodynamic mirrors */}
-      <mesh position={[-0.34, 1.04, -0.61]}>
-        <sphereGeometry args={[0.06, 8, 6]} />
-        <meshStandardMaterial color="#111214" metalness={0.92} roughness={0.12} />
-      </mesh>
-      <mesh position={[0.34, 1.04, -0.61]}>
-        <sphereGeometry args={[0.06, 8, 6]} />
-        <meshStandardMaterial color="#111214" metalness={0.92} roughness={0.12} />
-      </mesh>
-
       {/* Headlight - LED strip */}
       <mesh position={[0, 0.62, -1.15]}>
         <boxGeometry args={[0.2, 0.04, 0.03]} />
@@ -1726,6 +1694,11 @@ function ZenithBike({ bike }: { bike: Bike }) {
         handX={0.39}
         handY={-0.03}
         handZ={-0.59}
+        leftElbowX={-0.20}
+        leftElbowY={0.13}
+        leftHandX={-0.39}
+        leftHandY={-0.03}
+        leftHandZ={-0.59}
         shoulderY={0.42}
         hipY={0.10}
         kneeY={-0.02}
