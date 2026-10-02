@@ -1378,28 +1378,6 @@ function ChronosBike({ bike }: { bike: Bike }) {
         <meshStandardMaterial color="#555555" metalness={0.85} />
       </mesh>
 
-      {/* Handlebar - clearly visible split clip-ons */}
-      <mesh position={[0, 0.90, -0.69]}>
-        <boxGeometry args={[0.18, 0.055, 0.12]} />
-        <meshStandardMaterial color="#666a6d" metalness={0.95} roughness={0.12} />
-      </mesh>
-      <mesh position={[-0.20, 0.90, -0.70]} rotation={[0.35, 0, 0]}>
-        <cylinderGeometry args={[0.024, 0.024, 0.22, 8]} />
-        <meshStandardMaterial color="#3d4145" metalness={0.92} roughness={0.16} />
-      </mesh>
-      <mesh position={[0.20, 0.90, -0.70]} rotation={[0.35, 0, 0]}>
-        <cylinderGeometry args={[0.024, 0.024, 0.22, 8]} />
-        <meshStandardMaterial color="#3d4145" metalness={0.92} roughness={0.16} />
-      </mesh>
-      <mesh position={[-0.33, 0.90, -0.71]} rotation={[0.35, 0, 0]}>
-        <cylinderGeometry args={[0.04, 0.04, 0.16, 8]} />
-        <meshStandardMaterial color="#111315" roughness={0.92} />
-      </mesh>
-      <mesh position={[0.33, 0.90, -0.71]} rotation={[0.35, 0, 0]}>
-        <cylinderGeometry args={[0.04, 0.04, 0.16, 8]} />
-        <meshStandardMaterial color="#111315" roughness={0.92} />
-      </mesh>
-      
       {/* Mirrors - integrated */}
       <mesh position={[-0.3, 0.92, -0.72]}>
         <sphereGeometry args={[0.035, 6, 6]} />
