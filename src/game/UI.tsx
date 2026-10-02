@@ -1271,8 +1271,6 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
 
             <div className="absolute inset-0 overflow-hidden rounded-[28px]">
 
-            <div className="pointer-events-none absolute -left-[18%] top-[-30%] h-[85%] w-[42%] rotate-[18deg] rounded-full bg-white/[0.08] blur-2xl" />
-            <div className="pointer-events-none absolute inset-x-6 top-2 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent" />
             <div className="absolute inset-0 hs-menu-hero-glow" />
             <div className="absolute inset-x-0 top-[20%] h-[52%] hs-menu-hero-surface pointer-events-none" />
             <div className="absolute left-1/2 top-[44%] h-px w-[62%] -translate-x-1/2 rounded-full bg-amber-200/30 hs-menu-hero-horizon pointer-events-none" />
