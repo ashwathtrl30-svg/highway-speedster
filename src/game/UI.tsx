@@ -1057,21 +1057,21 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
         }
         @keyframes hsMenuLaunchVehicle {
           0% { transform:translate3d(0,0,0); }
-          12% { transform:translate3d(14vw,-1px,0); }
-          30% { transform:translate3d(40vw,-3px,0); }
-          52% { transform:translate3d(62vw,-5px,0); }
-          76% { transform:translate3d(74vw,-7px,0); }
+          16% { transform:translate3d(13vw,-1px,0); }
+          34% { transform:translate3d(31vw,-2px,0); }
+          54% { transform:translate3d(52vw,-4px,0); }
+          76% { transform:translate3d(68vw,-7px,0); }
           100% { transform:translate3d(80vw,-9px,0); }
         }
         @keyframes hsMenuLaunchWheelie {
           0% { transform:translate3d(0,0,0) rotate(0deg); }
-          10% { transform:translate3d(0,-7px,0) rotate(-7deg); }
-          22% { transform:translate3d(0,-18px,0) rotate(-18deg); }
-          36% { transform:translate3d(0,-29px,0) rotate(-28deg); }
-          50% { transform:translate3d(0,-31px,0) rotate(-30deg); }
-          68% { transform:translate3d(0,-23px,0) rotate(-22deg); }
-          84% { transform:translate3d(0,-12px,0) rotate(-12deg); }
-          100% { transform:translate3d(0,-7px,0) rotate(-7deg); }
+          12% { transform:translate3d(0,-6px,0) rotate(-6deg); }
+          26% { transform:translate3d(0,-17px,0) rotate(-16deg); }
+          42% { transform:translate3d(0,-27px,0) rotate(-26deg); }
+          56% { transform:translate3d(0,-30px,0) rotate(-29deg); }
+          70% { transform:translate3d(0,-24px,0) rotate(-23deg); }
+          84% { transform:translate3d(0,-15px,0) rotate(-15deg); }
+          100% { transform:translate3d(0,-8px,0) rotate(-8deg); }
         }
         @keyframes hsMenuLaunchCamera {
           from { transform:translate3d(0,0,0); }
@@ -1103,7 +1103,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           100% { opacity:0; transform:scale(2.1); }
         }
         .hs-menu-launch-vehicle {
-          animation:hsMenuLaunchVehicle 900ms cubic-bezier(.08,.92,.12,1) both;
+          animation:hsMenuLaunchVehicle 900ms cubic-bezier(.18,.82,.20,1) both;
           transform-origin:50% 65%;
           transform:translate3d(0,0,0);
           backface-visibility:hidden;
@@ -1111,14 +1111,14 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           will-change:transform;
         }
         .hs-menu-launch-wheelie {
-          animation:hsMenuLaunchWheelie 900ms cubic-bezier(.08,.9,.12,1) both;
+          animation:hsMenuLaunchWheelie 900ms cubic-bezier(.18,.82,.20,1) both;
           transform-origin:46% 72%;
           backface-visibility:hidden;
           -webkit-backface-visibility:hidden;
           will-change:transform;
         }
         .hs-menu-launch-camera {
-          animation:hsMenuLaunchCamera 900ms cubic-bezier(.08,.9,.12,1) both;
+          animation:hsMenuLaunchCamera 900ms cubic-bezier(.18,.82,.20,1) both;
           transform-origin:50% 55%;
           transform:translate3d(0,0,0);
           backface-visibility:hidden;
@@ -1126,14 +1126,14 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
           will-change:transform;
         }
         .hs-menu-glass-crack {
-          animation:hsMenuGlassCrack 900ms linear both;
+          animation:hsMenuGlassCrack 900ms cubic-bezier(.18,.82,.20,1) both;
           transform-origin:50% 50%;
           backface-visibility:hidden;
           -webkit-backface-visibility:hidden;
           will-change:transform,opacity;
         }
         .hs-menu-glass-shard {
-          animation:hsMenuGlassShard 440ms cubic-bezier(.08,.9,.12,1) 170ms both;
+          animation:hsMenuGlassShard 520ms cubic-bezier(.18,.82,.20,1) 170ms both;
           transform-origin:center;
           backface-visibility:hidden;
           -webkit-backface-visibility:hidden;
