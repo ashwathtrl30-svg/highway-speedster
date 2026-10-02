@@ -20,6 +20,17 @@ const PLAYER_BIKE_TRIANGLE_BUDGET = 8000
 const TRAFFIC_VEHICLE_TRIANGLE_BUDGET = 4000
 const VEHICLE_DRAW_CALL_BUDGET = 120
 
+function isMobilePerformanceDevice(): boolean {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false
+  try {
+    const touchDevice = navigator.maxTouchPoints > 0 || 'ontouchstart' in window
+    const shortestSide = Math.min(window.innerWidth, window.innerHeight)
+    return touchDevice && shortestSide <= 1100
+  } catch {
+    return false
+  }
+}
+
 // Bike-specific spawn configurations
 const getSpawnConfig = (vehicleId: string) => {
   switch (vehicleId) {
@@ -1796,7 +1807,7 @@ function TrafficSystem() {
       case 'scooter': return [0.85, 1.15, 1.8]
       default: return [1.4, 1.1, 3.2]
     }
-  }, [])
+  }, [lineCount])
 
   useFrame((_, delta) => {
     const state = getState()
@@ -2199,6 +2210,17 @@ function getVfxBudget(gl: THREE.WebGLRenderer): { tier: VfxQualityTier; maxParti
     if (stored === 'high') return { tier: 'high', maxParticles: 250 }
   } catch {}
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  const mobile = isMobilePerformanceDevice()
+
+  if (mobile) {
+    const stored = (() => {
+      try { return window.localStorage.getItem('hs_gfx_quality') } catch { return null }
+    })()
+    if (stored === 'low') return { tier: 'low', maxParticles: 32 }
+    if (stored === 'high') return { tier: 'high', maxParticles: 110 }
+    return { tier: 'medium', maxParticles: 70 }
+  }
+
   const highCapability = gl.capabilities.maxTextureSize >= 2048 && gl.capabilities.getMaxAnisotropy() >= 4 && dpr <= 2
   return highCapability ? { tier: 'high', maxParticles: 250 } : { tier: 'medium', maxParticles: 120 }
 }
@@ -3333,6 +3355,8 @@ function areSpeedEffectsReduced() {
 }
 
 function SpeedEdgeStreaks() {
+  const mobile = isMobilePerformanceDevice()
+  const streakCount = mobile ? 16 : 28
   const groupRef = useRef<THREE.Group>(null)
   const streaksRef = useRef<Array<{ mesh: THREE.Mesh; side: -1 | 1; y: number; z: number; base: number }>>([])
   const reducedRef = useRef(false)
@@ -3377,7 +3401,7 @@ function SpeedEdgeStreaks() {
 
   return (
     <group ref={groupRef}>
-      {Array.from({ length: 28 }, (_, i) => {
+      {Array.from({ length: streakCount }, (_, i) => {
         const side: -1 | 1 = i % 2 === 0 ? -1 : 1
         return (
           <mesh
@@ -4528,13 +4552,15 @@ function Environment() {
 
 // ============== SPEED LINES ==============
 function SpeedLines() {
+  const mobile = isMobilePerformanceDevice()
+  const lineCount = mobile ? 24 : 42
   const linesRef = useRef<THREE.Group>(null)
   const linesDataRef = useRef<Array<{ x: number; y: number; z: number; speed: number; edge: number }>>([])
   const reducedRef = useRef(false)
 
   useEffect(() => {
     const data = []
-    for (let i = 0; i < 42; i++) {
+    for (let i = 0; i < lineCount; i++) {
       const side = i % 2 === 0 ? -1 : 1
       const edge = Math.random()
       data.push({
@@ -4591,7 +4617,7 @@ function SpeedLines() {
 
   return (
     <group ref={linesRef}>
-      {Array.from({ length: 42 }, (_, i) => (
+      {Array.from({ length: lineCount }, (_, i) => (
         <mesh key={i}>
           <boxGeometry args={[0.015, 0.4, 0.015]} />
           <meshBasicMaterial color="#ffffff" transparent opacity={0} depthWrite={false} />
@@ -4607,20 +4633,22 @@ export function GameScene() {
   const selectedBike = useGameStore((s) => s.selectedBike)
   const selectedCar = useGameStore((s) => s.selectedCar)
   const gameState = useGameStore((s) => s.gameState)
+  const mobilePerformance = isMobilePerformanceDevice()
 
   return (
     <Canvas
+      dpr={mobilePerformance ? [1, 1.35] : [1, 2]}
       camera={{ position: [0, 4, PLAYER_Z + 8], fov: 70, near: 0.1, far: 500 }}
       style={{ width: '100%', height: '100%' }}
       gl={{
-        antialias: true,
+        antialias: !mobilePerformance,
         alpha: false,
         powerPreference: 'high-performance',
         outputColorSpace: THREE.SRGBColorSpace,
         toneMapping: THREE.ACESFilmicToneMapping,
         toneMappingExposure: 1.12,
       }}
-      shadows={{ type: THREE.PCFSoftShadowMap }}
+      shadows={mobilePerformance ? false : { type: THREE.PCFSoftShadowMap }}
     >
       <Environment />
       <Highway />
