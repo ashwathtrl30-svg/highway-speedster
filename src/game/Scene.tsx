@@ -1521,17 +1521,6 @@ function StratosBike({ bike }: { bike: Bike }) {
       <FuturisticRider
         position={[0, 0.98, 0.10]}
         scale={0.90}
-        elbowX={0.20}
-        elbowY={0.13}
-        handX={0.39}
-        handY={-0.03}
-        handZ={-0.55}
-        shoulderY={0.42}
-        hipY={0.10}
-        kneeY={-0.02}
-        ankleY={-0.16}
-        ankleZ={0.26}
-        torsoRotationX={-0.40}
       />
     </>
   )
@@ -1630,17 +1619,6 @@ function StratosBike({ bike }: { bike: Bike }) {
       <FuturisticRider
         position={[0, 0.99, 0.06]}
         scale={0.92}
-        elbowX={0.20}
-        elbowY={0.13}
-        handX={0.39}
-        handY={-0.03}
-        handZ={-0.59}
-        shoulderY={0.42}
-        hipY={0.10}
-        kneeY={-0.02}
-        ankleY={-0.16}
-        ankleZ={0.27}
-        torsoRotationX={-0.40}
       />
     </>
   )
