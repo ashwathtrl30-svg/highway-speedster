@@ -1520,7 +1520,7 @@ function StratosBike({ bike }: { bike: Bike }) {
       {/* Supplied futuristic rider reference, scaled down to fit this bike. */}
       <FuturisticRider
         position={[0, 0.98, 0.10]}
-        scale={0.90}
+        scale={0.70}
       />
     </>
   )
@@ -1618,7 +1618,7 @@ function StratosBike({ bike }: { bike: Bike }) {
       {/* Supplied futuristic rider reference, scaled down to fit this bike. */}
       <FuturisticRider
         position={[0, 0.99, 0.06]}
-        scale={0.92}
+        scale={0.70}
       />
     </>
   )
