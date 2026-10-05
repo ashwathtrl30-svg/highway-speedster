@@ -666,14 +666,34 @@ function saveCloudProgressNow() {
   void saveUserGameProgress(playerId, current.username, progress, getOrCreateDeviceId())
 }
 
-const CLOUD_ANALYTICS_SYNC_MS = 30_000
+function flushAnalyticsRemainder() {
+  const current = getState()
+  if (!playerId || !current.username.trim()) return
+
+  if (pendingAnalyticsSeconds > 0) {
+    const remainder = pendingAnalyticsSeconds
+    pendingAnalyticsSeconds = 0
+    void recordPlaytimeEvent(playerId, current.username.trim(), remainder)
+  }
+
+  void syncAnalyticsToSupabase(
+    playerId,
+    current.username.trim(),
+    current.totalPlaytime,
+    current.highScore,
+    current.totalCoins
+  )
+  saveCloudProgressNow()
+}
+
+const CLOUD_ANALYTICS_SYNC_MS = 10_000
 
 function queueCloudSave() {
   if (cloudHydratingUser || cloudSaveTimer) return
 
-  // Throttle cloud persistence to one write per 30 seconds while still
-  // persisting the latest in-memory state. This keeps cloud progress current
-  // while substantially reducing database write pressure during traffic spikes.
+  // Throttle cloud persistence to one write per 10 seconds while still
+  // persisting the latest in-memory state. This keeps analytics/playtime current
+  // without changing gameplay or the player's local progress behavior.
   cloudSaveTimer = setTimeout(() => {
     cloudSaveTimer = null
     if (!cloudHydratingUser) saveCloudProgressNow()
@@ -788,7 +808,7 @@ export function subscribe(listener: Listener): () => void {
   return () => listeners.delete(listener)
 }
 
-// Analytics batches playtime into 30-second events so weekly/monthly history is accurate.
+// Analytics batches playtime into 10-second events for near-real-time history.
 let pendingAnalyticsSeconds = 0
 let currentRunSeconds = 0
 let currentRunStartingHighScore = 0
@@ -945,6 +965,18 @@ export const actions = {
     setState({ gameState })
     // Save progress when game ends
     if (gameState === 'gameover') {
+      if (state.username && pendingAnalyticsSeconds > 0) {
+        const remainder = pendingAnalyticsSeconds
+        pendingAnalyticsSeconds = 0
+        void recordPlaytimeEvent(playerId, state.username.trim(), remainder)
+        void syncAnalyticsToSupabase(
+          playerId,
+          state.username.trim(),
+          state.totalPlaytime,
+          state.highScore,
+          state.totalCoins
+        )
+      }
       trackEvent('game_over', {
         vehicle_mode: state.vehicleMode,
         vehicle_id: state.vehicleMode === 'car' ? state.selectedCar.id : state.selectedBike.id,
@@ -1626,14 +1658,23 @@ export const actions = {
     })
     saveProgress(state.highScore, state.unlockedBikes, state.bikeSkins, state.totalCoins, state.inventory, state.username, newTotalPlaytime, newUserPlaytime, newPlaytimeHistory)
     
-    // Record real historical playtime in 30-second batches so the
-    // rolling analytics windows stay accurate while reducing event-write load.
+    // Record exact historical playtime in 10-second batches.
+    // The cumulative account metric is synced at the same checkpoint.
     if (state.username) {
       pendingAnalyticsSeconds += seconds
-      if (pendingAnalyticsSeconds >= 30) {
+      if (pendingAnalyticsSeconds >= 10) {
         const eventSeconds = pendingAnalyticsSeconds
         pendingAnalyticsSeconds = 0
-        recordPlaytimeEvent(playerId, state.username, eventSeconds)
+        const currentUsername = state.username.trim()
+        const currentTotalPlaytime = newTotalPlaytime
+        void recordPlaytimeEvent(playerId, currentUsername, eventSeconds)
+        void syncAnalyticsToSupabase(
+          playerId,
+          currentUsername,
+          currentTotalPlaytime,
+          state.highScore,
+          state.totalCoins
+        )
       }
     }
   },
@@ -1748,4 +1789,11 @@ export function useGameStore<T>(selector?: (state: GameData) => T): T | GameData
 // Hook for specific actions that need stable references
 export function useGameActions() {
   return useRef(actions).current
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('pagehide', flushAnalyticsRemainder)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushAnalyticsRemainder()
+  })
 }
