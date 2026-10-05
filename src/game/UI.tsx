@@ -236,9 +236,9 @@ export function AccountSetup({ onComplete, initialError = '' }: { onComplete: ()
       </div>
 
       <div className="relative flex h-full items-center justify-center overflow-y-auto px-4 py-8 sm:px-6">
-        <div className="relative w-full max-w-[470px] [animation:hsAccountCardIn_500ms_ease-out]">
+        <div className="relative w-full max-w-[510px] [animation:hsAccountCardIn_500ms_ease-out]">
           <div className="absolute -inset-px rounded-[28px] bg-[linear-gradient(135deg,rgba(255,220,150,.28),rgba(255,255,255,.04)_34%,rgba(255,255,255,.02)_70%,rgba(88,172,200,.20))] blur-[1px]" />
-          <div className="relative overflow-hidden rounded-[28px] border border-white/12 bg-[#0d151b]/82 p-5 shadow-[0_26px_90px_rgba(0,0,0,.45),0_8px_28px_rgba(0,0,0,.22)] backdrop-blur-2xl sm:p-7">
+          <div className="relative overflow-hidden rounded-[28px] border border-white/12 bg-[#0d151b]/82 p-5 sm:p-8 shadow-[0_26px_90px_rgba(0,0,0,.45),0_8px_28px_rgba(0,0,0,.22)] backdrop-blur-2xl">
             <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-amber-200/60 to-transparent" />
             <div className="pointer-events-none absolute -right-20 -top-20 h-44 w-44 rounded-full bg-amber-300/8 blur-3xl" />
 
