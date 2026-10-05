@@ -1,5 +1,17 @@
 import { useRef, useMemo, useCallback, useEffect } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
+// Crash-isolation wrapper: a single bad per-frame visual callback must never
+// terminate the shared React Three Fiber render loop or take down the game.
+function safeUseFrame(callback: (...args: any[]) => void, renderPriority?: number) {
+  useFrame((...args: any[]) => {
+    try {
+      callback(...args)
+    } catch (error) {
+      console.error('Highway Speedster frame callback recovered from error:', error)
+    }
+  }, renderPriority)
+}
+
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { getState, actions, useGameStore, type Bike, type Car } from './store'
@@ -235,7 +247,7 @@ function Highway() {
     }
   }, [roadTextures])
 
-  useFrame((_, delta) => {
+  safeUseFrame((_, delta) => {
     const state = getState()
     if (state.gameState !== 'playing') return
 
@@ -543,7 +555,7 @@ function LightingRig() {
     }
   }, [])
 
-  useFrame(() => {
+  safeUseFrame(() => {
     const state = getState()
     const playerX = state.playerX
 
@@ -661,7 +673,7 @@ function PlayerWheelEffects({ vehicleMode, speed }: { vehicleMode: 'bike' | 'car
   const blurFrontRef = useRef<THREE.Mesh>(null)
   const blurRearRef = useRef<THREE.Mesh>(null)
 
-  useFrame(() => {
+  safeUseFrame(() => {
     const intensity = THREE.MathUtils.clamp((speed - 60) / 70, 0, 1)
     const opacity = 0.01 + intensity * 0.11
     if (blurFrontRef.current) {
@@ -803,7 +815,7 @@ function ShieldBubble({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
   const bubbleRef = useRef<THREE.Group>(null)
   const radius = vehicleMode === 'car' ? 1.48 : 0.96
 
-  useFrame((_, delta) => {
+  safeUseFrame((_, delta) => {
     if (!bubbleRef.current) return
     bubbleRef.current.rotation.y += delta * 0.2
     const pulse = 1 + Math.sin(performance.now() * 0.004) * 0.02
@@ -851,7 +863,7 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
 
   useEffect(() => { bikeRef.current = bike }, [bike])
 
-  useFrame((_, delta) => {
+  safeUseFrame((_, delta) => {
     const state = getState()
     if (state.gameState !== 'playing') return
 
@@ -1797,7 +1809,7 @@ function TrafficSystem() {
     }
   }, [])
 
-  useFrame((_, delta) => {
+  safeUseFrame((_, delta) => {
     const state = getState()
     
     // Clear vehicles when game restarts
@@ -1988,7 +2000,7 @@ function TrafficRenderer({ vehiclesRef, getDimensions }: {
   const groupRef = useRef<THREE.Group>(null)
   const meshCacheRef = useRef<Map<number, THREE.Group>>(new Map())
 
-  useFrame(() => {
+  safeUseFrame(() => {
     if (!groupRef.current) return
     const vehicles = vehiclesRef.current
     const state = getState()
@@ -2414,7 +2426,7 @@ function SharedParticleVFX() {
     }
   }, [baseColors, colors, geometry, kind, life, maxLife, material, maxParticles, positions, priority, velocities])
 
-  useFrame((_, delta) => {
+  safeUseFrame((_, delta) => {
     if (!pointsRef.current || hiddenRef.current || document.hidden) return
     const fx = sharedVfxEmitter
     if (!fx) return
@@ -2545,7 +2557,7 @@ function MagnetAura() {
     reducedRef.current = areSpeedEffectsReduced()
   }, [])
 
-  useFrame((_, delta) => {
+  safeUseFrame((_, delta) => {
     const state = getState()
     if (!groupRef.current) return
 
@@ -2698,7 +2710,7 @@ function CoinSystem() {
     magnetGlowMaterial,
   ])
 
-  useFrame((_, delta) => {
+  safeUseFrame((_, delta) => {
     const state = getState()
 
     if (state.gameState === 'playing' && lastGameStateRef.current !== 'playing') {
@@ -3096,7 +3108,7 @@ function PowerUpSystem() {
   const groupRef = useRef<THREE.Group>(null)
   const lastGameStateRef = useRef<string>('menu')
 
-  useFrame((_, delta) => {
+  safeUseFrame((_, delta) => {
     const state = getState()
     
     // Clear power-ups when game restarts
@@ -3364,7 +3376,7 @@ function SpeedEdgeStreaks() {
     reducedRef.current = areSpeedEffectsReduced()
   }, [])
 
-  useFrame((_, delta) => {
+  safeUseFrame((_, delta) => {
     const state = getState()
     if (state.gameState !== 'playing' || !groupRef.current) return
 
@@ -3451,7 +3463,7 @@ function SpeedVignette() {
     return () => texture.dispose()
   }, [texture])
 
-  useFrame(() => {
+  safeUseFrame(() => {
     const state = getState()
     if (!materialRef.current) return
     const normalized = THREE.MathUtils.clamp(state.speed / 120, 0, 1)
@@ -3567,7 +3579,7 @@ function CollisionFeedback() {
       poolRef.current = []
     }
   }, [])
-  useFrame((_, delta) => {
+  safeUseFrame((_, delta) => {
     const now = performance.now()
     const event = collisionImpactVisual
     if (event && event.id !== lastEventIdRef.current) {
@@ -3651,7 +3663,7 @@ function CollisionScreenEffect() {
     return () => texture.dispose()
   }, [texture])
 
-  useFrame((_, delta) => {
+  safeUseFrame((_, delta) => {
     const event = collisionImpactVisual
     if (event && event.id !== lastEventIdRef.current) {
       lastEventIdRef.current = event.id
@@ -3722,7 +3734,7 @@ function GameCamera() {
     return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [])
 
-  useFrame((_, delta) => {
+  safeUseFrame((_, delta) => {
     if (hiddenRef.current || document.hidden) return
 
     const state = getState()
@@ -4345,7 +4357,7 @@ function AtmosphereSky() {
     [uniforms]
   )
 
-  useFrame(() => {
+  safeUseFrame(() => {
     // Keep the dome centered on the camera so the sky is infinitely distant.
     material.uniforms.sunDirection.value.set(0.12, 0.72, -0.68).normalize()
     material.needsUpdate = false
@@ -4572,7 +4584,7 @@ function SpeedLines() {
     reducedRef.current = areSpeedEffectsReduced()
   }, [])
 
-  useFrame((_, delta) => {
+  safeUseFrame((_, delta) => {
     const state = getState()
     if (state.gameState !== 'playing' || !linesRef.current) return
 
