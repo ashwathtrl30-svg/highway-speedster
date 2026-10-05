@@ -245,8 +245,7 @@ export function AccountSetup({ onComplete, initialError = '' }: { onComplete: ()
             <div className="relative mb-7">
               <div className="flex items-center justify-between gap-5">
                 <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.24em] text-amber-200/70">HIGHWAY SPEEDSTER</p>
-                  <h1 className="mt-3 text-[34px] font-black tracking-[-0.02em] text-white sm:text-[40px]">Welcome, rider.</h1>
+                  <h1 className="text-[34px] font-black tracking-[-0.02em] text-white sm:text-[40px]">Welcome, rider.</h1>
                 </div>
                 
               </div>
