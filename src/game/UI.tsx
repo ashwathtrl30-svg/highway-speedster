@@ -259,7 +259,7 @@ export function AccountSetup({ onComplete, initialError = '' }: { onComplete: ()
               <div className="relative space-y-4">
                 <button
                   onClick={beginNewUser}
-                  className="hs-account-option group w-full rounded-2xl border border-amber-200/25 bg-[linear-gradient(135deg,rgba(255,190,70,.98),rgba(241,118,36,.98))] px-4 py-5 sm:px-5 sm:py-5 text-left" shadow-[inset_0_1px_0_rgba(255,255,255,.28),0_12px_30px_rgba(246,124,39,.18)]"
+                  className="hs-account-option group w-full rounded-2xl border border-amber-200/25 bg-[linear-gradient(135deg,rgba(255,190,70,.98),rgba(241,118,36,.98))] px-4 py-5 sm:px-5 sm:py-5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,.28),0_12px_30px_rgba(246,124,39,.18)]"
                   style={{ animation: 'hsAccountOptionIn 360ms ease-out both' }}
                 >
                   <div className="flex items-center gap-4">
