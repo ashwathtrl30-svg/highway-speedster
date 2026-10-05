@@ -236,21 +236,21 @@ export function AccountSetup({ onComplete, initialError = '' }: { onComplete: ()
       </div>
 
       <div className="relative flex h-full items-center justify-center overflow-y-auto px-4 py-8 sm:px-6">
-        <div className="relative w-full max-w-[510px] [animation:hsAccountCardIn_500ms_ease-out]">
+        <div className="relative w-full max-w-[560px] [animation:hsAccountCardIn_500ms_ease-out]">
           <div className="absolute -inset-px rounded-[28px] bg-[linear-gradient(135deg,rgba(255,220,150,.28),rgba(255,255,255,.04)_34%,rgba(255,255,255,.02)_70%,rgba(88,172,200,.20))] blur-[1px]" />
-          <div className="relative overflow-hidden rounded-[28px] border border-white/12 bg-[#0d151b]/82 p-5 sm:p-8 shadow-[0_26px_90px_rgba(0,0,0,.45),0_8px_28px_rgba(0,0,0,.22)] backdrop-blur-2xl">
+          <div className="relative overflow-hidden rounded-[28px] border border-white/12 bg-[#0d151b]/82 p-6 sm:p-9 shadow-[0_26px_90px_rgba(0,0,0,.45),0_8px_28px_rgba(0,0,0,.22)] backdrop-blur-2xl">
             <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-amber-200/60 to-transparent" />
             <div className="pointer-events-none absolute -right-20 -top-20 h-44 w-44 rounded-full bg-amber-300/8 blur-3xl" />
 
-            <div className="relative mb-6">
-              <div className="flex items-center justify-between gap-4">
+            <div className="relative mb-7">
+              <div className="flex items-center justify-between gap-5">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.28em] text-amber-200/70">HIGHWAY SPEEDSTER</p>
-                  <h1 className="mt-2 text-[30px] font-black tracking-[-0.03em] text-white sm:text-[36px]">Welcome, rider.</h1>
+                  <p className="text-[11px] font-black uppercase tracking-[0.24em] text-amber-200/70">HIGHWAY SPEEDSTER</p>
+                  <h1 className="mt-3 text-[34px] font-black tracking-[-0.02em] text-white sm:text-[40px]">Welcome, rider.</h1>
                 </div>
                 
               </div>
-              <p className="mt-3 max-w-[390px] text-[13px] leading-5 text-white/55">
+              <p className="mt-4 max-w-[470px] text-[14px] leading-6 text-white/55">
                 Create a fresh account or reconnect an existing one. Your account ID keeps your progress separate from every other rider.
               </p>
             </div>
@@ -259,18 +259,18 @@ export function AccountSetup({ onComplete, initialError = '' }: { onComplete: ()
               <div className="relative space-y-4">
                 <button
                   onClick={beginNewUser}
-                  className="hs-account-option group w-full rounded-2xl border border-amber-200/25 bg-[linear-gradient(135deg,rgba(255,190,70,.98),rgba(241,118,36,.98))] px-4 py-5 sm:px-5 sm:py-5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,.28),0_12px_30px_rgba(246,124,39,.18)]"
+                  className="hs-account-option group w-full rounded-2xl border border-amber-200/25 bg-[linear-gradient(135deg,rgba(255,190,70,.98),rgba(241,118,36,.98))] px-5 py-6 sm:px-6 sm:py-6 text-left shadow-[inset_0_1px_0_rgba(255,255,255,.28),0_12px_30px_rgba(246,124,39,.18)]"
                   style={{ animation: 'hsAccountOptionIn 360ms ease-out both' }}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-black/10 bg-white/18 text-[13px] font-black text-black shadow-[inset_0_1px_0_rgba(255,255,255,.30)]">01</div>
+                    <div className="flex h-13 w-13 shrink-0 items-center justify-center rounded-xl border border-black/10 bg-white/18 text-[13px] font-black text-black shadow-[inset_0_1px_0_rgba(255,255,255,.30)]">01</div>
                     <div className="min-w-0 flex-1">
-                      <span className="block text-[15px] font-black tracking-wide text-black sm:text-base">NEW USER</span>
-                      <span className="mt-1 block text-[11px] font-semibold leading-4 text-black/62">
+                      <span className="block text-[16px] font-black tracking-wide text-black sm:text-base">NEW USER</span>
+                      <span className="mt-1 block text-[12px] font-semibold leading-5 text-black/62">
                         Start fresh with a brand-new account and zero progress.
                       </span>
                     </div>
-                    <span className="text-lg font-black text-black/60 transition-transform duration-200 group-hover:translate-x-1">→</span>
+                    <span className="text-xl font-black text-black/60 transition-transform duration-200 group-hover:translate-x-1">→</span>
                   </div>
                 </button>
 
