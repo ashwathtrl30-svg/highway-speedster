@@ -65,7 +65,7 @@ export async function syncAnalyticsToSupabase(
 export async function recordPlaytimeEvent(playerId: string, username: string, seconds: number) {
   const cleanPlayerId = playerId.trim()
   const cleanUsername = username.trim()
-  const eventSeconds = Math.min(60, Math.floor(seconds))
+  const eventSeconds = Math.min(10, Math.floor(seconds))
 
   if (!cleanPlayerId || !cleanUsername || eventSeconds <= 0) return
 
