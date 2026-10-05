@@ -138,7 +138,10 @@ async function flushPlaytimeQueue() {
       const { error } = await supabase.from('playtime_events').insert(batch)
       if (error) throw error
 
-      writePlaytimeQueue(currentQueue.slice(batch.length))
+      // Remove only the batch that was successfully uploaded. Re-read the
+      // queue so events added while the request was in flight are preserved.
+      const latestQueue = readPlaytimeQueue()
+      writePlaytimeQueue(latestQueue.slice(batch.length))
     } catch (error) {
       console.error('Playtime analytics upload failed; keeping events queued for retry:', error)
       if (playtimeRetryTimer) clearTimeout(playtimeRetryTimer)
