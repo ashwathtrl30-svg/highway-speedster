@@ -256,14 +256,14 @@ export function AccountSetup({ onComplete, initialError = '' }: { onComplete: ()
             </div>
 
             {mode === 'choice' && (
-              <div className="relative space-y-3">
+              <div className="relative space-y-4">
                 <button
                   onClick={beginNewUser}
-                  className="hs-account-option group w-full rounded-2xl border border-amber-200/25 bg-[linear-gradient(135deg,rgba(255,190,70,.98),rgba(241,118,36,.98))] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,.28),0_12px_30px_rgba(246,124,39,.18)]"
+                  className="hs-account-option group w-full rounded-2xl border border-amber-200/25 bg-[linear-gradient(135deg,rgba(255,190,70,.98),rgba(241,118,36,.98))] px-4 py-5 sm:px-5 sm:py-5 text-left" shadow-[inset_0_1px_0_rgba(255,255,255,.28),0_12px_30px_rgba(246,124,39,.18)]"
                   style={{ animation: 'hsAccountOptionIn 360ms ease-out both' }}
                 >
-                  <div className="flex items-center gap-3.5">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-black/10 bg-white/18 text-[13px] font-black text-black shadow-[inset_0_1px_0_rgba(255,255,255,.30)]">01</div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-black/10 bg-white/18 text-[13px] font-black text-black shadow-[inset_0_1px_0_rgba(255,255,255,.30)]">01</div>
                     <div className="min-w-0 flex-1">
                       <span className="block text-[15px] font-black tracking-wide text-black sm:text-base">NEW USER</span>
                       <span className="mt-1 block text-[11px] font-semibold leading-4 text-black/62">
@@ -276,11 +276,11 @@ export function AccountSetup({ onComplete, initialError = '' }: { onComplete: ()
 
                 <button
                   onClick={() => { setMode('existing'); setError('') }}
-                  className="hs-account-option group w-full rounded-2xl border border-white/12 bg-white/[0.045] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,.05),0_12px_28px_rgba(0,0,0,.16)] hover:border-white/20 hover:bg-white/[0.07]"
+                  className="hs-account-option group w-full rounded-2xl border border-white/12 bg-white/[0.045] px-4 py-5 sm:px-5 sm:py-5 text-left" shadow-[inset_0_1px_0_rgba(255,255,255,.05),0_12px_28px_rgba(0,0,0,.16)] hover:border-white/20 hover:bg-white/[0.07]"
                   style={{ animation: 'hsAccountOptionIn 360ms 90ms ease-out both' }}
                 >
-                  <div className="flex items-center gap-3.5">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.055] text-[13px] font-black text-white/75">02</div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.055] text-[13px] font-black text-white/75">02</div>
                     <div className="min-w-0 flex-1">
                       <span className="block text-[15px] font-black tracking-wide text-white sm:text-base">ALREADY HAVE AN ACCOUNT</span>
                       <span className="mt-1 block text-[11px] font-semibold leading-4 text-white/48">
