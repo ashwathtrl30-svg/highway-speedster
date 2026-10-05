@@ -62,6 +62,98 @@ export async function syncAnalyticsToSupabase(
   }
 }
 
+type PendingPlaytimeEvent = {
+  player_id: string
+  username: string
+  seconds: number
+}
+
+const PLAYTIME_QUEUE_KEY = 'highway-speedster-playtime-queue-v1'
+const PLAYTIME_QUEUE_MAX = 2000
+let playtimeFlushPromise: Promise<void> | null = null
+let playtimeRetryTimer: ReturnType<typeof setTimeout> | null = null
+
+function readPlaytimeQueue(): PendingPlaytimeEvent[] {
+  try {
+    const raw = localStorage.getItem(PLAYTIME_QUEUE_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .filter((event): event is PendingPlaytimeEvent =>
+        event &&
+        typeof event.player_id === 'string' &&
+        typeof event.username === 'string' &&
+        Number.isFinite(event.seconds)
+      )
+      .map((event) => ({
+        player_id: event.player_id.trim(),
+        username: event.username.trim(),
+        seconds: Math.min(10, Math.max(1, Math.floor(event.seconds))),
+      }))
+      .filter((event) => event.player_id && event.username)
+      .slice(-PLAYTIME_QUEUE_MAX)
+  } catch {
+    return []
+  }
+}
+
+function writePlaytimeQueue(queue: PendingPlaytimeEvent[]) {
+  try {
+    localStorage.setItem(PLAYTIME_QUEUE_KEY, JSON.stringify(queue.slice(-PLAYTIME_QUEUE_MAX)))
+  } catch (error) {
+    console.error('Unable to persist playtime retry queue:', error)
+  }
+}
+
+function enqueuePlaytimeEvent(event: PendingPlaytimeEvent) {
+  const queue = readPlaytimeQueue()
+  queue.push(event)
+  writePlaytimeQueue(queue)
+}
+
+async function flushPlaytimeQueue() {
+  if (playtimeFlushPromise) return playtimeFlushPromise
+
+  playtimeFlushPromise = (async () => {
+    try {
+      const queue = readPlaytimeQueue()
+      if (queue.length === 0) return
+
+      // Re-establish the anonymous Supabase session before retrying. This is
+      // intentionally best-effort: the analytics sink can still accept the
+      // payload according to the project's configured access policy.
+      await ensureSupabaseAuth()
+
+      const currentQueue = readPlaytimeQueue()
+      if (currentQueue.length === 0) return
+
+      const { data: sessionData } = await supabase.auth.getSession()
+      const authUserId = sessionData.session?.user?.id ?? null
+      const batch = currentQueue.slice(0, 100).map((event) => ({
+        ...event,
+        ...(authUserId ? { auth_user_id: authUserId } : {}),
+      }))
+
+      const { error } = await supabase.from('playtime_events').insert(batch)
+      if (error) throw error
+
+      writePlaytimeQueue(currentQueue.slice(batch.length))
+    } catch (error) {
+      console.error('Playtime analytics upload failed; keeping events queued for retry:', error)
+      if (playtimeRetryTimer) clearTimeout(playtimeRetryTimer)
+      playtimeRetryTimer = setTimeout(() => {
+        playtimeRetryTimer = null
+        void flushPlaytimeQueue()
+      }, 15000)
+    } finally {
+      playtimeFlushPromise = null
+    }
+  })()
+
+  return playtimeFlushPromise
+}
+
 export async function recordPlaytimeEvent(playerId: string, username: string, seconds: number) {
   const cleanPlayerId = playerId.trim()
   const cleanUsername = username.trim()
@@ -69,30 +161,13 @@ export async function recordPlaytimeEvent(playerId: string, username: string, se
 
   if (!cleanPlayerId || !cleanUsername || eventSeconds <= 0) return
 
-  try {
-    // Prefer an authenticated session when available. When anonymous sign-ins
-    // are disabled, this still records to the public append-only analytics sink.
-    const { data: sessionData } = await supabase.auth.getSession()
-    const authUserId = sessionData.session?.user?.id ?? null
+  enqueuePlaytimeEvent({
+    player_id: cleanPlayerId,
+    username: cleanUsername,
+    seconds: eventSeconds,
+  })
 
-    const payload: {
-      player_id: string
-      username: string
-      seconds: number
-      auth_user_id?: string
-    } = {
-      player_id: cleanPlayerId,
-      username: cleanUsername,
-      seconds: eventSeconds,
-    }
-
-    if (authUserId) payload.auth_user_id = authUserId
-
-    const { error } = await supabase.from('playtime_events').insert(payload)
-    if (error) throw error
-  } catch (error) {
-    console.error('Error recording playtime event:', error)
-  }
+  void flushPlaytimeQueue()
 }
 
 
