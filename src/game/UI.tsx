@@ -276,7 +276,7 @@ export function AccountSetup({ onComplete, initialError = '' }: { onComplete: ()
 
                 <button
                   onClick={() => { setMode('existing'); setError('') }}
-                  className="hs-account-option group w-full rounded-2xl border border-white/12 bg-white/[0.045] px-4 py-5 sm:px-5 sm:py-5 text-left" shadow-[inset_0_1px_0_rgba(255,255,255,.05),0_12px_28px_rgba(0,0,0,.16)] hover:border-white/20 hover:bg-white/[0.07]"
+                  className="hs-account-option group w-full rounded-2xl border border-white/12 bg-white/[0.045] px-4 py-5 sm:px-5 sm:py-5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,.05),0_12px_28px_rgba(0,0,0,.16)] hover:border-white/20 hover:bg-white/[0.07]"
                   style={{ animation: 'hsAccountOptionIn 360ms 90ms ease-out both' }}
                 >
                   <div className="flex items-center gap-4">
