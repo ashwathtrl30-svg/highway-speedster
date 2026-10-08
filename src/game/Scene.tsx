@@ -25,6 +25,12 @@ const NUM_SEGMENTS = 30
 const VISIBLE_DISTANCE = 400
 const PLAYER_Z = 5
 
+// Mobile rendering profile: preserve gameplay and scene composition while
+// preventing high-DPR mobile displays from multiplying GPU pixel work.
+const MOBILE_RENDER_PROFILE =
+  typeof window !== 'undefined' &&
+  (navigator.maxTouchPoints > 1 || window.matchMedia?.('(pointer: coarse)').matches === true)
+
 // [GFX] Mobile vehicle rendering budgets: player bike <=8k triangles,
 // traffic vehicle <=4k triangles, vehicle set <=120 draw calls.
 // The visual additions below stay far below these per-vehicle geometry limits.
@@ -608,7 +614,7 @@ function getVehicleGfxQuality(gl: THREE.WebGLRenderer): VehicleGfxQuality {
     // Storage access is optional; fall back to capability detection.
   }
 
-  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  const dpr = Math.min(window.devicePixelRatio || 1, MOBILE_RENDER_PROFILE ? 1.35 : 2)
   const highCapability =
     gl.capabilities.getMaxAnisotropy() >= 4 &&
     gl.capabilities.maxTextureSize >= 2048 &&
@@ -2233,8 +2239,9 @@ function getVfxBudget(gl: THREE.WebGLRenderer): { tier: VfxQualityTier; maxParti
     if (stored === 'medium') return { tier: 'medium', maxParticles: 120 }
     if (stored === 'high') return { tier: 'high', maxParticles: 250 }
   } catch {}
-  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  const dpr = Math.min(window.devicePixelRatio || 1, MOBILE_RENDER_PROFILE ? 1.35 : 2)
   const highCapability = gl.capabilities.maxTextureSize >= 2048 && gl.capabilities.getMaxAnisotropy() >= 4 && dpr <= 2
+  if (MOBILE_RENDER_PROFILE) return { tier: 'medium', maxParticles: 90 }
   return highCapability ? { tier: 'high', maxParticles: 250 } : { tier: 'medium', maxParticles: 120 }
 }
 
@@ -4647,15 +4654,16 @@ export function GameScene() {
     <Canvas
       camera={{ position: [0, 4, PLAYER_Z + 8], fov: 70, near: 0.1, far: 500 }}
       style={{ width: '100%', height: '100%' }}
+      dpr={MOBILE_RENDER_PROFILE ? [0.85, 1.35] : [1, 2]}
       gl={{
-        antialias: true,
+        antialias: !MOBILE_RENDER_PROFILE,
         alpha: false,
         powerPreference: 'high-performance',
         outputColorSpace: THREE.SRGBColorSpace,
         toneMapping: THREE.ACESFilmicToneMapping,
         toneMappingExposure: 1.12,
       }}
-      shadows={{ type: THREE.PCFSoftShadowMap }}
+      shadows={{ type: MOBILE_RENDER_PROFILE ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap }}
     >
       <Environment />
       <Highway />
