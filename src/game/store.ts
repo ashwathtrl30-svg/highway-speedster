@@ -439,7 +439,7 @@ function getOrCreateDeviceId(): string {
   return getDeviceId() || generateDeviceId()
 }
 
-function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHighScore: number; unlockedBikes: string[]; unlockedCars: string[]; bikeSkins: Record<string, BikeSkin>; totalCoins: number; inventory: PowerUpInventory; username: string; totalPlaytime: number; userPlaytime: Record<string, number>; playtimeHistory: PlaytimeEntry[]; vehicleMode: 'bike' | 'car'; selectedBikeId: string; selectedCarId: string; selectedSkin: BikeSkin; carColors: Record<string, string>; selectedCarColor: string } {
+function loadSavedProgress(): { highScore: number; bikeHighScore: number; carHighScore: number; unlockedBikes: string[]; unlockedCars: string[]; bikeSkins: Record<string, BikeSkin>; totalCoins: number; inventory: PowerUpInventory; username: string; totalPlaytime: number; userPlaytime: Record<string, number>; playtimeHistory: PlaytimeEntry[]; nameEditsUsed: number; vehicleMode: 'bike' | 'car'; selectedBikeId: string; selectedCarId: string; selectedSkin: BikeSkin; carColors: Record<string, string>; selectedCarColor: string } {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {

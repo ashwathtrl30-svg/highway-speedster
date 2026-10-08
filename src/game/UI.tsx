@@ -743,7 +743,7 @@ function StatsScreen({ onBack }: { onBack: () => void }) {
                         <span className="text-white font-bold truncate">{user.username}</span>
                         {user.username === state.username && <span className="text-[10px] bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full font-semibold">YOU</span>}
                       </div>
-                      <p className="text-gray-400 text-xs mt-1">Playtime in {filterLabel[timeFilter]}</p>
+                      <p className="text-gray-400 text-xs mt-1">Playtime in {filterLabel}</p>
                     </div>
                   </div>
                   <div className="text-purple-400 font-black text-sm sm:text-base whitespace-nowrap">{formatTime(user.seconds)}</div>
@@ -1637,7 +1637,7 @@ export function MainMenu({ onLogout }: { onLogout: () => void }) {
                   <path d="M5 6h8.5a4 4 0 0 1 0 8H9l-2.5 4H4l2-4H5a4 4 0 0 1 0-8Z" stroke="currentColor" strokeWidth="1.8"/>
                   <path d="M15.5 8.5 20 6v8l-4.5-2.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                RIDE NOW
+                {isCar ? 'ENTER THE TRACK' : 'HIT THE ROAD'}
               </span>
             </button>
 
@@ -3158,7 +3158,7 @@ export function GameOverScreen() {
             onClick={() => { actions.resetGame(); actions.setGameState('playing') }}
             className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-base sm:text-lg py-3 rounded-xl shadow-lg shadow-green-500/25 active:scale-95 transition-all"
           >
-            🔄 RIDE AGAIN
+            🔄 DOMINATE AGAIN
           </button>
           <button
             onClick={() => { actions.resetGame(); actions.setGameState('menu') }}
