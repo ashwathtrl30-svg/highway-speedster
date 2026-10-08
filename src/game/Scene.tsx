@@ -14,7 +14,9 @@ function safeUseFrame(callback: (...args: any[]) => void, renderPriority?: numbe
 
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
+import { Html } from '@react-three/drei'
 import { getState, actions, useGameStore, type Bike, type Car } from './store'
+import { BikeIcon, CarIcon } from './VehicleArt'
 import { sweptSegmentOverlapsRange } from './collision'
 
 // Constants
@@ -853,13 +855,12 @@ function ShieldBubble({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
 
 function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
   const meshRef = useRef<THREE.Group>(null)
-  const visualRef = useRef<THREE.Group>(null)
   const currentXRef = useRef(0)
   const tiltRef = useRef(0)
   const bikeRef = useRef(bike)
-  const wheelSpinRef = useRef(0)
   const shieldActive = useGameStore((s) => s.shieldActive)
   const vehicleMode = useGameStore((s) => s.vehicleMode)
+  const selectedSkin = useGameStore((s) => s.selectedSkin)
 
   useEffect(() => { bikeRef.current = bike }, [bike])
 
@@ -876,266 +877,50 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
     const tiltTarget = (targetX - currentXRef.current) * 0.12
     tiltRef.current += (tiltTarget - tiltRef.current) * 5 * delta
 
-    wheelSpinRef.current += state.speed * delta * 0.3
-
     if (meshRef.current) {
       meshRef.current.position.x = currentXRef.current
       meshRef.current.rotation.z = tiltRef.current
       meshRef.current.rotation.y = -tiltRef.current * 0.3
-      meshRef.current.position.y = 0
-
-      if (visualRef.current) {
-        const speedNorm = THREE.MathUtils.clamp(state.speed / 100, 0, 1)
-        visualRef.current.rotation.z = tiltRef.current * 0.14
-        visualRef.current.rotation.y = -tiltRef.current * 0.05
-        visualRef.current.position.y = 0
-        visualRef.current.scale.y = 1 - speedNorm * 0.018
-
-        visualRef.current.traverse((object) => {
-          if (object instanceof THREE.Mesh && object.name === 'player-wheel') {
-            object.rotation.x = wheelSpinRef.current
-          }
-        })
-      }
     }
   })
 
-  const renderBikeModel = () => {
-    switch (bike.id) {
-      case 'blitz': return <BlitzBike bike={bike} />
-      case 'apex': return <ApexBike bike={bike} />
-      case 'chronos': return <ChronosBike bike={bike} />
-      case 'stratos': return <StratosBike bike={bike} />
-      case 'zenith': return <ZenithBike bike={bike} />
-      default: return <BlitzBike bike={bike} />
-    }
-  }
-
-  const renderCarModel = () => {
-    switch (car.id) {
-      case 'kanto-zip': return <KantoZipCar car={car} />
-      case 'saber-swift': return <SaberSwiftCar car={car} />
-      case 'goliath-titan': return <GoliathTitanCar car={car} />
-      case 'kaiser-monarch': return <KaiserMonarchCar car={car} />
-      case 'scuderia-fury': return <ScuderiaFuryCar car={car} />
-      default: return <KantoZipCar car={car} />
-    }
-  }
-
-  useEffect(() => {
-    const root = meshRef.current
-    if (!root) return
-    root.traverse((object) => {
-      if (object instanceof THREE.Mesh) {
-        object.castShadow = true
-        object.receiveShadow = true
-      }
-    })
-  }, [bike.id, car.id, vehicleMode])
-
   return (
     <group ref={meshRef} position={[0, 0, PLAYER_Z]}>
-      <group ref={visualRef}>
-        {vehicleMode === 'car' ? renderCarModel() : renderBikeModel()}
-        <VehicleLightingAccents
-          vehicleMode={vehicleMode}
-          hideHighlightRails={vehicleMode === 'bike' && (bike.id === 'stratos' || bike.id === 'zenith')}
-          hideHeadlights={vehicleMode === 'bike' && (bike.id === 'stratos' || bike.id === 'zenith')}
-        />
-        {shieldActive && <ShieldBubble vehicleMode={vehicleMode} />}
-      </group>
-    </group>
-  )
-}
-
-// ============== FUTURISTIC RIDER ==============
-function RiderSegment({
-  start,
-  end,
-  radius,
-  color,
-  metalness = 0.35,
-  roughness = 0.5,
-}: {
-  start: [number, number, number]
-  end: [number, number, number]
-  radius: number
-  color: string
-  metalness?: number
-  roughness?: number
-}) {
-  const a = new THREE.Vector3(...start)
-  const b = new THREE.Vector3(...end)
-  const direction = new THREE.Vector3().subVectors(b, a)
-  const length = direction.length()
-  const midpoint = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5)
-  const quaternion = new THREE.Quaternion().setFromUnitVectors(
-    new THREE.Vector3(0, 1, 0),
-    direction.normalize()
-  )
-
-  return (
-    <mesh position={midpoint} quaternion={quaternion} castShadow receiveShadow>
-      <cylinderGeometry args={[radius * 0.92, radius, length, 10]} />
-      <meshStandardMaterial color={color} metalness={metalness} roughness={roughness} />
-    </mesh>
-  )
-}
-
-function FuturisticRider({
-  position,
-  scale = 0.70,
-  elbowX = 0.19,
-  elbowY = 0.28,
-  handX = 0.20,
-  handY = -0.04,
-  handZ = -0.82,
-  leftElbowX,
-  leftElbowY,
-  leftHandX,
-  leftHandY,
-  leftHandZ,
-  leftArmResting = false,
-  shoulderY = 0.55,
-  hipY = -0.02,
-  kneeY = -0.18,
-  ankleY = -0.38,
-  ankleZ = 0.06,
-  torsoRotationX = -0.30,
-}: {
-  position: [number, number, number]
-  scale?: number
-  elbowX?: number
-  elbowY?: number
-  handX?: number
-  handY?: number
-  handZ?: number
-  leftElbowX?: number
-  leftElbowY?: number
-  leftHandX?: number
-  leftHandY?: number
-  leftHandZ?: number
-  leftArmResting?: boolean
-  shoulderY?: number
-  hipY?: number
-  kneeY?: number
-  ankleY?: number
-  ankleZ?: number
-  torsoRotationX?: number
-}) {
-  const suit = '#20252a'
-  const suitEdge = '#0f1317'
-  const red = '#e33a32'
-  const redDeep = '#a91f1b'
-  const white = '#e8edf0'
-  const visor = '#071017'
-  const resolvedLeftElbowX = leftArmResting ? -0.24 : (leftElbowX ?? -elbowX)
-  const resolvedLeftElbowY = leftArmResting ? 0.08 : (leftElbowY ?? elbowY)
-  const resolvedLeftHandX = leftArmResting ? -0.26 : (leftHandX ?? -handX)
-  const resolvedLeftHandY = leftArmResting ? -0.22 : (leftHandY ?? handY)
-  const resolvedLeftHandZ = leftArmResting ? 0.20 : (leftHandZ ?? handZ)
-
-  return (
-    <group position={position} scale={scale}>
-      {/* Same supplied visual language: black/red/white suit, full dark helmet,
-          compact forward tuck and pronounced bent legs. */}
-      <mesh position={[0, 0.36, -0.05]} rotation={[torsoRotationX, 0, 0]}>
-        <boxGeometry args={[0.38, 0.50, 0.30]} />
-        <meshStandardMaterial color={suit} metalness={0.38} roughness={0.42} />
-      </mesh>
-      <mesh position={[0, 0.52, -0.15]} rotation={[torsoRotationX, 0, 0]}>
-        <boxGeometry args={[0.24, 0.14, 0.035]} />
-        <meshStandardMaterial color={red} metalness={0.45} roughness={0.32} />
-      </mesh>
-      <mesh position={[0, 0.42, -0.20]} rotation={[torsoRotationX, 0, 0]}>
-        <boxGeometry args={[0.27, 0.055, 0.028]} />
-        <meshStandardMaterial color={white} metalness={0.25} roughness={0.48} />
-      </mesh>
-
-      {/* Helmet shell, red perimeter and dark visor. */}
-      <mesh position={[0, 0.82, -0.25]} scale={[1.0, 1.07, 1.10]}>
-        <sphereGeometry args={[0.19, 14, 10]} />
-        <meshStandardMaterial color="#252b31" metalness={0.62} roughness={0.20} />
-      </mesh>
-      <mesh
-        position={[0, 0.82, -0.25]}
-        rotation={[Math.PI / 2, 0, 0]}
-        scale={[1.0, 0.88, 1.0]}
+      <Html
+        position={[0, 0.92, 0]}
+        center
+        sprite
+        zIndexRange={[10, 20]}
+        style={{
+          width: vehicleMode === 'car' ? '280px' : '260px',
+          height: vehicleMode === 'car' ? '168px' : '156px',
+          pointerEvents: 'none',
+          userSelect: 'none',
+          display: 'block',
+        }}
       >
-        <torusGeometry args={[0.155, 0.026, 8, 16]} />
-        <meshStandardMaterial color={red} metalness={0.55} roughness={0.20} />
-      </mesh>
-      <mesh position={[0, 0.79, -0.43]} rotation={[-0.12, 0, 0]}>
-        <boxGeometry args={[0.20, 0.105, 0.04]} />
-        <meshStandardMaterial color={visor} metalness={0.82} roughness={0.10} />
-      </mesh>
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            filter: 'drop-shadow(0 14px 12px rgba(0,0,0,.32))',
+          }}
+        >
+          {vehicleMode === 'car'
+            ? <CarIcon car={car} />
+            : <BikeIcon bike={bike} skin={selectedSkin} />}
+        </div>
+      </Html>
 
-      {/* Arms: shoulder armor, dropped elbows and hands at the bars. */}
-      <mesh position={[-0.17, shoulderY, -0.08]} scale={[1.10, 0.85, 0.95]}>
-        <sphereGeometry args={[0.105, 10, 8]} />
-        <meshStandardMaterial color={red} metalness={0.42} roughness={0.30} />
-      </mesh>
-      <mesh position={[0.17, shoulderY, -0.08]} scale={[1.10, 0.85, 0.95]}>
-        <sphereGeometry args={[0.105, 10, 8]} />
-        <meshStandardMaterial color={red} metalness={0.42} roughness={0.30} />
-      </mesh>
-      <RiderSegment start={[-0.16, shoulderY - 0.02, -0.07]} end={[resolvedLeftElbowX, resolvedLeftElbowY, -0.34]} radius={0.075} color={suit} />
-      <RiderSegment start={[resolvedLeftElbowX, resolvedLeftElbowY, -0.34]} end={[resolvedLeftHandX, resolvedLeftHandY, resolvedLeftHandZ]} radius={0.065} color={suit} />
-      <RiderSegment start={[0.16, shoulderY - 0.02, -0.07]} end={[elbowX, elbowY, -0.34]} radius={0.075} color={suit} />
-      <RiderSegment start={[elbowX, elbowY, -0.34]} end={[handX, handY, handZ]} radius={0.065} color={suit} />
-
-      {/* White/red suit accents and gloves. */}
-      <mesh position={[resolvedLeftElbowX, 0.38, -0.22]} rotation={[0.1, 0, -0.04]}>
-        <boxGeometry args={[0.18, 0.052, 0.035]} />
-        <meshStandardMaterial color={white} metalness={0.22} roughness={0.45} />
-      </mesh>
-      <mesh position={[elbowX, 0.38, -0.22]} rotation={[0.1, 0, 0.04]}>
-        <boxGeometry args={[0.18, 0.052, 0.035]} />
-        <meshStandardMaterial color={white} metalness={0.22} roughness={0.45} />
-      </mesh>
-      <mesh position={[resolvedLeftHandX, resolvedLeftHandY, resolvedLeftHandZ - 0.01]}>
-        <sphereGeometry args={[0.072, 9, 7]} />
-        <meshStandardMaterial color={suitEdge} metalness={0.18} roughness={0.70} />
-      </mesh>
-      <mesh position={[handX, handY, handZ - 0.01]}>
-        <sphereGeometry args={[0.072, 9, 7]} />
-        <meshStandardMaterial color={suitEdge} metalness={0.18} roughness={0.70} />
-      </mesh>
-
-      {/* Legs deliberately form hip -> forward knee -> rear ankle: ">" from side view. */}
-      <RiderSegment start={[-0.14, hipY, 0.28]} end={[-0.15, kneeY, -0.34]} radius={0.092} color={suit} metalness={0.32} roughness={0.46} />
-      <RiderSegment start={[-0.15, kneeY, -0.34]} end={[-0.15, ankleY, ankleZ]} radius={0.078} color={suit} metalness={0.30} roughness={0.48} />
-      <RiderSegment start={[0.14, hipY, 0.28]} end={[0.15, kneeY, -0.34]} radius={0.092} color={suit} metalness={0.32} roughness={0.46} />
-      <RiderSegment start={[0.15, kneeY, -0.34]} end={[0.15, ankleY, ankleZ]} radius={0.078} color={suit} metalness={0.30} roughness={0.48} />
-
-      {/* Knee armor, bright shin bands and boots. */}
-      <mesh position={[-0.15, kneeY, -0.34]} scale={[1.0, 1.0, 1.12]}>
-        <sphereGeometry args={[0.095, 10, 8]} />
-        <meshStandardMaterial color={redDeep} metalness={0.45} roughness={0.30} />
-      </mesh>
-      <mesh position={[0.15, kneeY, -0.34]} scale={[1.0, 1.0, 1.12]}>
-        <sphereGeometry args={[0.095, 10, 8]} />
-        <meshStandardMaterial color={redDeep} metalness={0.45} roughness={0.30} />
-      </mesh>
-      <mesh position={[-0.15, -0.23, -0.16]} rotation={[-0.35, 0, 0]}>
-        <boxGeometry args={[0.13, 0.045, 0.035]} />
-        <meshStandardMaterial color={white} metalness={0.24} roughness={0.45} />
-      </mesh>
-      <mesh position={[0.15, -0.23, -0.16]} rotation={[-0.35, 0, 0]}>
-        <boxGeometry args={[0.13, 0.045, 0.035]} />
-        <meshStandardMaterial color={white} metalness={0.24} roughness={0.45} />
-      </mesh>
-      <mesh position={[-0.15, ankleY - 0.06, ankleZ]}>
-        <boxGeometry args={[0.14, 0.16, 0.28]} />
-        <meshStandardMaterial color={suitEdge} metalness={0.30} roughness={0.54} />
-      </mesh>
-      <mesh position={[0.15, ankleY - 0.06, ankleZ]}>
-        <boxGeometry args={[0.14, 0.16, 0.28]} />
-        <meshStandardMaterial color={suitEdge} metalness={0.30} roughness={0.54} />
-      </mesh>
+      <VehicleLightingAccents vehicleMode={vehicleMode} />
+      {shieldActive && <ShieldBubble vehicleMode={vehicleMode} />}
     </group>
   )
 }
+
 // ============== BLITZ BIKE (Modern Neo-Retro Cruiser) ==============
 function BlitzBike({ bike }: { bike: Bike }) {
   return (
