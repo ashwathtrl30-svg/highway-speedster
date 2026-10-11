@@ -541,7 +541,7 @@ function VehicleLightingAccents({
       map: getGlowTexture('head'),
       color: '#fff8d6',
       transparent: true,
-      opacity: 0.72,
+      opacity: 0.42,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     }),
@@ -570,8 +570,8 @@ function VehicleLightingAccents({
     <group>
       {!hideHeadlights && (
         <>
-          <sprite position={[-spread, y, frontZ]} scale={[0.42, 0.42, 1]} material={headMaterial} />
-          <sprite position={[spread, y, frontZ]} scale={[0.42, 0.42, 1]} material={headMaterial} />
+          <sprite position={[-spread, y, frontZ]} scale={[0.30, 0.30, 1]} material={headMaterial} />
+          <sprite position={[spread, y, frontZ]} scale={[0.30, 0.30, 1]} material={headMaterial} />
         </>
       )}
       <sprite position={[-spread, y * 0.9, rearZ]} scale={[0.32, 0.32, 1]} material={tailMaterial} />
@@ -608,11 +608,15 @@ function VehicleLightingAccents({
 function LightingRig() {
   const keyRef = useRef<THREE.DirectionalLight>(null)
   const targetRef = useRef<THREE.Object3D>(null)
-  const headlightRef = useRef<THREE.PointLight>(null)
+  const headlightRef = useRef<THREE.SpotLight>(null)
+  const headlightTargetRef = useRef<THREE.Object3D>(null)
 
   useEffect(() => {
     if (keyRef.current && targetRef.current) {
       keyRef.current.target = targetRef.current
+    }
+    if (headlightRef.current && headlightTargetRef.current) {
+      headlightRef.current.target = headlightTargetRef.current
     }
   }, [])
 
@@ -626,8 +630,12 @@ function LightingRig() {
       targetRef.current.updateMatrixWorld()
     }
     if (headlightRef.current) {
-      headlightRef.current.position.set(playerX, 1.1, PLAYER_Z - 2.8)
+      headlightRef.current.position.set(playerX, 0.78, PLAYER_Z - 1.35)
       headlightRef.current.intensity = state.gameState === 'playing' ? 1.8 : 0.65
+    }
+    if (headlightTargetRef.current) {
+      headlightTargetRef.current.position.set(playerX, 0.25, PLAYER_Z - 18)
+      headlightTargetRef.current.updateMatrixWorld()
     }
   })
 
@@ -661,14 +669,17 @@ function LightingRig() {
         color="#71a8d0"
         intensity={0.42}
       />
-      <pointLight
+      <spotLight
         ref={headlightRef}
-        position={[0, 1.1, PLAYER_Z - 2.8]}
+        position={[0, 0.78, PLAYER_Z - 1.35]}
         color="#fff1c7"
         intensity={0.65}
-        distance={18}
+        distance={28}
+        angle={0.34}
+        penumbra={0.72}
         decay={2}
       />
+      <object3D ref={headlightTargetRef} position={[0, 0.25, PLAYER_Z - 18]} />
       <object3D ref={targetRef} position={[0, 0, PLAYER_Z - 9]} />
     </group>
   )
@@ -4588,12 +4599,8 @@ function Environment() {
 
       {/* Sun: bright enough to define the sky without washing out road/vehicle contrast. */}
       <mesh position={[40, 70, -250]}>
-        <sphereGeometry args={[17, 16, 16]} />
+        <sphereGeometry args={[14, 24, 16]} />
         <meshBasicMaterial color="#ffd09b" />
-      </mesh>
-      <mesh position={[40, 70, -250]}>
-        <sphereGeometry args={[33, 16, 16]} />
-        <meshBasicMaterial color="#ffb878" transparent opacity={0.18} depthWrite={false} />
       </mesh>
 
       <DistantDepthLayers />
