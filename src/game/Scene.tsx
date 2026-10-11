@@ -604,19 +604,76 @@ function VehicleLightingAccents({
     </group>
   )
 }
+// [GFX] Vehicle-local headlamps. Keeping the lights inside the player group
+// guarantees that the beam follows the bike/car rather than illuminating a
+// detached roadside position. The transparent cones make the emitted light
+// readable even on devices with conservative dynamic-light settings.
+function VehicleHeadlightBeams({ vehicleMode }: { vehicleMode: 'bike' | 'car' }) {
+  const isCar = vehicleMode === 'car'
+  const frontZ = isCar ? -1.65 : -1.05
+  const y = isCar ? 0.58 : 0.64
+  const spread = isCar ? 0.52 : 0.32
+  const leftTargetRef = useRef<THREE.Object3D>(null)
+  const rightTargetRef = useRef<THREE.Object3D>(null)
+  const leftLightRef = useRef<THREE.SpotLight>(null)
+  const rightLightRef = useRef<THREE.SpotLight>(null)
+  useEffect(() => {
+    if (leftLightRef.current && leftTargetRef.current) leftLightRef.current.target = leftTargetRef.current
+    if (rightLightRef.current && rightTargetRef.current) rightLightRef.current.target = rightTargetRef.current
+  }, [])
+  return (
+    <group>
+      <spotLight
+        ref={leftLightRef}
+        position={[-spread, y, frontZ]}
+        color="#fff2bf"
+        intensity={6}
+        distance={24}
+        angle={0.28}
+        penumbra={0.88}
+        decay={2}
+      />
+      <spotLight
+        ref={rightLightRef}
+        position={[spread, y, frontZ]}
+        color="#fff2bf"
+        intensity={6}
+        distance={24}
+        angle={0.28}
+        penumbra={0.88}
+        decay={2}
+      />
+      <object3D ref={leftTargetRef} position={[-spread * 1.5, 0.12, frontZ - 16]} />
+      <object3D ref={rightTargetRef} position={[spread * 1.5, 0.12, frontZ - 16]} />
+      {[-spread, spread].map((x) => (
+        <mesh
+          key={x}
+          position={[x, y - 0.08, frontZ - 4.3]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          renderOrder={4}
+        >
+          <coneGeometry args={[isCar ? 0.62 : 0.38, 8.6, 16, 1, true]} />
+          <meshBasicMaterial
+            color="#fff3c4"
+            transparent
+            opacity={0.075}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      ))}
+    </group>
+  )
+}
 
 function LightingRig() {
   const keyRef = useRef<THREE.DirectionalLight>(null)
   const targetRef = useRef<THREE.Object3D>(null)
-  const headlightRef = useRef<THREE.SpotLight>(null)
-  const headlightTargetRef = useRef<THREE.Object3D>(null)
 
   useEffect(() => {
     if (keyRef.current && targetRef.current) {
       keyRef.current.target = targetRef.current
-    }
-    if (headlightRef.current && headlightTargetRef.current) {
-      headlightRef.current.target = headlightTargetRef.current
     }
   }, [])
 
@@ -628,14 +685,6 @@ function LightingRig() {
       keyRef.current.position.set(playerX + 18, 28, PLAYER_Z + 18)
       targetRef.current.position.set(playerX, 0, PLAYER_Z - 9)
       targetRef.current.updateMatrixWorld()
-    }
-    if (headlightRef.current) {
-      headlightRef.current.position.set(playerX, 0.78, PLAYER_Z - 1.35)
-      headlightRef.current.intensity = state.gameState === 'playing' ? 1.8 : 0.65
-    }
-    if (headlightTargetRef.current) {
-      headlightTargetRef.current.position.set(playerX, 0.25, PLAYER_Z - 18)
-      headlightTargetRef.current.updateMatrixWorld()
     }
   })
 
@@ -669,17 +718,6 @@ function LightingRig() {
         color="#71a8d0"
         intensity={0.42}
       />
-      <spotLight
-        ref={headlightRef}
-        position={[0, 0.78, PLAYER_Z - 1.35]}
-        color="#fff1c7"
-        intensity={0.65}
-        distance={28}
-        angle={0.34}
-        penumbra={0.72}
-        decay={2}
-      />
-      <object3D ref={headlightTargetRef} position={[0, 0.25, PLAYER_Z - 18]} />
       <object3D ref={targetRef} position={[0, 0, PLAYER_Z - 9]} />
     </group>
   )
@@ -1031,6 +1069,7 @@ function Motorcycle({ bike, car }: { bike: Bike; car: Car }) {
           hideHighlightRails={vehicleMode === 'bike' && (bike.id === 'stratos' || bike.id === 'zenith')}
           hideHeadlights={vehicleMode === 'bike' && (bike.id === 'stratos' || bike.id === 'zenith')}
         />
+        <VehicleHeadlightBeams vehicleMode={vehicleMode} />
         {shieldActive && <ShieldBubble vehicleMode={vehicleMode} />}
       </group>
     </group>
@@ -4087,10 +4126,10 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
     poleMesh.castShadow = true
     const lampGeo = new THREE.SphereGeometry(0.12, 7, 6)
     const lampMat = new THREE.MeshStandardMaterial({
-      color: '#fff6d5',
-      emissive: '#ffe8a6',
-      emissiveIntensity: 0.90,
-      roughness: 0.32,
+      color: '#7d8584',
+      emissive: '#141817',
+      emissiveIntensity: 0.04,
+      roughness: 0.42,
     })
     const lampMesh = new THREE.InstancedMesh(lampGeo, lampMat, lamps.length)
 
