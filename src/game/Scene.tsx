@@ -413,70 +413,11 @@ function Highway() {
 
       {/* [GFX] Reusable roadside environment follows the existing segment
           recycling transform and is fully visual-only. */}
-      {GFX_UPGRADE_ENABLED && (
-        <>
-          <RoadsideVisualInstances segmentOffsets={segments} />
-          <RoadReflectors segmentOffsets={segments} />
-        </>
-      )}
+      {GFX_UPGRADE_ENABLED && <RoadsideVisualInstances segmentOffsets={segments} />}
     </group>
   )
 }
 
-// [GFX] Reflective road studs add a grounded high-speed reference line without
-// changing lanes, collision bounds, or the recycled road segment dimensions.
-function RoadReflectors({ segmentOffsets }: { segmentOffsets: number[] }) {
-  const groupRef = useRef<THREE.Group>(null)
-  const reflectorData = useMemo(() => {
-    const data: Array<{ x: number; z: number; color: string }> = []
-    segmentOffsets.forEach((segmentZ, segmentIndex) => {
-      for (let i = 0; i < 4; i += 1) {
-        const z = segmentZ - SEGMENT_LENGTH / 2 + 2.4 + i * 4.8
-        data.push({ x: -LANE_WIDTH / 2, z, color: '#f4df8a' })
-        data.push({ x: LANE_WIDTH / 2, z, color: '#f4df8a' })
-        if (segmentIndex % 2 === 0) {
-          data.push({ x: -ROAD_WIDTH / 2 + 0.72, z: z + 0.4, color: '#fff2bc' })
-          data.push({ x: ROAD_WIDTH / 2 - 0.72, z: z + 0.4, color: '#fff2bc' })
-        }
-      }
-    })
-    return data
-  }, [segmentOffsets])
-  const reflectorGeo = useMemo(() => new THREE.BoxGeometry(0.12, 0.025, 0.24), [])
-  const reflectorMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#f4df8a',
-    emissive: '#c18b2d',
-    emissiveIntensity: 0.42,
-    metalness: 0.68,
-    roughness: 0.24,
-  }), [])
-  useEffect(() => {
-    const root = groupRef.current
-    if (!root) return
-    const mesh = new THREE.InstancedMesh(reflectorGeo, reflectorMat, reflectorData.length)
-    mesh.frustumCulled = false
-    mesh.renderOrder = 3
-    const dummy = new THREE.Object3D()
-    reflectorData.forEach((item, index) => {
-      dummy.position.set(item.x, 0.028, item.z)
-      dummy.rotation.set(-0.08, 0, 0)
-      dummy.updateMatrix()
-      mesh.setMatrixAt(index, dummy.matrix)
-      mesh.setColorAt(index, new THREE.Color(item.color))
-    })
-    mesh.instanceMatrix.needsUpdate = true
-    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
-    root.add(mesh)
-    return () => {
-      root.remove(mesh)
-    }
-  }, [reflectorData, reflectorGeo, reflectorMat])
-  useEffect(() => () => {
-    reflectorGeo.dispose()
-    reflectorMat.dispose()
-  }, [reflectorGeo, reflectorMat])
-  return <group ref={groupRef} />
-}
 // [GFX] Lightweight vehicle lighting: additive billboard glows and restrained
 // specular/rim accents. No gameplay transform, collision, or input dependency.
 let headGlowTexture: THREE.CanvasTexture | null = null
