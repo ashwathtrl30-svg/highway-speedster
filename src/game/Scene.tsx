@@ -413,11 +413,70 @@ function Highway() {
 
       {/* [GFX] Reusable roadside environment follows the existing segment
           recycling transform and is fully visual-only. */}
-      {GFX_UPGRADE_ENABLED && <RoadsideVisualInstances segmentOffsets={segments} />}
+      {GFX_UPGRADE_ENABLED && (
+        <>
+          <RoadsideVisualInstances segmentOffsets={segments} />
+          <RoadReflectors segmentOffsets={segments} />
+        </>
+      )}
     </group>
   )
 }
 
+// [GFX] Reflective road studs add a grounded high-speed reference line without
+// changing lanes, collision bounds, or the recycled road segment dimensions.
+function RoadReflectors({ segmentOffsets }: { segmentOffsets: number[] }) {
+  const groupRef = useRef<THREE.Group>(null)
+  const reflectorData = useMemo(() => {
+    const data: Array<{ x: number; z: number; color: string }> = []
+    segmentOffsets.forEach((segmentZ, segmentIndex) => {
+      for (let i = 0; i < 4; i += 1) {
+        const z = segmentZ - SEGMENT_LENGTH / 2 + 2.4 + i * 4.8
+        data.push({ x: -LANE_WIDTH / 2, z, color: '#f4df8a' })
+        data.push({ x: LANE_WIDTH / 2, z, color: '#f4df8a' })
+        if (segmentIndex % 2 === 0) {
+          data.push({ x: -ROAD_WIDTH / 2 + 0.72, z: z + 0.4, color: '#fff2bc' })
+          data.push({ x: ROAD_WIDTH / 2 - 0.72, z: z + 0.4, color: '#fff2bc' })
+        }
+      }
+    })
+    return data
+  }, [segmentOffsets])
+  const reflectorGeo = useMemo(() => new THREE.BoxGeometry(0.12, 0.025, 0.24), [])
+  const reflectorMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#f4df8a',
+    emissive: '#c18b2d',
+    emissiveIntensity: 0.42,
+    metalness: 0.68,
+    roughness: 0.24,
+  }), [])
+  useEffect(() => {
+    const root = groupRef.current
+    if (!root) return
+    const mesh = new THREE.InstancedMesh(reflectorGeo, reflectorMat, reflectorData.length)
+    mesh.frustumCulled = false
+    mesh.renderOrder = 3
+    const dummy = new THREE.Object3D()
+    reflectorData.forEach((item, index) => {
+      dummy.position.set(item.x, 0.028, item.z)
+      dummy.rotation.set(-0.08, 0, 0)
+      dummy.updateMatrix()
+      mesh.setMatrixAt(index, dummy.matrix)
+      mesh.setColorAt(index, new THREE.Color(item.color))
+    })
+    mesh.instanceMatrix.needsUpdate = true
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
+    root.add(mesh)
+    return () => {
+      root.remove(mesh)
+    }
+  }, [reflectorData, reflectorGeo, reflectorMat])
+  useEffect(() => () => {
+    reflectorGeo.dispose()
+    reflectorMat.dispose()
+  }, [reflectorGeo, reflectorMat])
+  return <group ref={groupRef} />
+}
 // [GFX] Lightweight vehicle lighting: additive billboard glows and restrained
 // specular/rim accents. No gameplay transform, collision, or input dependency.
 let headGlowTexture: THREE.CanvasTexture | null = null
@@ -549,6 +608,7 @@ function VehicleLightingAccents({
 function LightingRig() {
   const keyRef = useRef<THREE.DirectionalLight>(null)
   const targetRef = useRef<THREE.Object3D>(null)
+  const headlightRef = useRef<THREE.PointLight>(null)
 
   useEffect(() => {
     if (keyRef.current && targetRef.current) {
@@ -565,21 +625,25 @@ function LightingRig() {
       targetRef.current.position.set(playerX, 0, PLAYER_Z - 9)
       targetRef.current.updateMatrixWorld()
     }
+    if (headlightRef.current) {
+      headlightRef.current.position.set(playerX, 1.1, PLAYER_Z - 2.8)
+      headlightRef.current.intensity = state.gameState === 'playing' ? 1.8 : 0.65
+    }
   })
 
   return (
     <group>
       <hemisphereLight
-        color="#b9d9ec"
-        groundColor="#53664a"
-        intensity={0.96}
+        color="#9cc9e6"
+        groundColor="#3d443a"
+        intensity={0.82}
       />
-      <ambientLight intensity={0.25} color="#f0e9dc" />
+      <ambientLight intensity={0.18} color="#d4e2ec" />
       <directionalLight
         ref={keyRef}
         position={[18, 28, PLAYER_Z + 18]}
-        color="#ffd9ad"
-        intensity={1.82}
+        color="#ffc28d"
+        intensity={2.15}
         castShadow
         shadow-mapSize-width={512}
         shadow-mapSize-height={512}
@@ -591,6 +655,19 @@ function LightingRig() {
         shadow-camera-right={13}
         shadow-camera-top={12}
         shadow-camera-bottom={-8}
+      />
+      <directionalLight
+        position={[-22, 12, PLAYER_Z - 28]}
+        color="#71a8d0"
+        intensity={0.42}
+      />
+      <pointLight
+        ref={headlightRef}
+        position={[0, 1.1, PLAYER_Z - 2.8]}
+        color="#fff1c7"
+        intensity={0.65}
+        distance={18}
+        decay={2}
       />
       <object3D ref={targetRef} position={[0, 0, PLAYER_Z - 9]} />
     </group>
@@ -3928,29 +4005,33 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
     trunkMesh.castShadow = true
 
     const canopyGeos = [
-      new THREE.SphereGeometry(1.25, 8, 6),
-      new THREE.ConeGeometry(1.35, 2.6, 8),
-      new THREE.SphereGeometry(1.05, 7, 5),
+      new THREE.SphereGeometry(1.25, 10, 7),
+      new THREE.ConeGeometry(1.35, 2.6, 10),
+      new THREE.SphereGeometry(1.05, 9, 6),
     ]
-    // Lush foliage: darker and more saturated than the muted roadside grass (#53664a).
+    // Lush foliage uses three dusk-shifted greens so repeated trees read as
+    // separate species instead of a single repeated primitive.
     const canopyMats = [
       new THREE.MeshStandardMaterial({
-        color: '#1f6b2b',
+        color: '#235e36',
         roughness: 0.88,
-        emissive: '#08260e',
+        emissive: '#071b10',
         emissiveIntensity: 0.02,
+        flatShading: true,
       }),
       new THREE.MeshStandardMaterial({
-        color: '#1f6b2b',
+        color: '#345f31',
         roughness: 0.88,
-        emissive: '#08260e',
+        emissive: '#0c1d0d',
         emissiveIntensity: 0.02,
+        flatShading: true,
       }),
       new THREE.MeshStandardMaterial({
-        color: '#1f6b2b',
+        color: '#1d4f2e',
         roughness: 0.88,
-        emissive: '#08260e',
+        emissive: '#06170c',
         emissiveIntensity: 0.02,
+        flatShading: true,
       }),
     ]
     const variantCounts = [0, 0, 0]
@@ -4306,10 +4387,10 @@ function AtmosphereSky() {
 
   const uniforms = useMemo(
     () => ({
-      topColor: { value: new THREE.Color('#70b5dc') },
-      horizonColor: { value: new THREE.Color('#e0eef4') },
-      lowerHorizonColor: { value: new THREE.Color('#d3dfe3') },
-      sunColor: { value: new THREE.Color('#fff7df') },
+      topColor: { value: new THREE.Color('#0b1728') },
+      horizonColor: { value: new THREE.Color('#d78b6d') },
+      lowerHorizonColor: { value: new THREE.Color('#384a59') },
+      sunColor: { value: new THREE.Color('#ffd39b') },
       sunDirection: { value: new THREE.Vector3(0.12, 0.72, -0.68).normalize() },
     }),
     []
@@ -4360,7 +4441,7 @@ function AtmosphereSky() {
 
   safeUseFrame(() => {
     // Keep the dome centered on the camera so the sky is infinitely distant.
-    material.uniforms.sunDirection.value.set(0.12, 0.72, -0.68).normalize()
+    material.uniforms.sunDirection.value.set(0.12, 0.58, -0.78).normalize()
     material.needsUpdate = false
   })
 
@@ -4508,11 +4589,11 @@ function Environment() {
       {/* Sun: bright enough to define the sky without washing out road/vehicle contrast. */}
       <mesh position={[40, 70, -250]}>
         <sphereGeometry args={[17, 16, 16]} />
-        <meshBasicMaterial color="#fff7df" />
+        <meshBasicMaterial color="#ffd09b" />
       </mesh>
       <mesh position={[40, 70, -250]}>
         <sphereGeometry args={[33, 16, 16]} />
-        <meshBasicMaterial color="#fff7df" transparent opacity={0.14} depthWrite={false} />
+        <meshBasicMaterial color="#ffb878" transparent opacity={0.18} depthWrite={false} />
       </mesh>
 
       <DistantDepthLayers />
@@ -4520,7 +4601,7 @@ function Environment() {
       {/* Broad terrain base */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, -150]} receiveShadow>
         <planeGeometry args={[300, 800]} />
-        <meshStandardMaterial color="#679353" roughness={1} />
+        <meshStandardMaterial color="#4d5b48" roughness={1} />
       </mesh>
 
       {/* Layered terrain close to and beyond the road */}
@@ -4557,7 +4638,7 @@ function Environment() {
 
       {/* Layered atmospheric depth: near detail stays crisp while distant
           structures merge naturally into the horizon. */}
-      <fog attach="fog" args={['#c7d8df', 62, 220]} />
+      <fog attach="fog" args={['#354a59', 58, 220]} />
     </>
   )
 }

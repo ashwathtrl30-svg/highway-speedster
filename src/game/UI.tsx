@@ -166,6 +166,12 @@ export function AccountSetup({ onComplete, initialError = '' }: { onComplete: ()
           70% { opacity: .1; }
           100% { transform: translate3d(75%, 0, 0) rotate(12deg); opacity: 0; }
         }
+        @keyframes hsAccountHeadlight {
+          0% { transform: translate3d(-18vw, 10px, 0) scaleX(.55); opacity: 0; }
+          18% { opacity: .34; }
+          72% { opacity: .10; }
+          100% { transform: translate3d(118vw, -12px, 0) scaleX(1.35); opacity: 0; }
+        }
         @keyframes hsAccountGlow {
           0%, 100% { opacity: .38; transform: scale(1); }
           50% { opacity: .62; transform: scale(1.08); }
@@ -191,6 +197,10 @@ export function AccountSetup({ onComplete, initialError = '' }: { onComplete: ()
         .hs-account-sweep {
           animation: hsAccountSweep 4.5s ease-in-out infinite;
         }
+        .hs-account-headlight {
+          animation: hsAccountHeadlight 5.2s linear infinite;
+          filter: blur(1px);
+        }
         .hs-account-glow {
           animation: hsAccountGlow 3.4s ease-in-out infinite;
         }
@@ -208,6 +218,7 @@ export function AccountSetup({ onComplete, initialError = '' }: { onComplete: ()
           .hs-account-road-lines,
           .hs-account-drift,
           .hs-account-sweep,
+          .hs-account-headlight,
           .hs-account-glow,
           .hs-account-option {
             animation: none !important;
@@ -229,6 +240,8 @@ export function AccountSetup({ onComplete, initialError = '' }: { onComplete: ()
         />
         <div className="absolute inset-0 bg-[linear-gradient(115deg,transparent_0%,transparent_41%,rgba(255,188,86,.10)_45%,transparent_49%,transparent_100%)]" />
         <div className="hs-account-sweep absolute left-0 top-[35%] h-32 w-1/3 bg-[linear-gradient(90deg,transparent,rgba(255,205,120,.22),transparent)] blur-xl" />
+        <div className="hs-account-headlight absolute left-[-12%] top-[49%] h-1.5 w-[23%] rounded-full bg-gradient-to-r from-transparent via-amber-100/55 to-transparent shadow-[0_0_24px_rgba(255,203,120,.35)]" />
+        <div className="hs-account-headlight absolute left-[-28%] top-[57%] h-px w-[18%] rounded-full bg-gradient-to-r from-transparent via-sky-100/45 to-transparent" style={{ animationDelay: '-2.4s' }} />
         <div className="hs-account-drift absolute left-[12%] top-[28%] h-1.5 w-1.5 rounded-full bg-white/50" />
         <div className="hs-account-drift absolute right-[17%] top-[23%] h-1 w-1 rounded-full bg-white/40 [animation-delay:.7s]" />
         <div className="hs-account-drift absolute left-[22%] bottom-[23%] h-1 w-1 rounded-full bg-white/40 [animation-delay:1.1s]" />
