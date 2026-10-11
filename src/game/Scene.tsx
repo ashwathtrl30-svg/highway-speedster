@@ -4126,8 +4126,6 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
     root.add(
       trunkMesh,
       ...canopyMeshes,
-            poleMesh,
-      lampMesh,
       ...boardMeshes,
       boardPosts,
       propMesh
@@ -4137,8 +4135,6 @@ function RoadsideVisualInstances({ segmentOffsets }: { segmentOffsets: number[] 
       root.remove(
         trunkMesh,
         ...canopyMeshes,
-              poleMesh,
-        lampMesh,
         ...boardMeshes,
         boardPosts,
         propMesh
