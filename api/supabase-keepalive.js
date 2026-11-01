@@ -17,7 +17,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `${supabaseUrl.replace(/\\/$/, '')}/rest/v1/rpc/get_public_high_score_leaderboard`,
+      `${supabaseUrl.replace(/\/$/, '')}/rest/v1/rpc/get_public_high_score_leaderboard`,
       {
         method: 'POST',
         headers: {
