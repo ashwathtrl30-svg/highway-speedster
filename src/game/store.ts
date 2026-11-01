@@ -702,7 +702,10 @@ function queueCloudSave() {
 
 async function loadCloudProgress(username = state.username): Promise<boolean> {
   cloudHydratingUser = username.trim()
-  const cloud = await fetchUserGameProgress(playerId)
+  const cloud = await fetchUserGameProgress(playerId).catch((error) => {
+    cloudHydratingUser = ''
+    throw error
+  })
 
   if (!cloud) {
     cloudHydratingUser = ''
@@ -823,7 +826,11 @@ let currentRunPowerUps: Record<PowerUpType, number> = {
 // Actions
 export function setPlayerId(id: string) {
   const trimmed = id.trim()
-  if (!trimmed) return
+  if (!trimmed) {
+    playerId = ''
+    try { localStorage.removeItem('highway-speedster-player-id') } catch {}
+    return
+  }
   playerId = trimmed
   try { localStorage.setItem('highway-speedster-player-id', trimmed) } catch {}
 }
@@ -1398,7 +1405,9 @@ export const actions = {
   restoreCloudProgress(username = state.username) {
     const trimmed = username.trim()
     if (!trimmed) return Promise.resolve()
-    return loadCloudProgress(trimmed).then(() => undefined)
+    return loadCloudProgress(trimmed).then(() => undefined).catch((error) => {
+      console.error('Cloud progress restore failed; keeping local progress:', error)
+    })
   },
 
   startNewAccount() {
@@ -1496,7 +1505,8 @@ export const actions = {
     const colors = SKIN_COLORS[skin]
     const car = CARS[0]
     const carColor = getCarColorOption(car.id, defaultCarColors[car.id])
-    const deviceRegistration = await registerGameDevice(trimmed, getOrCreateDeviceId())
+    const deviceId = getOrCreateDeviceId()
+    const deviceRegistration = await registerGameDevice(trimmed, deviceId)
     if (!deviceRegistration.success) {
       setPlayerId(previousId)
       setState(previous)
@@ -1523,8 +1533,30 @@ export const actions = {
       multiplierActive: false, multiplierTimer: 0, multiplier4x: false, shieldActive: false, shieldCount: 0,
     })
 
-    const connected = await loadCloudProgress()
+    let connected = false
+    try {
+      connected = await loadCloudProgress()
+    } catch (error) {
+      const released = await logoutGameAccount(trimmed, deviceId)
+      if (!released.success) {
+        console.error('Could not release device registration after account lookup failed:', released.reason)
+      }
+      setPlayerId(previousId)
+      setState(previous)
+      if (!previousId) {
+        try { localStorage.removeItem('highway-speedster-player-id') } catch {}
+      }
+      return {
+        ok: false as const,
+        reason: 'The account service is temporarily unavailable. Your saved progress is safe; please try again shortly.',
+      }
+    }
+
     if (!connected || !getState().username.trim()) {
+      const released = await logoutGameAccount(trimmed, deviceId)
+      if (!released.success) {
+        console.error('Could not release device registration after account was not found:', released.reason)
+      }
       setPlayerId(previousId)
       setState(previous)
       if (!previousId) {
@@ -1594,7 +1626,9 @@ export const actions = {
       saveCloudProgressNow()
     }
 
-    void loadCloudProgress(trimmed).then(() => actions.syncSharedHighScore())
+    void loadCloudProgress(trimmed)
+      .then(() => actions.syncSharedHighScore())
+      .catch((error) => console.error('Background cloud progress refresh failed:', error))
   },
 
   async editDisplayName(newUsername: string) {

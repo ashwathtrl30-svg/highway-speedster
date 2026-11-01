@@ -312,7 +312,7 @@ export async function fetchUserGameProgress(playerId: string): Promise<CloudAcco
     }
   } catch (error) {
     console.error('Error fetching game progress:', error)
-    return null
+    throw new Error('The account service is temporarily unavailable. Your saved progress is safe; please try again shortly.')
   }
 }
 
